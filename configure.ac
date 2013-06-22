@@ -18,6 +18,15 @@ if test x"$LUA_LIB" = x; then
     AC_MSG_ERROR([Lua library not found. You may try option --with-lua-suffix.])
 fi
 
+
+# Make sure libcrafter build a static library by adding the --disable-shared
+# argument to the configure script.
+ac_configure_args_pre="$ac_configure_args"
+ac_configure_args_post="$ac_configure_args --disable-shared"
+ac_configure_args="$ac_configure_args_post"
+
+AC_CONFIG_COMMANDS_PRE([ac_configure_args="$ac_configure_args_pre"])
+AC_CONFIG_COMMANDS_POST([ac_configure_args="$ac_configure_args_post"])
 AC_CONFIG_SUBDIRS(src/libcrafter/libcrafter)
 
 AC_SUBST(LUA_INCLUDE)
