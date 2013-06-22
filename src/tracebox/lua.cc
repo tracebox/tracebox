@@ -489,9 +489,9 @@ static int l_IP_EOL(lua_State *l)
 	return 1;
 }
 
-static int l_IP_RR(lua_State *l)
+static int l_IP_SSRR(lua_State *l)
 {
-	IPOptionRR *opt;
+	IPOptionSSRR *opt;
 	std::vector<std::string> ips;
 
 	if (!lua_istable(l, 1)) {
@@ -506,6 +506,52 @@ static int l_IP_RR(lua_State *l)
 		ips.push_back(ip);
 		lua_pop(l, 1);
 	}
+
+	opt = l_IPOptionSSRR_new(l);
+	if (!opt)
+		return 0;
+
+	opt->SetPointer(4);
+	/* Put the raw IPs data in the optoin payload */
+	opt->SetPayload(IPtoRawData(ips));
+
+	return 1;
+}
+
+static int l_IP_LSRR(lua_State *l)
+{
+	IPOptionLSRR *opt;
+	std::vector<std::string> ips;
+
+	if (!lua_istable(l, 1)) {
+		const char* msg = lua_pushfstring(l, "argument must be a table");
+		luaL_argerror(l, 1, msg);
+		return 0;
+	}
+
+	lua_pushnil(l);
+	while (lua_next(l, 1)) {
+		const char *ip = luaL_checkstring(l, -1);
+		ips.push_back(ip);
+		lua_pop(l, 1);
+	}
+
+	opt = l_IPOptionLSRR_new(l);
+	if (!opt)
+		return 0;
+
+	opt->SetPointer(4);
+	/* Put the raw IPs data in the optoin payload */
+	opt->SetPayload(IPtoRawData(ips));
+
+	return 1;
+}
+
+static int l_IP_RR(lua_State *l)
+{
+	IPOptionRR *opt;
+	int n = luaL_checknumber(l, 1);
+	std::vector<std::string> ips(n, "0.0.0.0");
 
 	opt = l_IPOptionRR_new(l);
 	if (!opt)
@@ -690,15 +736,16 @@ static int l_TCP_WindowScale(lua_State *l)
 static int l_UDP(lua_State *l)
 {
 	UDP *udp;
-	int src = v_arg_integer(l, 1, "src");
-	int dst = v_arg_integer(l, 1, "dst");
+	int src, dst;
+	bool src_set = v_arg_integer_opt(l, 1, "src", &src);
+	bool dst_set = v_arg_integer_opt(l, 1, "dst", &dst);
 
 	udp = l_UDP_new(l);
 	if (!udp)
 		return 0;
 
-	udp->SetSrcPort(src);
-	udp->SetDstPort(dst);
+	udp->SetSrcPort(src_set ? src : rand() % USHRT_MAX);
+	udp->SetSrcPort(dst_set ? dst : rand() % USHRT_MAX);
 	return 1;
 }
 
@@ -742,9 +789,13 @@ static lua_State *l_init()
 	lua_register(l, "ip_nop", l_IP_NOP);
 	lua_register(l, "ip_eol", l_IP_EOL);
 	lua_register(l, "rr", l_IP_RR);
+	lua_register(l, "ssrr", l_IP_SSRR);
+	lua_register(l, "lsrr", l_IP_LSRR);
 	luaL_dostring(l, "IP_NOP=ip_nop()");
 	luaL_dostring(l, "IP_EOL=ip_eol()");
-	luaL_dostring(l, "function RR(addrs) return rr(addrs)/IP_NOP end");
+	luaL_dostring(l, "function RR(n) return rr(n)/IP_NOP end");
+	luaL_dostring(l, "function SSRR(addrs) return ssrr(addrs)/IP_NOP end");
+	luaL_dostring(l, "function LSRR(addrs) return lsrr(addrs)/IP_NOP end");
 
 	/* TCP options */
 	l_register(l, TCPOption, sTCPOptionRegs);
