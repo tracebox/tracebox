@@ -1,0 +1,3 @@
+[submodule "src/libcrafter"]
+	path = src/libcrafter
+	url = git@github.com:gdetal/libcrafter.git
