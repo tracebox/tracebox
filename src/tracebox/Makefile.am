@@ -9,5 +9,5 @@ tracebox_LDADD = \
 	$(abs_top_builddir)/src/libcrafter/libcrafter/libcrafter.la \
 	$(LUA_LIB)
 tracebox_CPPFLAGS = \
-	-I$(top_srcdir)/src/llibcrafter/libcrafter \
+	-I$(top_srcdir)/src/libcrafter/libcrafter \
 	$(LUA_INCLUDE)
