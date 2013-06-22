@@ -39,7 +39,7 @@ class Raw : public RawLayer { };
 static const char *layer_names[] = {
 	"IP", "IPv6", "TCP", "UDP", "Raw",
 	"TCPOption", "TCPOptionPad",
-	"IPOptionPointer", "IPOptionPad",
+	"IPOptionLayer",
 	NULL
 };
 static const char *pkt_names[] = {"Packet", NULL};
@@ -160,19 +160,15 @@ l_setter(IP, Identification, number);
 l_setter(IP, DiffServicesCP, number);
 l_setter(IP, ExpCongestionNot, number);
 
-l_check(IPOptionPointer);
-l_destructor(IPOptionPointer);
-l_print(IPOptionPointer);
-l_hexdump(IPOptionPointer);
-l_new_(IPOptionPointer, IPOptionRR);
-l_new_(IPOptionPointer, IPOptionLSRR);
-l_new_(IPOptionPointer, IPOptionSSRR);
-
-l_check(IPOptionPad);
-l_constructor(IPOptionPad);
-l_destructor(IPOptionPad);
-l_print(IPOptionPad);
-l_hexdump(IPOptionPad);
+l_check(IPOptionLayer);
+l_destructor(IPOptionLayer);
+l_print(IPOptionLayer);
+l_hexdump(IPOptionLayer);
+l_new_(IPOptionLayer, IPOptionRR);
+l_new_(IPOptionLayer, IPOptionLSRR);
+l_new_(IPOptionLayer, IPOptionSSRR);
+l_new_(IPOptionLayer, IPOptionPad);
+l_new_(IPOptionLayer, IPOptionTraceroute);
 
 l_check(IPv6);
 l_constructor(IPv6);
@@ -290,13 +286,8 @@ static luaL_Reg sIPRegs[] = {
 	{ NULL, NULL }
 };
 
-static luaL_Reg sIPOptionPointerRegs[] = {
-	l_defunc_(IPOptionPointer),
-	{ NULL, NULL }
-};
-
-static luaL_Reg sIPOptionPadRegs[] = {
-	l_defunc(IPOptionPad),
+static luaL_Reg sIPOptionRegs[] = {
+	l_defunc_(IPOptionLayer),
 	{ NULL, NULL }
 };
 
@@ -564,6 +555,21 @@ static int l_IP_RR(lua_State *l)
 	return 1;
 }
 
+static int l_IP_Traceroute(lua_State *l)
+{
+	IPOptionTraceroute *opt;
+	const char *src = luaL_checkstring(l, 1);
+
+	opt = l_IPOptionTraceroute_new(l);
+	if (!opt)
+		return 0;
+
+	opt->SetIDNumber(rand() % USHRT_MAX);
+	opt->SetOrigIP(src);
+
+	return 1;
+}
+
 static int l_IPv6(lua_State *l)
 {
 	IPv6 *ipv6;
@@ -784,13 +790,13 @@ static lua_State *l_init()
 	l_register(l, Raw, sRawRegs);
 
 	/* IP options */
-	l_register(l, IPOptionPointer, sIPOptionPointerRegs);
-	l_register(l, IPOptionPad, sIPOptionPadRegs);
+	l_register(l, IPOptionLayer, sIPOptionRegs);
 	lua_register(l, "ip_nop", l_IP_NOP);
 	lua_register(l, "ip_eol", l_IP_EOL);
 	lua_register(l, "rr", l_IP_RR);
 	lua_register(l, "ssrr", l_IP_SSRR);
 	lua_register(l, "lsrr", l_IP_LSRR);
+	lua_register(l, "traceroute", l_IP_Traceroute);
 	luaL_dostring(l, "IP_NOP=ip_nop()");
 	luaL_dostring(l, "IP_EOL=ip_eol()");
 	luaL_dostring(l, "function RR(n) return rr(n)/IP_NOP end");
