@@ -38,8 +38,7 @@ class Raw : public RawLayer { };
 
 static const char *layer_names[] = {
 	"IP", "IPv6", "TCP", "UDP", "Raw",
-	"TCPOption", "TCPOptionPad",
-	"IPOptionLayer",
+	"TCPOptionLayer", "IPOptionLayer",
 	NULL
 };
 static const char *pkt_names[] = {"Packet", NULL};
@@ -193,24 +192,18 @@ l_setter(TCP, AckNumber, number);
 l_setter(TCP, WindowsSize, number);
 l_setter(TCP, Flags, number);
 
-l_check(TCPOption);
-l_constructor(TCPOption);
-l_destructor(TCPOption);
-l_print(TCPOption);
-l_hexdump(TCPOption);
-l_setter(TCPOption, Kind, number);
-l_setter(TCPOption, Payload, string);
-l_new_(TCPOption, TCPOptionSACKPermitted);
-l_new_(TCPOption, TCPOptionSACK);
-l_new_(TCPOption, TCPOptionMaxSegSize);
-l_new_(TCPOption, TCPOptionTimestamp);
-
-l_check(TCPOptionPad);
-l_constructor(TCPOptionPad);
-l_destructor(TCPOptionPad);
-l_print(TCPOptionPad);
-l_hexdump(TCPOptionPad);
-l_setter(TCPOptionPad, Kind, number);
+l_check(TCPOptionLayer);
+l_destructor(TCPOptionLayer);
+l_print(TCPOptionLayer);
+l_hexdump(TCPOptionLayer);
+l_setter(TCPOptionLayer, Kind, number);
+l_setter(TCPOptionLayer, Payload, string);
+l_new_(TCPOptionLayer, TCPOptionSACKPermitted);
+l_new_(TCPOptionLayer, TCPOptionSACK);
+l_new_(TCPOptionLayer, TCPOptionMaxSegSize);
+l_new_(TCPOptionLayer, TCPOptionTimestamp);
+l_new_(TCPOptionLayer, TCPOptionPad);
+l_new_(TCPOptionLayer, TCPOption);
 
 l_check(UDP);
 l_constructor(UDP);
@@ -313,15 +306,9 @@ static luaL_Reg sTCPRegs[] = {
 };
 
 static luaL_Reg sTCPOptionRegs[] = {
-	l_defunc(TCPOption),
-	{ "kind", l_TCPOption_SetKind },
-	{ "data", l_TCPOption_SetPayload },
-	{ NULL, NULL }
-};
-
-static luaL_Reg sTCPOptionPadRegs[] = {
-	l_defunc(TCPOptionPad),
-	{ "kind", l_TCPOptionPad_SetKind },
+	l_defunc_(TCPOptionLayer),
+	{ "kind", l_TCPOptionLayer_SetKind },
+	{ "data", l_TCPOptionLayer_SetPayload },
 	{ NULL, NULL }
 };
 
@@ -804,8 +791,7 @@ static lua_State *l_init()
 	luaL_dostring(l, "function LSRR(addrs) return lsrr(addrs)/IP_NOP end");
 
 	/* TCP options */
-	l_register(l, TCPOption, sTCPOptionRegs);
-	l_register(l, TCPOptionPad, sTCPOptionPadRegs);
+	l_register(l, TCPOptionLayer, sTCPOptionRegs);
 	lua_register(l, "nop", l_TCP_NOP);
 	lua_register(l, "eol", l_TCP_EOL);
 	lua_register(l, "sackp", l_TCP_SACKP);
@@ -819,6 +805,7 @@ static lua_State *l_init()
 	luaL_dostring(l, "MSS=mss(1460)");
 	luaL_dostring(l, "TS=NOP/NOP/timestamp{}");
 	luaL_dostring(l, "function SACK(blocks) return NOP/NOP/sack(blocks) end");
+	luaL_dostring(l, "WSCALE=wscale(14)/NOP");
 
 	return l;
 }
