@@ -555,8 +555,10 @@ static int l_IP_Traceroute(lua_State *l)
 static int l_IPv6(lua_State *l)
 {
 	IPv6 *ipv6;
-	const char* dst = v_arg_string(l, 1, "dst");
+
+	const char *dst;
 	int tc, flabel, hoplimit;
+	bool dst_set = v_arg_string_opt(l, 1, "dst", &dst);
 	bool tc_set = v_arg_integer_opt(l, 1, "tc", &tc);
 	bool flabel_set = v_arg_integer_opt(l, 1, "flowlabel", &flabel);
 	bool hoplimit_set = v_arg_integer_opt(l, 1, "hoplimit", &hoplimit);
@@ -565,7 +567,8 @@ static int l_IPv6(lua_State *l)
 	if (!ipv6)
 		return 0;
 
-	ipv6->SetDestinationIP(dst);
+	if (dst_set)
+		ipv6->SetDestinationIP(dst);
 	if (tc_set)
 		ipv6->SetTrafficClass(tc);
 	if (hoplimit_set)
