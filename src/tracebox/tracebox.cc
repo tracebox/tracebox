@@ -88,15 +88,16 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 		switch (proto) {
 		case IP::PROTO:
 			reinterpret_cast<IP *>(ip)->SetTTL(ttl);
+			break;
 		case IPv6::PROTO:
 			reinterpret_cast<IPv6 *>(ip)->SetHopLimit(ttl);
+			break;
 		}
 		pkt->PreCraft();
-		pkt->Print(cout);
 
 		Packet* rcv = pkt->SendRecv(iface, 1, 3);
 		if (rcv) {
-			ip = rcv->GetLayer<IP>();
+			ip = rcv->GetLayer<IPLayer>();
 			if (!resolve)
 				cout << ttl << ": " << ip->GetSourceIP() << endl;
 			else
