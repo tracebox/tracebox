@@ -24,6 +24,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <climits>
+
+#define LUA_COMPAT_ALL
 #include <lua.hpp>
 
 using namespace Crafter;
