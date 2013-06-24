@@ -17,12 +17,6 @@
  *  MA  02110-1301, USA.
  */
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-};
-
 #include "crafter.h"
 #include "crafter/Utils/IPResolver.h"
 #include "script.h"
@@ -30,6 +24,7 @@ extern "C" {
 #include <cstdlib>
 #include <ctime>
 #include <climits>
+#include <lua.hpp>
 
 using namespace Crafter;
 

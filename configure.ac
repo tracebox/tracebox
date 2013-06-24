@@ -13,6 +13,7 @@ AC_HEADER_STDC
 AC_HEADER_ASSERT
 
 AX_PROG_LUA
+AX_LUA_HEADERS
 AX_LUA_LIBS
 if test x"$LUA_LIB" = x; then
     AC_MSG_ERROR([Lua library not found. You may try option --with-lua-suffix.])
