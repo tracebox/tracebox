@@ -1,3 +1,5 @@
 [submodule "src/libcrafter"]
 	path = src/libcrafter
 	url = https://github.com/gdetal/libcrafter.git
+	fetchRecurseSubmodules = true
+	ignore = untracked
