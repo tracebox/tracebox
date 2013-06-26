@@ -199,6 +199,7 @@ l_new_(TCPOptionLayer, TCPOptionSACKPermitted);
 l_new_(TCPOptionLayer, TCPOptionSACK);
 l_new_(TCPOptionLayer, TCPOptionMaxSegSize);
 l_new_(TCPOptionLayer, TCPOptionTimestamp);
+l_new_(TCPOptionLayer, TCPOptionMPTCPCapable);
 l_new_(TCPOptionLayer, TCPOptionPad);
 l_new_(TCPOptionLayer, TCPOption);
 
@@ -230,13 +231,11 @@ static int l_concat(lua_State *l)
 		pkt->PushLayer(*l2);
 	} else if (p1 && l2) {
 		p1->PushLayer(*l2);
-		p1->PreCraft();
 		lua_pop(l, 1);
 	} else if (l1 && p2) {
 		Packet *pkt = l_Packet_new(l);
 		pkt->PushLayer(*l1);
 		*pkt /= *p2;
-		pkt->PreCraft();
 	} else if (p1 && p2){
 		*p1 /= *p2;
 		lua_pop(l, 1);
@@ -379,7 +378,7 @@ static bool v_arg_string_opt(lua_State* L, int argt, const char* field, const ch
 	return true;
 }
 
-static int v_arg_integer_get_(lua_State* L, int argt, const char* field)
+static lua_Integer v_arg_integer_get_(lua_State* L, int argt, const char* field)
 {
 	if(lua_type(L, -1) != LUA_TNUMBER) {
 		const char* msg = lua_pushfstring(L, "%s is not an integer", field);
@@ -397,7 +396,7 @@ static int v_arg_integer(lua_State* L, int argt, const char* field)
 		luaL_argerror(L, argt, msg);
 	}
 
-	return v_arg_integer_get_(L, argt, field);
+	return (int)v_arg_integer_get_(L, argt, field);
 }
 
 static bool v_arg_integer_opt(lua_State* L, int argt, const char* field, int *val)
@@ -405,7 +404,34 @@ static bool v_arg_integer_opt(lua_State* L, int argt, const char* field, int *va
 	if(!v_arg(L, argt, field))
 		return false;
 
-	*val = v_arg_integer_get_(L, argt, field);
+	*val = (int)v_arg_integer_get_(L, argt, field);
+	return true;
+}
+
+static bool v_arg_integer64_opt(lua_State* L, int argt, const char* field, uint64_t *val)
+{
+	if(!v_arg(L, argt, field))
+		return false;
+
+	*val = (uint64_t)v_arg_integer_get_(L, argt, field);
+	return true;
+}
+
+static bool v_arg_boolean_get_(lua_State* L, int argt, const char* field)
+{
+	if(lua_type(L, -1) != LUA_TBOOLEAN) {
+		const char* msg = lua_pushfstring(L, "%s is not an boolean", field);
+		luaL_argerror(L, argt, msg);
+	}
+
+	return lua_toboolean(L, -1);
+}
+static bool v_arg_boolean_opt(lua_State* L, int argt, const char* field, bool *val)
+{
+	if(!v_arg(L, argt, field))
+		return false;
+
+	*val = v_arg_boolean_get_(L, argt, field);
 	return true;
 }
 
@@ -726,6 +752,27 @@ static int l_TCP_WindowScale(lua_State *l)
 	return 1;
 }
 
+static int l_TCP_MPTCPCapable(lua_State *l)
+{
+	TCPOptionMPTCPCapable *opt;
+	uint64_t skey, rkey;
+	bool csum = true; /* enable by default */
+	bool skey_set = v_arg_integer64_opt(l, 1, "skey", &skey);
+	bool rkey_set = v_arg_integer64_opt(l, 1, "rkey", &rkey);
+	v_arg_boolean_opt(l, 1, "csum", &csum);
+
+	opt = l_TCPOptionMPTCPCapable_new(l);
+	if (!opt)
+		return 0;
+
+	if (csum)
+		opt->EnableChecksum();
+	opt->SetSenderKey(skey_set ? skey : ((uint64_t)rand()) << 32 | rand());
+	if (rkey_set)
+		opt->SetReceiverKey(rkey);
+	return 1;
+}
+
 static int l_UDP(lua_State *l)
 {
 	UDP *udp;
@@ -799,6 +846,7 @@ static lua_State *l_init()
 	lua_register(l, "mss", l_TCP_MSS);
 	lua_register(l, "timestamp", l_TCP_Timestamp);
 	lua_register(l, "wscale", l_TCP_WindowScale);
+    lua_register(l, "mpcapable", l_TCP_MPTCPCapable);
 	luaL_dostring(l, "NOP=nop()");
 	luaL_dostring(l, "EOL=eol()");
 	luaL_dostring(l, "SACKP=NOP/NOP/sackp()");
@@ -806,6 +854,7 @@ static lua_State *l_init()
 	luaL_dostring(l, "TS=NOP/NOP/timestamp{}");
 	luaL_dostring(l, "function SACK(blocks) return NOP/NOP/sack(blocks) end");
 	luaL_dostring(l, "WSCALE=wscale(14)/NOP");
+	luaL_dostring(l, "MPCAPABLE=mpcapable{}");
 
 	return l;
 }
