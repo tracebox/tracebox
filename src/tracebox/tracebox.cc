@@ -32,20 +32,64 @@ extern "C" {
 using namespace Crafter;
 using namespace std;
 
-Packet *BuildProbe(int dport)
+template<int n> void BuildNetworkLayer(Packet *) { }
+template<int n> void BuildTransportLayer(Packet *, int) { }
+
+template<>
+void BuildNetworkLayer<IP::PROTO>(Packet *pkt)
+{
+	IP ip = IP();
+#ifdef __APPLE__
+	ip.SetIdentification(rand());
+#endif
+	pkt->PushLayer(ip);
+}
+
+template<>
+void BuildNetworkLayer<IPv6::PROTO>(Packet *pkt)
+{
+	pkt->PushLayer(IPv6());
+}
+
+template<>
+void BuildTransportLayer<TCP::PROTO>(Packet *pkt, int dport)
+{
+	TCP tcp = TCP();
+	tcp.SetSrcPort(rand());
+	tcp.SetDstPort(dport);
+	tcp.SetSeqNumber(rand());
+	tcp.SetFlags(0x2);
+	pkt->PushLayer(tcp);
+}
+
+template<>
+void BuildTransportLayer<UDP::PROTO>(Packet *pkt, int dport)
+{
+	UDP udp = UDP();
+	udp.SetSrcPort(rand());
+	udp.SetDstPort(dport);
+	pkt->PushLayer(udp);
+}
+
+Packet *BuildProbe(int net, int tr, int dport)
 {
 	Packet *pkt = new Packet();
-	IP ip = IP();
-	TCP tcp = TCP();
-
-	tcp.SetDstPort(dport);
-	tcp.SetFlags(0x1);
-
-	pkt->PushLayer(ip);
-	pkt->PushLayer(tcp);
-
-	pkt->PreCraft();
-
+	switch(net) {
+	case IP::PROTO:
+		BuildNetworkLayer<IP::PROTO>(pkt);
+		break;
+	case IPv6::PROTO:
+		BuildNetworkLayer<IPv6::PROTO>(pkt);
+		break;
+	}
+	switch(tr) {
+	case TCP::PROTO:
+		BuildTransportLayer<TCP::PROTO>(pkt, dport);
+		break;
+	case UDP::PROTO:
+		BuildTransportLayer<UDP::PROTO>(pkt, dport);
+		break;
+	}
 	return pkt;
 }
 
@@ -116,14 +160,15 @@ int main(int argc, char *argv[])
 	char c;
 	string iface, destination;
 	string sourceIP, destinationIP;
-	int hops_max = 64;
+	int hops_max = 64, dport = 80;
 	bool resolve = true;
+	int net_proto = IP::PROTO, tr_proto = TCP::PROTO;
 	const char *script = NULL;
 	const char *probe = NULL;
 	Packet *pkt = NULL;
 	IPLayer *ip = NULL;
 
-	while ((c = getopt(argc, argv, ":i:m:s:p:hn")) != -1) {
+	while ((c = getopt(argc, argv, ":i:m:s:p:d:hn6u")) != -1) {
 		switch (c) {
 			case 'i':
 				iface = optarg;
@@ -133,6 +178,15 @@ int main(int argc, char *argv[])
 				break;
 			case 'n':
 				resolve = false;
+				break;
+			case '6':
+				net_proto = IPv6::PROTO;
+				break;
+			case 'd':
+				dport = strtol(optarg, NULL, 10);
+				break;
+			case 'u':
+				tr_proto = UDP::PROTO;
 				break;
 			case 's':
 				script = optarg;
@@ -149,13 +203,16 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* disable libcrafter warnings */
+	ShowWarnings = 0;
+
 	if (iface == "") {
 		cerr << "You need to specify an interface" << endl;
 		goto usage;
 	}
 
 	if (!probe && !script) {
-		pkt = BuildProbe(80);
+		pkt = BuildProbe(net_proto, tr_proto, dport);
 	} else if (probe && !script) {
 		string cmd = probe;
 		pkt = script_packet(cmd);
@@ -202,10 +259,14 @@ out:
 
 usage:
 	fprintf(stderr, "Usage:\n"
-"  %s [ -hn ] [ OPTIONS ] host\n"
+"  %s [ OPTIONS ] host\n"
 "Options are:\n"
 "  -h                          Display this help and exit\n"
 "  -n                          Do not resolve IP adresses\n"
+"  -6                          Use IPv6 for static probe generated\n"
+"  -u                          Use UDP for static probe generated\n"
+"  -d port                     Use the specified port for static probe\n"
+"                              generated. Default is 80.\n"
 "  -i device                   Specify a network interface to operate with\n"
 "  -m hops_max                 Set the max number of hops (max TTL to be\n"
 "                              reached). Default is 30\n"
