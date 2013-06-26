@@ -846,7 +846,7 @@ static lua_State *l_init()
 	lua_register(l, "mss", l_TCP_MSS);
 	lua_register(l, "timestamp", l_TCP_Timestamp);
 	lua_register(l, "wscale", l_TCP_WindowScale);
-    lua_register(l, "mpcapable", l_TCP_MPTCPCapable);
+	lua_register(l, "mpcapable", l_TCP_MPTCPCapable);
 	luaL_dostring(l, "NOP=nop()");
 	luaL_dostring(l, "EOL=eol()");
 	luaL_dostring(l, "SACKP=NOP/NOP/sackp()");
