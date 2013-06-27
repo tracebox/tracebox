@@ -99,18 +99,19 @@ string GetDefaultIface(bool ipv6)
 	struct sockaddr sa;
 	int i, fd, af = ipv6 ? AF_INET6 : AF_INET;
 	socklen_t n;
+	size_t sa_len;
 	struct ifaddrs *ifaces, *ifa;
 
 	if (ipv6) {
 		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&sa;
 		sin6->sin6_family = af;
-		sa.sa_len = sizeof(*sin6);
+		sa_len = sizeof(*sin6);
 		inet_pton(af, "2001:6a8:3080:2:94b0:b600:965:8cf5", &sin6->sin6_addr);
 		sin6->sin6_port = htons(666);
 	} else {
 		struct sockaddr_in *sin = (struct sockaddr_in *)&sa;
 		sin->sin_family = af;
-		sa.sa_len = sizeof(*sin);
+		sa_len = sizeof(*sin);
 		inet_pton(af, "130.104.230.45", &sin->sin_addr);
 		sin->sin_port = htons(666);
 	}
@@ -118,7 +119,7 @@ string GetDefaultIface(bool ipv6)
 	if ((fd = socket(af, SOCK_DGRAM, 0)) < 0)
 		goto out;
 
-	if (connect(fd, &sa, sa.sa_len) < 0)
+	if (connect(fd, &sa, sa_len) < 0)
 		goto error;
 
 	n = sizeof(sa);
