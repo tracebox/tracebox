@@ -27,6 +27,7 @@
 
 extern "C" {
 #include <pcap/pcap.h>
+#include <ifaddrs.h>
 };
 
 using namespace Crafter;
@@ -92,6 +93,64 @@ Packet *BuildProbe(int net, int tr, int dport)
 	}
 	return pkt;
 }
+
+string GetDefaultIface(bool ipv6)
+{
+	struct sockaddr sa;
+	int i, fd, af = ipv6 ? AF_INET6 : AF_INET;
+	socklen_t n;
+	struct ifaddrs *ifaces, *ifa;
+
+	if (ipv6) {
+		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&sa;
+		sin6->sin6_family = af;
+		sa.sa_len = sizeof(*sin6);
+		inet_pton(af, "2001:6a8:3080:2:94b0:b600:965:8cf5", &sin6->sin6_addr);
+		sin6->sin6_port = htons(666);
+	} else {
+		struct sockaddr_in *sin = (struct sockaddr_in *)&sa;
+		sin->sin_family = af;
+		sa.sa_len = sizeof(*sin);
+		inet_pton(af, "130.104.230.45", &sin->sin_addr);
+		sin->sin_port = htons(666);
+	}
+
+	if ((fd = socket(af, SOCK_DGRAM, 0)) < 0)
+		goto out;
+
+	if (connect(fd, &sa, sa.sa_len) < 0)
+		goto error;
+
+	n = sizeof(sa);
+	if (getsockname(fd, &sa, &n) < 0)
+		goto error;
+
+	if (getifaddrs(&ifaces) < 0)
+		goto error;
+
+	for (ifa = ifaces; ifa != 0; ifa = ifa->ifa_next) {
+		if (ifa->ifa_addr && ifa->ifa_addr->sa_family == af) {
+			void *ifa_addr, *saddr;
+			size_t len = ipv6 ? sizeof(struct in6_addr) : sizeof(struct in_addr);
+			ifa_addr = ipv6 ? (void *)&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr :
+					(void *)&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+			saddr = ipv6 ? (void *)&((struct sockaddr_in6 *)&sa)->sin6_addr :
+					(void *)&((struct sockaddr_in *)&sa)->sin_addr;
+			if (!memcmp(ifa_addr, saddr, len)) {
+				freeifaddrs(ifaces);
+				close(fd);
+				return ifa->ifa_name;
+			}
+		}
+	}
+
+	freeifaddrs(ifaces);
+error:
+	close(fd);
+out:
+	return "";
+}
+
 
 string resolve_name(int proto, string& name)
 {
@@ -206,10 +265,6 @@ int main(int argc, char *argv[])
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
 
-	if (iface == "") {
-		cerr << "You need to specify an interface" << endl;
-		goto usage;
-	}
 
 	if (!probe && !script) {
 		pkt = BuildProbe(net_proto, tr_proto, dport);
@@ -231,24 +286,30 @@ int main(int argc, char *argv[])
 	// is IPv4 or IPv6 ???
 	ip = pkt->GetLayer<IPLayer>();
 	if (!ip) {
-		cout << "You need to specify at least an IPv4 or IPv6 header" << endl;
+		cerr << "You need to specify at least an IPv4 or IPv6 header" << endl;
 		goto out;
 	}
 
 	destinationIP = destination = ip->GetDestinationIP();
-	if (destinationIP == "0.0.0.0" || destinationIP == "::") {
+	if ((destinationIP == "0.0.0.0" || destinationIP == "::") && optind < argc) {
 		destination = argv[argc-1];
 		destinationIP = resolve_name(ip->GetID(), destination);
 	}
 
-	if (destinationIP == "") {
-		cout << "You need to specify a destination" << endl;
+	iface = iface == "" ? GetDefaultIface(ip->GetID() == IPv6::PROTO) : iface;
+	if (iface == "") {
+		cerr << "You need to specify an interface" << endl;
+		goto usage;
+	}
+
+	if (destinationIP == "" || destinationIP == "0.0.0.0" || destinationIP == "::") {
+		cerr << "You need to specify a destination" << endl;
 		goto out;
 	}
 
 	sourceIP = iface_address(ip->GetID(), iface);
 	if (sourceIP == "") {
-		cout << "There is no source address for the specified protocol" << endl;
+		cerr << "There is no source address for the specified protocol" << endl;
 		goto out;
 	}
 
