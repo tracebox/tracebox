@@ -20,6 +20,8 @@
 #include "crafter.h"
 #include "crafter/Utils/IPResolver.h"
 #include "script.h"
+#include "PartialHeader.h"
+#include "PacketModification.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -179,6 +181,140 @@ string iface_address(int proto, string& iface)
 	}
 }
 
+Layer *GetLayer(Packet *pkt, int proto_id)
+{
+	LayerStack::const_iterator it;
+
+	for (it = pkt->begin() ; it != pkt->end() ; it++) {
+		Layer *l = *it;
+		if (l->GetID() == proto_id)
+			return l;
+	}
+}
+
+set<int> GetAllProtos(Packet *p1, Packet *p2)
+{
+	set<int> ret;
+	LayerStack::const_iterator it;
+
+	for (it = p1->begin() ; it != p1->end() ; it++)
+		ret.insert((*it)->GetID());
+	for (it = p2->begin() ; it != p2->end() ; it++)
+		ret.insert((*it)->GetID());
+	return ret;
+}
+
+void ComputeDifferences(PacketModifications *modifs,
+						Layer *l1, Layer *l2)
+{
+	byte* this_layer = new byte[l1->GetSize()];
+	byte* that_layer = new byte[l1->GetSize()];
+
+	/* Compute difference between fields */
+	for(size_t i = 0 ; i < min(l1->GetFieldsSize(), l2->GetFieldsSize()) ; i++) {
+		memset(this_layer, 0, l1->GetSize());
+		memset(that_layer, 0, l1->GetSize());
+
+		l1->GetField(i)->Write(this_layer);
+		l2->GetField(i)->Write(that_layer);
+
+		if (memcmp(this_layer, that_layer, l1->GetSize()))
+			modifs->push_back(Modification(l1->GetID(), l1->GetField(i)));
+	}
+
+	if (l1->GetPayload().GetSize() != l2->GetPayload().GetSize())
+		std::cout << l2->GetName() << "->" << "Payload has changed" << std::endl;
+	else if (memcmp(l1->GetPayload().GetRawPointer(), l2->GetPayload().GetRawPointer(), l1->GetPayload().GetSize()))
+		std::cout << l2->GetName() << "->" << "Payload has changed" << std::endl;
+
+	delete[] this_layer;
+	delete[] that_layer;
+}
+
+PacketModifications* ComputeDifferences(Packet *orig, Packet *modified)
+{
+	PacketModifications *modifs = new PacketModifications(orig, modified);
+	set<int> protos = GetAllProtos(orig, modified);
+	set<int>::iterator it = protos.begin();
+
+	for ( ; it != protos.end() ; it++) {
+		Layer *l1 = GetLayer(orig, *it);
+		Layer *l2 = GetLayer(modified, *it);
+
+		if (l1 && l2)
+			ComputeDifferences(modifs, l1, l2);
+		else if (l1 && !l2)
+			cout << l1->GetName() << " was suppressed" << endl;
+		else if (!l1 && l2)
+			cout << l2->GetName() << " was added" << endl;
+	}
+
+	return modifs;
+}
+
+Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv)
+{
+	IP *ip = GetIP(*rcv);
+
+	/* Remove any ICMP extension. */
+	if (ip->GetTotalLength() < rcv->GetSize()) {
+		RawLayer *raw = GetRawLayer(*rcv);
+		int len = raw->GetSize() - (rcv->GetSize() - ip->GetTotalLength());
+		RawLayer new_raw(raw->GetPayload().GetRawPointer(), len);
+
+		rcv->PopLayer();
+		if (len)
+			rcv->PushLayer(new_raw);
+	} else if (rcv->GetSize() < ip->GetTotalLength()) {
+		/* We have received a partial header */
+		RawLayer *raw = GetRawLayer(*rcv);
+		Layer *new_layer = NULL;
+
+		switch(ip->GetProtocol()) {
+		case TCP::PROTO:
+			new_layer = new PartialTCP(*raw);
+			break;
+		default:
+			return rcv;
+		}
+		if (new_layer) {
+			rcv->PopLayer();
+			rcv->PushLayer(new_layer);
+		}
+	}
+
+	return rcv;
+}
+
+PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
+{
+	ICMPLayer *icmp = rcv->GetLayer<ICMPLayer>();
+	RawLayer *raw = rcv->GetLayer<RawLayer>();
+	Packet *cnt;
+
+	if (!icmp || !raw)
+		return NULL;
+
+	cnt = new Packet;
+	switch (proto) {
+	case IP::PROTO:
+		cnt->PacketFromIP(*raw);
+		/* We might receive an ICMP without the complete
+		 * echoed packet or with ICMP extensions. We thus
+		 * remove undesired parts and parse partial headers.
+		 */
+		cnt = TrimReplyIPv4(pkt, cnt);
+		break;
+	case IPv6::PROTO:
+		cnt->PacketFromIPv6(*raw);
+		break;
+	default:
+		return NULL;
+	}
+
+	return ComputeDifferences(pkt, cnt);
+}
+
 void SendProbe(int proto, const string& iface, Packet *pkt,
 	       const string& sourceIP, const string& destinationIP,
 	       const string& destination, int hop_max, bool resolve)
@@ -188,6 +324,8 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 	cout << "tracebox to " << destinationIP << " (" << destination << "): " << hop_max << " hops max" << endl;
 	for (ttl = 1; ttl <= hop_max; ++ttl) {
 		IPLayer *ip = pkt->GetLayer<IPLayer>();
+		PacketModifications *mod = NULL;
+
 		ip->SetSourceIP(sourceIP);
 		ip->SetDestinationIP(destinationIP);
 
@@ -203,11 +341,16 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 
 		Packet* rcv = pkt->SendRecv(iface, 1, 3);
 		if (rcv) {
+			mod = RecvReply(proto, pkt, rcv);
 			ip = rcv->GetLayer<IPLayer>();
 			if (!resolve)
-				cout << ttl << ": " << ip->GetSourceIP() << endl;
+				cout << ttl << ": " << ip->GetSourceIP() << " ";
 			else
-				cout << ttl << ": " << GetHostname(ip->GetSourceIP()) << " (" << ip->GetSourceIP() << ")" << endl;
+				cout << ttl << ": " << GetHostname(ip->GetSourceIP()) << " (" << ip->GetSourceIP() << ") ";
+			if (mod)
+				mod->Print(cout);
+			else
+				cout << endl;
 		} else
 			cout << ttl << ": *" << endl;
 

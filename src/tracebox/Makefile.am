@@ -2,9 +2,13 @@ bin_PROGRAMS = tracebox
 
 tracebox_SOURCES = \
 	tracebox.cc \
-	lua.cc
+	lua.cc \
+	PartialHeader.cc \
+	PacketModification.cc
 noinst_HEADERS = \
-	script.h
+	script.h \
+	PartialHeader.h \
+	PacketModification.h
 tracebox_LDADD = \
 	$(abs_top_builddir)/src/libcrafter/libcrafter/libcrafter.la \
 	$(LUA_LIB)
