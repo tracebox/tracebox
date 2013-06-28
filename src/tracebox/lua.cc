@@ -199,6 +199,7 @@ l_new_(TCPOptionLayer, TCPOptionSACKPermitted);
 l_new_(TCPOptionLayer, TCPOptionSACK);
 l_new_(TCPOptionLayer, TCPOptionMaxSegSize);
 l_new_(TCPOptionLayer, TCPOptionTimestamp);
+l_new_(TCPOptionLayer, TCPOptionWindowScale);
 l_new_(TCPOptionLayer, TCPOptionMPTCPCapable);
 l_new_(TCPOptionLayer, TCPOptionPad);
 l_new_(TCPOptionLayer, TCPOption);
@@ -739,15 +740,14 @@ static int l_TCP_Timestamp(lua_State *l)
 
 static int l_TCP_WindowScale(lua_State *l)
 {
-	TCPOption *opt;
-	const char shift[] = {luaL_checknumber(l, 1), 0};
+	TCPOptionWindowScale *opt;
+	const byte shift = luaL_checknumber(l, 1);
 
-	opt = l_TCPOption_new(l);
+	opt = l_TCPOptionWindowScale_new(l);
 	if (!opt)
 		return 0;
 
-	opt->SetKind(3);
-	opt->SetPayload(shift);
+	opt->SetShift(shift);
 
 	return 1;
 }
