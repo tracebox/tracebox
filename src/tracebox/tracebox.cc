@@ -96,12 +96,13 @@ Packet *BuildProbe(int net, int tr, int dport)
 
 string GetDefaultIface(bool ipv6)
 {
-	struct sockaddr sa;
+	struct sockaddr_storage sa;
 	int i, fd, af = ipv6 ? AF_INET6 : AF_INET;
 	socklen_t n;
 	size_t sa_len;
 	struct ifaddrs *ifaces, *ifa;
 
+	memset(&sa, 0, sizeof(sa));
 	if (ipv6) {
 		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&sa;
 		sin6->sin6_family = af;
@@ -116,14 +117,15 @@ string GetDefaultIface(bool ipv6)
 		sin->sin_port = htons(666);
 	}
 
-	if ((fd = socket(af, SOCK_DGRAM, 0)) < 0)
+	if ((fd = socket(af, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		goto out;
-
-	if (connect(fd, &sa, sa_len) < 0)
+	if (connect(fd, (struct sockaddr *)&sa, sa_len) < 0) {
+		perror("connect");
 		goto error;
+	}
 
-	n = sizeof(sa);
-	if (getsockname(fd, &sa, &n) < 0)
+	n = sa_len;
+	if (getsockname(fd, (struct sockaddr *)&sa, &n) < 0)
 		goto error;
 
 	if (getifaddrs(&ifaces) < 0)
