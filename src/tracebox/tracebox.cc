@@ -117,7 +117,7 @@ string GetDefaultIface(bool ipv6)
 		sin->sin_port = htons(666);
 	}
 
-	if ((fd = socket(af, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+	if ((fd = socket(af, SOCK_DGRAM, 0)) < 0)
 		goto out;
 	if (connect(fd, (struct sockaddr *)&sa, sa_len) < 0) {
 		perror("connect");
