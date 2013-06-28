@@ -288,6 +288,24 @@ Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv, bool *partial)
 	return rcv;
 }
 
+Packet* TrimReplyIPv6(Packet *pkt, Packet *rcv)
+{
+	IPv6 *ip = GetIPv6(*rcv);
+
+	/* Remove any extension. */
+	if (ip->GetPayloadLength() + 40 < rcv->GetSize()) {
+		RawLayer *raw = GetRawLayer(*rcv);
+		int len = raw->GetSize() - (rcv->GetSize() - (ip->GetPayloadLength() + 40));
+		RawLayer new_raw(raw->GetPayload().GetRawPointer(), len);
+
+		rcv->PopLayer();
+		if (len)
+			rcv->PushLayer(new_raw);
+	}
+
+	return rcv;
+}
+
 PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 {
 	ICMPLayer *icmp = rcv->GetLayer<ICMPLayer>();
@@ -310,6 +328,7 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 		break;
 	case IPv6::PROTO:
 		cnt->PacketFromIPv6(*raw);
+		cnt = TrimReplyIPv6(pkt, cnt);
 		break;
 	default:
 		return NULL;
