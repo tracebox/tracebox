@@ -190,6 +190,7 @@ Layer *GetLayer(Packet *pkt, int proto_id)
 		if (l->GetID() == proto_id)
 			return l;
 	}
+	return NULL;
 }
 
 set<int> GetAllProtos(Packet *p1, Packet *p2)
@@ -217,7 +218,6 @@ void ComputeDifferences(PacketModifications *modifs,
 
 		l1->GetField(i)->Write(this_layer);
 		l2->GetField(i)->Write(that_layer);
-
 		if (memcmp(this_layer, that_layer, l1->GetSize()))
 			modifs->push_back(Modification(l1->GetID(), l1->GetField(i)));
 	}
@@ -231,7 +231,7 @@ void ComputeDifferences(PacketModifications *modifs,
 	delete[] that_layer;
 }
 
-PacketModifications* ComputeDifferences(Packet *orig, Packet *modified)
+PacketModifications* ComputeDifferences(Packet *orig, Packet *modified, bool partial)
 {
 	PacketModifications *modifs = new PacketModifications(orig, modified);
 	set<int> protos = GetAllProtos(orig, modified);
@@ -243,7 +243,7 @@ PacketModifications* ComputeDifferences(Packet *orig, Packet *modified)
 
 		if (l1 && l2)
 			ComputeDifferences(modifs, l1, l2);
-		else if (l1 && !l2)
+		else if (l1 && !l2 && !partial)
 			cout << l1->GetName() << " was suppressed" << endl;
 		else if (!l1 && l2)
 			cout << l2->GetName() << " was added" << endl;
@@ -252,10 +252,11 @@ PacketModifications* ComputeDifferences(Packet *orig, Packet *modified)
 	return modifs;
 }
 
-Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv)
+Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv, bool *partial)
 {
 	IP *ip = GetIP(*rcv);
 
+	*partial = false;
 	/* Remove any ICMP extension. */
 	if (ip->GetTotalLength() < rcv->GetSize()) {
 		RawLayer *raw = GetRawLayer(*rcv);
@@ -273,6 +274,7 @@ Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv)
 		switch(ip->GetProtocol()) {
 		case TCP::PROTO:
 			new_layer = new PartialTCP(*raw);
+			*partial = true;
 			break;
 		default:
 			return rcv;
@@ -291,6 +293,7 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 	ICMPLayer *icmp = rcv->GetLayer<ICMPLayer>();
 	RawLayer *raw = rcv->GetLayer<RawLayer>();
 	Packet *cnt;
+	bool partial = false;
 
 	if (!icmp || !raw)
 		return NULL;
@@ -303,7 +306,7 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 		 * echoed packet or with ICMP extensions. We thus
 		 * remove undesired parts and parse partial headers.
 		 */
-		cnt = TrimReplyIPv4(pkt, cnt);
+		cnt = TrimReplyIPv4(pkt, cnt, &partial);
 		break;
 	case IPv6::PROTO:
 		cnt->PacketFromIPv6(*raw);
@@ -312,7 +315,7 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 		return NULL;
 	}
 
-	return ComputeDifferences(pkt, cnt);
+	return ComputeDifferences(pkt, cnt, partial);
 }
 
 void SendProbe(int proto, const string& iface, Packet *pkt,
