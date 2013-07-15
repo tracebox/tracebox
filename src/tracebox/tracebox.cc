@@ -271,6 +271,9 @@ Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv, bool *partial)
 		RawLayer *raw = GetRawLayer(*rcv);
 		Layer *new_layer = NULL;
 
+		if (!raw)
+			return rcv;
+
 		switch(ip->GetProtocol()) {
 		case TCP::PROTO:
 			new_layer = new PartialTCP(*raw);
