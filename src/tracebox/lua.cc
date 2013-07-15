@@ -823,6 +823,11 @@ static lua_State *l_init()
 	l_register(l, UDP, sUDPRegs);
 	l_register(l, Raw, sRawRegs);
 
+	luaL_dostring(l, "IP=ip({})");
+	luaL_dostring(l, "IPv6=ipv6({})");
+	luaL_dostring(l, "TCP=tcp({dst=80})");
+	luaL_dostring(l, "UDP=udp({dst=53})");
+
 	/* IP options */
 	l_register(l, IPOptionLayer, sIPOptionRegs);
 	lua_register(l, "ip_nop", l_IP_NOP);
