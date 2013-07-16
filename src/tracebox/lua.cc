@@ -440,7 +440,7 @@ static int l_IP(lua_State *l)
 {
 	IP *ip;
 	const char *dst;
-	int id, flags, ttl, dscp, fragoffset, ecn;
+	int id, flags, ttl, dscp, fragoffset, ecn, proto;
 	bool dst_set = v_arg_string_opt(l, 1, "dst", &dst);
 	bool id_set = v_arg_integer_opt(l, 1, "id", &id);
 	bool flags_set = v_arg_integer_opt(l, 1, "flags", &flags);
@@ -448,6 +448,7 @@ static int l_IP(lua_State *l)
 	bool fragoffset_set = v_arg_integer_opt(l, 1, "offset", &fragoffset);
 	bool ecn_set = v_arg_integer_opt(l, 1, "ecn", &ecn);
 	bool dscp_set = v_arg_integer_opt(l, 1, "dscp", &dscp);
+	bool proto_set = v_arg_integer_opt(l, 1, "proto", &proto);
 
 	ip = l_IP_new(l);
 	if (!ip)
@@ -470,6 +471,8 @@ static int l_IP(lua_State *l)
 		ip->SetExpCongestionNot(ecn);
 	if (dscp_set)
 		ip->SetDiffServicesCP(dscp);
+	if (proto_set)
+		ip->SetProtocol(proto);
 	return 1;
 }
 
