@@ -34,7 +34,7 @@ using namespace Crafter;
 class Raw : public RawLayer { };
 
 static const char *layer_names[] = {
-	"IP", "IPv6", "TCP", "UDP", "Raw",
+	"IP", "IPv6", "TCP", "UDP", "ICMP", "Raw",
 	"TCPOptionLayer", "IPOptionLayer",
 	NULL
 };
@@ -212,6 +212,20 @@ l_hexdump(UDP);
 l_setter(UDP, SrcPort, number);
 l_setter(UDP, DstPort, number);
 
+l_check(ICMP);
+l_constructor(ICMP);
+l_destructor(ICMP);
+l_print(ICMP);
+l_hexdump(ICMP);
+l_setter(ICMP, Type, number);
+l_setter(ICMP, Code, number);
+l_setter(ICMP, Identifier, number);
+l_setter(ICMP, SequenceNumber, number);
+l_setter(ICMP, Pointer, number);
+l_setter(ICMP, Gateway, string);
+l_setter(ICMP, Length, number);
+l_setter(ICMP, MTU, number);
+
 l_check(Raw);
 l_constructor(Raw);
 l_destructor(Raw);
@@ -313,6 +327,19 @@ static luaL_Reg sUDPRegs[] = {
 	l_defunc(UDP),
 	{ "source", l_UDP_SetSrcPort },
 	{ "dest", l_UDP_SetDstPort },
+	{ NULL, NULL }
+};
+
+static luaL_Reg sICMPRegs[] = {
+	l_defunc(ICMP),
+	{ "type", l_ICMP_SetType },
+	{ "code", l_ICMP_SetCode },
+	{ "id", l_ICMP_SetIdentifier },
+	{ "seqno", l_ICMP_SetSequenceNumber },
+	{ "ptr", l_ICMP_SetPointer },
+	{ "gw", l_ICMP_SetGateway },
+	{ "len", l_ICMP_SetLength },
+	{ "mtu", l_ICMP_SetMTU },
 	{ NULL, NULL }
 };
 
@@ -792,6 +819,42 @@ static int l_UDP(lua_State *l)
 	return 1;
 }
 
+static int l_ICMP(lua_State *l)
+{
+	ICMP *icmp;
+	const char *gw;
+	int code, id, seqno, ptr, len, mtu;
+	int type = v_arg_integer(l, 1, "type");
+	bool code_set = v_arg_integer_opt(l, 1, "code", &code);
+	bool id_set = v_arg_integer_opt(l, 1, "id", &id);
+	bool seqno_set = v_arg_integer_opt(l, 1, "seqno", &seqno);
+	bool ptr_set = v_arg_integer_opt(l, 1, "ptr", &ptr);
+	bool len_set = v_arg_integer_opt(l, 1, "len", &len);
+	bool mtu_set = v_arg_integer_opt(l, 1, "mtu", &mtu);
+	bool gw_set = v_arg_string_opt(l, 1, "gw", &gw);
+
+	icmp = l_ICMP_new(l);
+	if (!icmp)
+		return 0;
+
+	icmp->SetType(type);
+	if (code_set)
+		icmp->SetCode(code);
+	if (id_set)
+		icmp->SetIdentifier(id);
+	if (seqno_set)
+		icmp->SetSequenceNumber(seqno);
+	if (ptr_set)
+		icmp->SetPointer(ptr);
+	if (len_set)
+		icmp->SetLength(len);
+	if (mtu_set)
+		icmp->SetMTU(mtu);
+	if (gw_set)
+		icmp->SetGateway(gw);
+	return 1;
+}
+
 static int l_Raw(lua_State *l)
 {
 	Raw *raw;
@@ -817,6 +880,7 @@ static lua_State *l_init()
 	lua_register(l, "ipv6", l_IPv6);
 	lua_register(l, "tcp", l_TCP);
 	lua_register(l, "udp", l_UDP);
+	lua_register(l, "icmp", l_ICMP);
 	lua_register(l, "raw", l_Raw);
 
 	l_register(l, Packet, sPacketRegs);
@@ -824,12 +888,19 @@ static lua_State *l_init()
 	l_register(l, IPv6, sIPv6Regs);
 	l_register(l, TCP, sTCPRegs);
 	l_register(l, UDP, sUDPRegs);
+	l_register(l, ICMP, sICMPRegs);
 	l_register(l, Raw, sRawRegs);
 
 	luaL_dostring(l, "IP=ip({})");
 	luaL_dostring(l, "IPv6=ipv6({})");
 	luaL_dostring(l, "TCP=tcp({dst=80})");
 	luaL_dostring(l, "UDP=udp({dst=53})");
+	luaL_dostring(l, "function ICMPEchoReq(id,seq) return icmp{type=8,id=id,seqno=seq} end");
+	luaL_dostring(l, "function ICMPEchoRep(id,seq) return icmp{type=0,id=id,seqno=seq} end");
+	luaL_dostring(l, "function ICMPDstUnreach(mtu) return icmp{type=3,mtu=mtu} end");
+	luaL_dostring(l, "ICMPSrcQuench=icmp{type=4}");
+	luaL_dostring(l, "function ICMPRedirect(addr) return icmp{type=5,gw=addr} end");
+	luaL_dostring(l, "ICMPTimeExceeded=icmp{type=11}");
 
 	/* IP options */
 	l_register(l, IPOptionLayer, sIPOptionRegs);
