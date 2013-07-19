@@ -1,5 +1,7 @@
 bin_PROGRAMS = tracebox
 
+dist_man_MANS = tracebox.1
+
 tracebox_SOURCES = \
 	tracebox.cc \
 	lua.cc \

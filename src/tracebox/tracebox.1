@@ -1,0 +1,56 @@
+.\" ###### Setup ############################################################
+.Dd July 18, 2013
+.Dt tracebox 1
+.Os tracebox
+.\" ###### Name #############################################################
+.Sh NAME
+.Nm tracebox
+.Nd A Middlebox Detection Tool
+.\" ###### Synopsis #########################################################
+.Sh SYNOPSIS
+.Nm tracebox
+.Op OPTIONS
+host
+.\" ###### Description ######################################################
+.Sh DESCRIPTION
+.Nm tracebox
+is a tool that allows to detect middleboxes on any paths, i.e., between a source
+and any destination. Tracebox can be viewed as a tool similar to traceroute as
+it uses ICMP replies to identify changes in the packets. The fact that tracebox
+is able to detect middleboxes comes from the observation that ICMP messages are
+often not as defined in RFC792. Indeed it is quite common to receive a ICMP
+Time-to-Live exceeded message with the original datagram instead of 64 bits as
+described in the standard. This is caused by operating systems configured to
+reply with full ICMP (e.g., Linux, Cisco IOS-XR, etc.) as well as the ICMP
+Multi-Part Messages extension that standardize the fact that routers using MPLS
+tunnels replies and ICMP message containing the full datagram.
+.Pp
+.\" ###### Arguments ########################################################
+.Sh ARGUMENTS
+The following options may be provided:
+.Bl -tag -width indent
+.It \-h
+Display help and exit.
+.It \-n
+Do not resolve IP adresses.
+.It \-6
+Use IPv6 for static probe generated.
+.It \-u
+Use UDP for static probe generated.
+.It \-d port
+Use the specified port for static probe generated. Default is 80.
+.It \-i device
+Specify a network interface to operate with.
+.It \-m hops_max
+Set the max number of hops (max TTL to be reached). Default is 30.
+.It \-p probe
+Specify the probe to send.
+.It \-s script
+Run a script.
+.El
+.\" ###### Arguments ########################################################
+.Sh EXAMPLES
+.Bl -tag -width indent
+.It tracebox -p "IP/TCP/MPCAPABLE/mss(9000)" bahn.de
+.It tracebox medu.ir
+.El
