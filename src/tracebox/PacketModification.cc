@@ -21,29 +21,64 @@
 
 using namespace std;
 
-Modification::Modification(int proto, std::string& name, size_t offset, size_t len) :
-							proto(proto), name(name), offset(offset), len(len)
+Modification::Modification(int proto, std::string name, size_t offset, size_t len) :
+							layer_proto(proto), name(name), offset(offset), len(len)
 {
 }
 
-Modification::Modification(int proto, FieldInfo *info) : proto(proto)
+Modification::Modification(int proto, FieldInfo *info) : layer_proto(proto)
 {
+	Layer *l = Protocol::AccessFactory()->GetLayerByID(proto);
 	offset = info->GetWord() * 32 + info->GetBit();
 	len = info->GetLength();
-	name = info->GetName();
+	name += l->GetName() + "::" + info->GetName();
 }
 
 void Modification::Print(std::ostream& out) const
 {
-	Layer *l = Protocol::AccessFactory()->GetLayerByID(proto);
-	out << l->GetName() << "::" << name;
+	out << name;
+}
+
+Addition::Addition(Layer *l) : Modification(l->GetID(), l->GetName(), 0, l->GetSize())
+{
+}
+
+void Addition::Print(std::ostream& out) const
+{
+	out << "+" << GetName();
+}
+
+Deletion::Deletion(Layer *l) : Modification(l->GetID(), l->GetName(), 0, l->GetSize())
+{
+}
+
+void Deletion::Print(std::ostream& out) const
+{
+	out << "-" << GetName();
 }
 
 void PacketModifications::Print(std::ostream& out) const
 {
 	for(const_iterator it = begin() ; it != end() ; it++) {
-		(*it).Print(out);
+		(*it)->Print(out);
 		out << " ";
 	}
 	out << endl;
+}
+
+static bool deleteAll(Modification *m)
+{
+	delete m;
+	return true;
+}
+
+PacketModifications::~PacketModifications()
+{
+	delete orig;
+	delete modif;
+
+	for(const_iterator it = begin() ; it != end() ; it++)
+		delete *it;
+
+	clear();
 }

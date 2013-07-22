@@ -22,31 +22,64 @@
 using namespace Crafter;
 
 class Modification {
-	Packet *orig;
-	Packet *modif;
-	int proto;
-	size_t offset;
-	size_t len;
+	/* Representation of the modification */
 	std::string name;
 
+	/* Layer protocol where the modification occured. The protocol is as defined
+	 * in Libcrafter.
+	 */
+	int layer_proto;
+
+	/* Offset compared to the start of the layer (in bits) */
+	size_t offset;
+
+	/* Length of the modification (in bits) */
+	size_t len;
+
 public:
-	Modification(int proto, std::string& name, size_t offset, size_t len);
+	Modification(int proto, std::string name, size_t offset, size_t len);
 	Modification(int proto, FieldInfo *info);
 
-	void Print(std::ostream& out) const;
+	int getOffset() const {
+		return offset;
+	}
+
+	int GetOffsetBytes() const {
+		return offset / 32;
+	}
+
+	size_t GetLength() const {
+		return len;
+	}
+
+	std::string GetName() const {
+		return name;
+	}
+
+	virtual void Print(std::ostream& out = std::cout) const;
 };
 
-class PacketModifications : public std::vector<Modification> {
+class Addition : public Modification {
+public:
+	Addition(Layer *l);
+	virtual void Print(std::ostream& out) const;
+};
+
+class Deletion : public Modification {
+public:
+	Deletion(Layer *l);
+
+	virtual void Print(std::ostream& out) const;
+};
+
+class PacketModifications : public std::vector<Modification *> {
 	Packet *orig;
 	Packet *modif;
 
 public:
 	PacketModifications(Packet *orig, Packet *modif) : orig(orig), modif(modif) { }
-	~PacketModifications() {
-		delete orig;
-		delete modif;
-	}
+	~PacketModifications();
 
-	void Print(std::ostream& out) const;
+	void Print(std::ostream& out = std::cout) const;
 };
 

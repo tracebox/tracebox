@@ -219,7 +219,7 @@ void ComputeDifferences(PacketModifications *modifs,
 		l1->GetField(i)->Write(this_layer);
 		l2->GetField(i)->Write(that_layer);
 		if (memcmp(this_layer, that_layer, l1->GetSize()))
-			modifs->push_back(Modification(l1->GetID(), l1->GetField(i)));
+			modifs->push_back(new Modification(l1->GetID(), l1->GetField(i)));
 	}
 
 	if (l1->GetPayload().GetSize() != l2->GetPayload().GetSize())
@@ -244,9 +244,9 @@ PacketModifications* ComputeDifferences(Packet *orig, Packet *modified, bool par
 		if (l1 && l2)
 			ComputeDifferences(modifs, l1, l2);
 		else if (l1 && !l2 && !partial)
-			cout << l1->GetName() << " was suppressed" << endl;
+			modifs->push_back(new Deletion(l1));
 		else if (!l1 && l2)
-			cout << l2->GetName() << " was added" << endl;
+			modifs->push_back(new Addition(l2));
 	}
 
 	return modifs;
@@ -373,7 +373,7 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 			else
 				cout << ttl << ": " << GetHostname(ip->GetSourceIP()) << " (" << ip->GetSourceIP() << ") ";
 			if (mod)
-				mod->Print(cout);
+				mod->Print();
 			else
 				cout << endl;
 		} else
