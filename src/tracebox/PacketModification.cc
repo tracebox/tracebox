@@ -22,7 +22,7 @@
 using namespace std;
 
 Modification::Modification(int proto, std::string name, size_t offset, size_t len) :
-							layer_proto(proto), name(name), offset(offset), len(len)
+	layer_proto(proto), name(name), offset(offset), len(len)
 {
 }
 
@@ -34,12 +34,17 @@ Modification::Modification(int proto, FieldInfo *info) : layer_proto(proto)
 	name += l->GetName() + "::" + info->GetName();
 }
 
+Modification::Modification(Layer *l) : layer_proto(l->GetID()), name(l->GetName()),
+	offset(0), len(l->GetSize())
+{
+}
+
 void Modification::Print(std::ostream& out) const
 {
 	out << name;
 }
 
-Addition::Addition(Layer *l) : Modification(l->GetID(), l->GetName(), 0, l->GetSize())
+Addition::Addition(Layer *l) : Modification(l)
 {
 }
 
@@ -48,7 +53,7 @@ void Addition::Print(std::ostream& out) const
 	out << "+" << GetName();
 }
 
-Deletion::Deletion(Layer *l) : Modification(l->GetID(), l->GetName(), 0, l->GetSize())
+Deletion::Deletion(Layer *l) : Modification(l)
 {
 }
 

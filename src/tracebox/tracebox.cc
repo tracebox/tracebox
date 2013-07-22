@@ -222,10 +222,15 @@ void ComputeDifferences(PacketModifications *modifs,
 			modifs->push_back(new Modification(l1->GetID(), l1->GetField(i)));
 	}
 
-	if (l1->GetPayload().GetSize() != l2->GetPayload().GetSize())
-		std::cout << l2->GetName() << "->" << "Payload has changed" << std::endl;
+	/* TODO do something more clever here
+	 * (ex: identify the offset where the change occured)
+	 */
+	if (l1->GetPayload().GetSize() < l2->GetPayload().GetSize())
+		modifs->push_back(new Addition(l1));
+	else if (l1->GetPayload().GetSize() > l2->GetPayload().GetSize())
+		modifs->push_back(new Deletion(l1));
 	else if (memcmp(l1->GetPayload().GetRawPointer(), l2->GetPayload().GetRawPointer(), l1->GetPayload().GetSize()))
-		std::cout << l2->GetName() << "->" << "Payload has changed" << std::endl;
+		modifs->push_back(new Modification(l1));
 
 	delete[] this_layer;
 	delete[] that_layer;

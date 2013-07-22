@@ -39,6 +39,7 @@ class Modification {
 public:
 	Modification(int proto, std::string name, size_t offset, size_t len);
 	Modification(int proto, FieldInfo *info);
+	Modification(Layer *l);
 
 	int getOffset() const {
 		return offset;
@@ -62,6 +63,7 @@ public:
 class Addition : public Modification {
 public:
 	Addition(Layer *l);
+
 	virtual void Print(std::ostream& out) const;
 };
 
