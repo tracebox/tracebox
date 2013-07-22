@@ -219,7 +219,7 @@ void ComputeDifferences(PacketModifications *modifs,
 		l1->GetField(i)->Write(this_layer);
 		l2->GetField(i)->Write(that_layer);
 		if (memcmp(this_layer, that_layer, l1->GetSize()))
-			modifs->push_back(new Modification(l1->GetID(), l1->GetField(i)));
+			modifs->push_back(new Modification(l1->GetID(), l1->GetField(i), l2->GetField(i)));
 	}
 
 	/* TODO do something more clever here
@@ -230,7 +230,7 @@ void ComputeDifferences(PacketModifications *modifs,
 	else if (l1->GetPayload().GetSize() > l2->GetPayload().GetSize())
 		modifs->push_back(new Deletion(l1));
 	else if (memcmp(l1->GetPayload().GetRawPointer(), l2->GetPayload().GetRawPointer(), l1->GetPayload().GetSize()))
-		modifs->push_back(new Modification(l1));
+		modifs->push_back(new Modification(l1, l2));
 
 	delete[] this_layer;
 	delete[] that_layer;
@@ -347,7 +347,7 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 
 void SendProbe(int proto, const string& iface, Packet *pkt,
 	       const string& sourceIP, const string& destinationIP,
-	       const string& destination, int hop_max, bool resolve)
+	       const string& destination, int hop_max, bool resolve, bool verbose)
 {
 	int ttl;
 
@@ -378,7 +378,7 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 			else
 				cout << ttl << ": " << GetHostname(ip->GetSourceIP()) << " (" << ip->GetSourceIP() << ") ";
 			if (mod)
-				mod->Print();
+				mod->Print(cout, verbose);
 			else
 				cout << endl;
 		} else
@@ -396,14 +396,14 @@ int main(int argc, char *argv[])
 	string iface, destination;
 	string sourceIP, destinationIP;
 	int hops_max = 64, dport = 80;
-	bool resolve = true;
+	bool resolve = true, verbose = false;
 	int net_proto = IP::PROTO, tr_proto = TCP::PROTO;
 	const char *script = NULL;
 	const char *probe = NULL;
 	Packet *pkt = NULL;
 	IPLayer *ip = NULL;
 
-	while ((c = getopt(argc, argv, ":i:m:s:p:d:hn6u")) != -1) {
+	while ((c = getopt(argc, argv, ":i:m:s:p:d:hnv6u")) != -1) {
 		switch (c) {
 			case 'i':
 				iface = optarg;
@@ -428,6 +428,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'p':
 				probe = optarg;
+				break;
+			case 'v':
+				verbose = true;
 				break;
 			case 'h':
 				goto usage;
@@ -489,7 +492,7 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
-	SendProbe(ip->GetID(), iface, pkt, sourceIP, destinationIP, destination, hops_max, resolve);
+	SendProbe(ip->GetID(), iface, pkt, sourceIP, destinationIP, destination, hops_max, resolve, verbose);
 
 out:
 	return 0;
@@ -506,7 +509,8 @@ usage:
 "                              generated. Default is 80.\n"
 "  -i device                   Specify a network interface to operate with\n"
 "  -m hops_max                 Set the max number of hops (max TTL to be\n"
-"                              reached). Default is 30\n"
+"                              reached). Default is 30.\n"
+"  -v                          Print more information.\n"
 "  -p probe                    Specify the probe to send.\n"
 "  -s script                   Run a script.\n"
 "", argv[0]);

@@ -36,10 +36,19 @@ class Modification {
 	/* Length of the modification (in bits) */
 	size_t len;
 
+	/* Some private functions */
+	std::string GetModifRepr() const;
+
+protected:
+	/* Field values helper */
+	std::string field1_repr;
+	std::string field2_repr;
+
+
 public:
 	Modification(int proto, std::string name, size_t offset, size_t len);
-	Modification(int proto, FieldInfo *info);
-	Modification(Layer *l);
+	Modification(int proto, FieldInfo *f1, FieldInfo *f2);
+	Modification(Layer *l1, Layer *l2);
 
 	int getOffset() const {
 		return offset;
@@ -57,21 +66,21 @@ public:
 		return name;
 	}
 
-	virtual void Print(std::ostream& out = std::cout) const;
+	virtual void Print(std::ostream& out = std::cout, bool verbose = false) const;
 };
 
 class Addition : public Modification {
 public:
 	Addition(Layer *l);
 
-	virtual void Print(std::ostream& out) const;
+	virtual void Print(std::ostream& out, bool verbose = false) const;
 };
 
 class Deletion : public Modification {
 public:
 	Deletion(Layer *l);
 
-	virtual void Print(std::ostream& out) const;
+	virtual void Print(std::ostream& out, bool verbose = false) const;
 };
 
 class PacketModifications : public std::vector<Modification *> {
@@ -82,6 +91,6 @@ public:
 	PacketModifications(Packet *orig, Packet *modif) : orig(orig), modif(modif) { }
 	~PacketModifications();
 
-	void Print(std::ostream& out = std::cout) const;
+	void Print(std::ostream& out = std::cout, bool verbose = false) const;
 };
 

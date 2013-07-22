@@ -26,46 +26,74 @@ Modification::Modification(int proto, std::string name, size_t offset, size_t le
 {
 }
 
-Modification::Modification(int proto, FieldInfo *info) : layer_proto(proto)
+Modification::Modification(int proto, FieldInfo *f1, FieldInfo *f2) : layer_proto(proto)
 {
 	Layer *l = Protocol::AccessFactory()->GetLayerByID(proto);
-	offset = info->GetWord() * 32 + info->GetBit();
-	len = info->GetLength();
-	name += l->GetName() + "::" + info->GetName();
+	std::ostringstream sf1, sf2;
+
+	offset = f1->GetWord() * 32 + f1->GetBit();
+	len = f1->GetLength();
+	name += l->GetName() + "::" + f1->GetName();
+
+	f1->PrintValue(sf1);
+	field1_repr = sf1.str();
+
+	f2->PrintValue(sf2);
+	field2_repr = sf2.str();
 }
 
-Modification::Modification(Layer *l) : layer_proto(l->GetID()), name(l->GetName()),
-	offset(0), len(l->GetSize())
+Modification::Modification(Layer *l1, Layer *l2) : layer_proto(l1->GetID()), name(l1->GetName()),
+	offset(0), len(l1->GetSize())
 {
+	std::ostringstream sf1, sf2;
+
+	l1->Print(sf1);
+	field1_repr = sf1.str();
+
+	l2->Print(sf2);
+	field2_repr = sf2.str();
 }
 
-void Modification::Print(std::ostream& out) const
+void Modification::Print(std::ostream& out, bool verbose) const
 {
 	out << name;
+	if (verbose)
+		out << GetModifRepr();
 }
 
-Addition::Addition(Layer *l) : Modification(l)
+std::string Modification::GetModifRepr() const
+{
+	if (field1_repr != "" && field2_repr != "")
+		return " (" + field1_repr + " -> " + field2_repr + ")";
+	return "";
+}
+
+Addition::Addition(Layer *l) : Modification(l, l)
 {
 }
 
-void Addition::Print(std::ostream& out) const
+void Addition::Print(std::ostream& out, bool verbose) const
 {
 	out << "+" << GetName();
+	if (verbose)
+		out << " " << field1_repr;
 }
 
-Deletion::Deletion(Layer *l) : Modification(l)
+Deletion::Deletion(Layer *l) : Modification(l, l)
 {
 }
 
-void Deletion::Print(std::ostream& out) const
+void Deletion::Print(std::ostream& out, bool verbose) const
 {
 	out << "-" << GetName();
+	if (verbose)
+		out << " " << field1_repr;
 }
 
-void PacketModifications::Print(std::ostream& out) const
+void PacketModifications::Print(std::ostream& out, bool verbose) const
 {
 	for(const_iterator it = begin() ; it != end() ; it++) {
-		(*it)->Print(out);
+		(*it)->Print(out, verbose);
 		out << " ";
 	}
 	out << endl;
