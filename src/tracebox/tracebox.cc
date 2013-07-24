@@ -26,11 +26,16 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 extern "C" {
-#include <pcap/pcap.h>
+#include <pcap.h>
 #include <ifaddrs.h>
+#include <netinet/in.h>
 };
+
+#define PCAP_IPv4 "1.1.1.1"
+#define PCAP_IPv6 "dead::beef"
 
 using namespace Crafter;
 using namespace std;
@@ -156,6 +161,124 @@ out:
 	return "";
 }
 
+bool isPcap(const string& iface)
+{
+	return iface.compare(0, 5, "pcap:") == 0;
+}
+
+bool pcapParse(const string& name, string& output, string& input)
+{
+	string s = name;
+	string delimiter = ":";
+	vector<string> tokens;
+	size_t pos = 0;
+
+	while ((pos = s.find(delimiter)) != string::npos) {
+	    string token = s.substr(0, pos);
+	    s.erase(0, pos + 1);
+		tokens.push_back(token);
+	}
+	tokens.push_back(s);
+
+	if (tokens.size() != 3 || tokens[0] != "pcap")
+		return false;
+
+	output = tokens[1];
+	input = tokens[2];
+
+	return true;
+}
+
+static pcap_t *pd = NULL;
+static int rfd;
+static pcap_t *rd = NULL;
+static pcap_dumper_t *pdumper;
+
+Packet* PcapSendRecv(Packet *probe, const string& iface, double timeout, int retry)
+{
+	struct pcap_pkthdr hdr1, hdr2;
+	fd_set read_fd;
+	int ret;
+	struct timeval ts = {(int)timeout, 0};
+	uint8_t *packet;
+	Packet* reply = NULL;
+	string in_file, out_file;
+
+	if (!pd && !rd)
+		pcapParse(iface, out_file, in_file);
+
+retry:
+	if(!retry--)
+		return NULL;
+
+	memset(&hdr1, 0, sizeof(hdr2));
+	if (gettimeofday(&hdr2.ts, NULL) < 0)
+		return NULL;
+	hdr2.len = probe->GetSize();
+	hdr2.caplen = probe->GetSize();
+
+	/* Write packet to pcap and wait for reply */
+	if (!pd)
+		OpenPcapDumper(DLT_RAW, out_file, pd, pdumper);
+
+#ifdef __APPLE__
+	/* if MAC OSX -> IP total len must be changed */
+	byte copy[probe->GetSize()];
+	memcpy(copy, probe->GetRawPtr(), probe->GetSize());
+
+	if (probe->GetLayer<IPLayer>()->GetID() == IP::PROTO) {
+		byte tmp = copy[2];
+		copy[2] = copy[3];
+		copy[3] = tmp;
+	}
+	DumperPcap(pdumper, &hdr2, copy);
+#else
+	DumperPcap(pdumper, &hdr2, probe->GetRawPtr());
+#endif
+	pcap_dump_flush(pdumper);
+
+	if (!rd) {
+		char pcap_errbuf[PCAP_ERRBUF_SIZE];
+
+		rd = pcap_open_offline(in_file.c_str(), pcap_errbuf);
+		if (rd == NULL) {
+			goto error;
+		}
+
+		rfd = pcap_get_selectable_fd(rd);
+		if (rfd < 0) {
+			goto error;
+		}
+	}
+
+	FD_ZERO(&read_fd);
+	FD_SET(rfd, &read_fd);
+	ret = select(rfd+1, &read_fd, NULL, NULL, &ts);
+	if (ret == 0)
+		goto retry;
+
+	if (ret < 0)
+		goto error;
+
+	packet = (uint8_t *)pcap_next(rd, &hdr1);
+	if (!packet)
+		goto retry;
+
+	reply = new Packet;
+	switch((packet[0] & 0xf0) >> 4) {
+	case 4:
+		reply->PacketFromIP(packet, hdr1.len);
+		break;
+	case 6:
+		reply->PacketFromIPv6(packet, hdr1.len);
+		break;
+	default:
+		return NULL;
+	}
+
+error:
+	return reply;
+}
 
 string resolve_name(int proto, string& name)
 {
@@ -173,8 +296,12 @@ string iface_address(int proto, string& iface)
 {
 	switch (proto) {
 	case IP::PROTO:
+		if (isPcap(iface))
+			return PCAP_IPv4;
 		return GetMyIP(iface);
 	case IPv6::PROTO:
+		if (isPcap(iface))
+			return PCAP_IPv6;
 		return GetMyIPv6(iface, false);
 	default:
 		return "";
@@ -355,6 +482,7 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 	for (ttl = 1; ttl <= hop_max; ++ttl) {
 		IPLayer *ip = pkt->GetLayer<IPLayer>();
 		PacketModifications *mod = NULL;
+		Packet* rcv = NULL;
 
 		ip->SetSourceIP(sourceIP);
 		ip->SetDestinationIP(destinationIP);
@@ -369,7 +497,10 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 		}
 		pkt->PreCraft();
 
-		Packet* rcv = pkt->SendRecv(iface, 1, 3);
+		if (isPcap(iface))
+			rcv = PcapSendRecv(pkt, iface, 1, 3);
+		else
+			rcv = pkt->SendRecv(iface, 1, 3);
 		if (rcv) {
 			mod = RecvReply(proto, pkt, rcv);
 			ip = rcv->GetLayer<IPLayer>();
