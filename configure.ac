@@ -40,7 +40,7 @@ AS_IF([test "x$enable_tests" == "xyes"], [
 
 	AC_CONFIG_COMMANDS_PRE([ac_configure_args="$ac_configure_args_pre"])
 	AC_CONFIG_COMMANDS_POST([ac_configure_args="$ac_configure_args_post"])
-	AC_CONFIG_SUBDIRS(tests/click)
+	AC_CONFIG_SUBDIRS(tests/tools/click)
 ])
 
 AC_SUBST(LUA_INCLUDE)
@@ -51,5 +51,6 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/tracebox/Makefile
 	tests/Makefile
+	tests/tools/Makefile
 ])
 AC_OUTPUT

@@ -3,8 +3,8 @@
 	url = https://github.com/gdetal/libcrafter.git
 	fetchRecurseSubmodules = true
 	ignore = untracked
-[submodule "tests/click"]
-	path = tests/click
+[submodule "tests/tools/click"]
+	path = tests/tools/click
 	url = https://github.com/bhesmans/click.git
 	fetchRecurseSubmodules = true
 	ignore = untracked
