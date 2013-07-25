@@ -1,0 +1,31 @@
+#!/bin/bash
+
+function cleanup {
+	[ -n ${CLICK_PID} ] && kill ${CLICK_PID}
+	[ -n ${TRACEBOX_OUTPUT} ] &&  rm -f ${TRACEBOX_OUTPUT}
+}
+
+set -e
+trap cleanup EXIT
+
+EXP=$(basename ${1%.click})
+EXPECTED_OUTPUT=${LAB_DIR}/${EXP}.out
+
+# Retrieve tracebox args to use
+TRACEBOX_ARG=$(cat ${LAB_DIR}/${EXP}.args)
+TRACEBOX_IO="-i pcap:${OUTPUT}:${INPUT}"
+TRACEBOX_ARGS="-n -m ${HOP_LIMIT} ${TRACEBOX_ARG} ${TRACEBOX_IO} ${DEST_IP}"
+
+# Cleanup/init input/output
+rm -f ${OUTPUT} ${INPUT} 2> /dev/null
+echo -n -e "\xd4\xc3\xb2\xa1\x02\x00\x04\x00\x00\x00\x00\x00\x00" \
+           "\x00\x00\x00\xff\xff\x00\x00\x65\x00\x00\x00" > ${OUTPUT}
+mkfifo ${INPUT}
+
+${CLICK} -f $1 &
+CLICK_PID=$!
+sleep 1
+
+TRACEBOX_OUTPUT=$(mktemp /tmp/tracebox_test.XXXXXXXXXX)
+${TRACEBOX} ${TRACEBOX_ARGS} > ${TRACEBOX_OUTPUT}
+diff ${TRACEBOX_OUTPUT} ${EXPECTED_OUTPUT}

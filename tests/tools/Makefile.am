@@ -1,8 +1,7 @@
+DIST_SUBDIRS = click
 
-SUBDIRS = click
+all-local:
+	${MAKE} -C click all
 
-install-recursive:
-	@true
-
-check-recursive:
-	@true
+clean-local:
+	${MAKE} -C click clean
