@@ -5,8 +5,18 @@ function cleanup {
 	[ -n ${TRACEBOX_OUTPUT} ] &&  rm -f ${TRACEBOX_OUTPUT}
 }
 
+function cleanup_timeo {
+	trap - ALRM
+	kill $! 2>/dev/null
+}
+
+function watchit {
+	sleep $1& wait
+	kill -ALRM $$
+}
+
 set -e
-trap cleanup EXIT
+trap "cleanup" EXIT
 
 EXP=$(basename ${1%.click})
 EXPECTED_OUTPUT=${LAB_DIR}/${EXP}.out
@@ -17,7 +27,8 @@ TRACEBOX_IO="-i pcap:${OUTPUT}:${INPUT}"
 TRACEBOX_ARGS="-n -m ${HOP_LIMIT} ${TRACEBOX_ARG} ${TRACEBOX_IO} ${DEST_IP}"
 
 # Cleanup/init input/output
-rm -f ${OUTPUT} ${INPUT} 2> /dev/null
+rm -f ${OUTPUT} 2> /dev/null
+rm -f ${INPUT} 2> /dev/null
 echo -n -e "\xd4\xc3\xb2\xa1\x02\x00\x04\x00\x00\x00\x00\x00\x00" \
            "\x00\x00\x00\xff\xff\x00\x00\x65\x00\x00\x00" > ${OUTPUT}
 mkfifo ${INPUT}
@@ -27,5 +38,13 @@ CLICK_PID=$!
 sleep 1
 
 TRACEBOX_OUTPUT=$(mktemp /tmp/tracebox_test.XXXXXXXXXX)
-${TRACEBOX} ${TRACEBOX_ARGS} > ${TRACEBOX_OUTPUT}
+
+watchit 60 & WATCH_PID=$!
+trap "cleanup_timeo" ALRM INT
+
+( ${TRACEBOX} ${TRACEBOX_ARGS} > ${TRACEBOX_OUTPUT} ) & wait $!
+
+kill -ALRM ${WATCH_PID}
+
 diff ${TRACEBOX_OUTPUT} ${EXPECTED_OUTPUT}
+cat ${TRACEBOX_OUTPUT}
