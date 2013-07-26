@@ -1,8 +1,8 @@
 #!/bin/bash
 
 function cleanup {
-	[ -n ${CLICK_PID} ] && kill ${CLICK_PID}
-	[ -n ${TRACEBOX_OUTPUT} ] &&  rm -f ${TRACEBOX_OUTPUT}
+	[ -n "${CLICK_PID}" ] && kill ${CLICK_PID}
+	[ -n "${TRACEBOX_OUTPUT}" ] &&  rm -f ${TRACEBOX_OUTPUT}
 }
 
 function cleanup_timeo {
@@ -12,7 +12,7 @@ function cleanup_timeo {
 
 function watchit {
 	sleep $1& wait
-	kill -ALRM $$
+	kill -14 $$
 }
 
 set -e
@@ -35,7 +35,6 @@ mkfifo ${INPUT}
 
 ${CLICK} -f $1 &
 CLICK_PID=$!
-sleep 1
 
 TRACEBOX_OUTPUT=$(mktemp /tmp/tracebox_test.XXXXXXXXXX)
 
@@ -44,7 +43,6 @@ trap "cleanup_timeo" ALRM INT
 
 ( ${TRACEBOX} ${TRACEBOX_ARGS} > ${TRACEBOX_OUTPUT} ) & wait $!
 
-kill -ALRM ${WATCH_PID}
+kill -14 ${WATCH_PID}
 
 diff ${TRACEBOX_OUTPUT} ${EXPECTED_OUTPUT}
-cat ${TRACEBOX_OUTPUT}

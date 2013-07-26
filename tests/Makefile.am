@@ -26,6 +26,10 @@ AM_TESTS_ENVIRONMENT = \
 LOG_COMPILER = \
 	$(srcdir)/runtest
 
+TESTS_ENVIRONMENT = \
+	$(AM_TESTS_ENVIRONMENT) \
+	$(LOG_COMPILER)
+
 TESTS = $(click_configs)
 
 EXTRA_DIST = \
