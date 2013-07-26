@@ -17,6 +17,9 @@
  *  MA  02110-1301, USA.
  */
 
+#ifndef __PACKETMODIFICATION_H__
+#define __PACKETMODIFICATION_H__
+
 #include "crafter.h"
 
 using namespace Crafter;
@@ -94,3 +97,4 @@ public:
 	void Print(std::ostream& out = std::cout, bool verbose = false) const;
 };
 
+#endif

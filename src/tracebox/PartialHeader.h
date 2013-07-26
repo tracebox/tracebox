@@ -17,6 +17,9 @@
  *  MA  02110-1301, USA.
  */
 
+#ifndef __PARTIALHEADER_H__
+#define __PARTIALHEADER_H__
+
 #include "crafter.h"
 
 /* ICMP message can contains partial header information */
@@ -42,3 +45,5 @@ namespace Crafter {
 	};
 
 };
+
+#endif

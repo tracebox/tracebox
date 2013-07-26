@@ -17,9 +17,8 @@
  *  MA  02110-1301, USA.
  */
 
-#include "crafter.h"
-#include "crafter/Utils/IPResolver.h"
 #include "script.h"
+#include "tracebox.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -61,6 +60,15 @@ void *luaL_checkudata_ex(lua_State *l, int i, const char **names)
 		if (udata = __checkudata(l, i, *names++))
 			return udata;
 	return NULL;
+}
+
+#define l_push(obj) \
+static void lua_push##obj(lua_State *l, obj *o) \
+{ \
+	obj **udata = (obj **)lua_newuserdata(l, sizeof(obj *)); \
+	*udata = o; \
+	luaL_getmetatable(l, #obj); \
+	lua_setmetatable(l, -2); \
 }
 
 #define l_new_(obj, obj2) \
@@ -141,6 +149,7 @@ l_new(Packet);
 l_destructor(Packet);
 l_print(Packet);
 l_hexdump(Packet);
+l_push(Packet);
 
 l_check(IP);
 l_constructor(IP);
@@ -233,6 +242,41 @@ l_print(Raw);
 l_hexdump(Raw);
 l_setter(Raw, Payload, string);
 
+l_check(PacketModifications);
+l_destructor(PacketModifications);
+l_push(PacketModifications);
+
+static int l_PacketModifications_print(lua_State *l)
+{
+	std::ostringstream stream;
+	PacketModifications *pm = l_PacketModifications_check(l, 1);
+	pm->Print(stream);
+	lua_pushstring(l, stream.str().c_str());
+	return 1;
+}
+
+static int l_Packet_GetSource(lua_State *l)
+{
+	std::ostringstream stream;
+	Packet *pkt = l_Packet_check(l, 1);
+	if (!pkt)
+		lua_pushnil(l);
+	else
+		lua_pushstring(l, pkt->GetLayer<IPLayer>()->GetSourceIP().c_str());
+	return 1;
+}
+
+static int l_Packet_GetDestination(lua_State *l)
+{
+	std::ostringstream stream;
+	Packet *pkt = l_Packet_check(l, 1);
+	if (!pkt)
+		lua_pushnil(l);
+	else
+		lua_pushstring(l, pkt->GetLayer<IPLayer>()->GetDestinationIP().c_str());
+	return 1;
+}
+
 static int l_concat(lua_State *l)
 {
 	Layer *l1 = (Layer *)luaL_checkudata_ex(l, 1, layer_names);
@@ -274,6 +318,8 @@ static int l_concat(lua_State *l)
 
 static luaL_Reg sPacketRegs[] = {
 	l_defunc_(Packet),
+	{ "source", l_Packet_GetSource },
+	{ "dest", l_Packet_GetDestination },
 	{ NULL, NULL }
 };
 
@@ -348,6 +394,12 @@ static luaL_Reg sRawRegs[] = {
 	{ "data", l_Raw_SetPayload },
 	{ NULL, NULL }
 };
+
+static luaL_Reg sPacketModificationsRegs[] = {
+	{ "__tostring", l_PacketModifications_print },
+	{ NULL, NULL }
+};
+
 
 static int v_arg(lua_State* L, int argt, const char* field)
 {
@@ -868,6 +920,77 @@ static int l_Raw(lua_State *l)
 	return 1;
 }
 
+static int l_Tracebox_Callback(lua_State *l, const char *cb)
+{
+	lua_getfield(l, LUA_GLOBALSINDEX, cb);
+
+	if(lua_type(l, -1) != LUA_TFUNCTION) {
+		const char* msg = lua_pushfstring(l, "%s is not afunction", cb);
+		luaL_argerror(l, -1, msg);
+		return -1;
+	}
+
+	lua_pushnumber(l, 42);
+	lua_pcall(l, 1, 0, NULL);
+	return 0;
+}
+
+struct tracebox_info {
+	const char *cb;
+	lua_State *l;
+};
+
+static int tCallback(void *ctx, int ttl, const Packet * const probe, Packet *rcv,
+	PacketModifications *mod)
+{
+	struct tracebox_info *info = (struct tracebox_info *)ctx;
+	int ret;
+
+	lua_getfield(info->l, LUA_GLOBALSINDEX, info->cb);
+
+	if(lua_type(info->l, -1) != LUA_TFUNCTION) {
+		const char* msg = lua_pushfstring(info->l, "`%s' is not a function", info->cb);
+		luaL_argerror(info->l, -1, msg);
+		return -1;
+	}
+
+	lua_pushnumber(info->l, ttl);
+	lua_pushPacket(info->l, (Packet *)probe);
+	if (!rcv)
+		lua_pushnil(info->l);
+	 else
+		lua_pushPacket(info->l, (Packet *)rcv);
+	if (!mod)
+		lua_pushnil(info->l);
+	else
+		lua_pushPacketModifications(info->l, mod);
+
+	lua_pcall(info->l, 4, 1, NULL);
+	if (!lua_isnumber(info->l, -1))
+		return 0;
+	ret = lua_tonumber(info->l, -1);
+	lua_pop(info->l, 1);
+	return ret;
+}
+
+static int l_Tracebox(lua_State *l)
+{
+	static struct tracebox_info info = {NULL, l};
+	std::string err;
+
+	Packet *pkt = l_Packet_check(l, 1);
+	if (!pkt)
+		return 0;
+	bool cb_set = v_arg_string_opt(l, 2, "callback", &info.cb);
+
+	if (doTracebox(pkt, cb_set ? tCallback : NULL, err, &info) < 0) {
+		const char* msg = lua_pushfstring(l, "Tracebox error: %s", err.c_str());
+		luaL_argerror(l, -1, msg);
+		return 0;
+	}
+	return 0;
+}
+
 static lua_State *l_init()
 {
 	lua_State * l = luaL_newstate();
@@ -934,6 +1057,10 @@ static lua_State *l_init()
 	luaL_dostring(l, "function SACK(blocks) return NOP/NOP/sack(blocks) end");
 	luaL_dostring(l, "WSCALE=wscale(14)/NOP");
 	luaL_dostring(l, "MPCAPABLE=mpcapable{}");
+
+	/* Register the tracebox function */
+	lua_register(l, "tracebox", l_Tracebox);
+	l_register(l, PacketModifications, sPacketModificationsRegs);
 
 	return l;
 }

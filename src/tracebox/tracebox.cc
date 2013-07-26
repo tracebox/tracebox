@@ -17,7 +17,7 @@
  *  MA  02110-1301, USA.
  */
 
-#include "crafter.h"
+#include "tracebox.h"
 #include "crafter/Utils/IPResolver.h"
 #include "script.h"
 #include "PartialHeader.h"
@@ -39,6 +39,12 @@ extern "C" {
 
 using namespace Crafter;
 using namespace std;
+
+static int hops_max = 64;
+static string destination;
+static string iface;
+static bool resolve = true;
+static bool verbose = false;
 
 template<int n> void BuildNetworkLayer(Packet *) { }
 template<int n> void BuildTransportLayer(Packet *, int) { }
@@ -472,22 +478,70 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 	return ComputeDifferences(pkt, cnt, partial);
 }
 
-void SendProbe(int proto, const string& iface, Packet *pkt,
-	       const string& sourceIP, const string& destinationIP,
-	       const string& destination, int hop_max, bool resolve, bool verbose)
+static int Callback(void *ctx, int ttl, const Packet * const probe, Packet *rcv,
+	PacketModifications *mod)
 {
-	int ttl;
+	IPLayer *ip = probe->GetLayer<IPLayer>();
 
-	cout << "tracebox to " << destinationIP << " (" << destination << "): " << hop_max << " hops max" << endl;
-	for (ttl = 1; ttl <= hop_max; ++ttl) {
-		IPLayer *ip = pkt->GetLayer<IPLayer>();
-		PacketModifications *mod = NULL;
+	if (ttl == 1)
+		cout << "tracebox to " << ip->GetDestinationIP() << " (" << destination << "): " << hops_max << " hops max" << endl;
+
+	if (rcv) {
+		ip = rcv->GetLayer<IPLayer>();
+		if (!resolve)
+			cout << ttl << ": " << ip->GetSourceIP() << " ";
+		else
+			cout << ttl << ": " << GetHostname(ip->GetSourceIP()) << " (" << ip->GetSourceIP() << ") ";
+		if (mod)
+			mod->Print(cout, verbose);
+		cout << endl;
+	} else
+		cout << ttl << ": *" << endl;
+
+	return 0;
+}
+
+int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
+{
+	IPLayer *ip = pkt->GetLayer<IPLayer>();
+	string sourceIP;
+	string destinationIP;
+
+	ip = pkt->GetLayer<IPLayer>();
+	if (!ip) {
+		err = "You need to specify at least an IPv4 or IPv6 header";
+		return -1;
+	}
+
+	destinationIP = ip->GetDestinationIP();
+	if ((destinationIP == "0.0.0.0" || destinationIP == "::") && destination != "")
+		destinationIP = resolve_name(ip->GetID(), destination);
+
+	iface = iface == "" ? GetDefaultIface(ip->GetID() == IPv6::PROTO) : iface;
+	if (iface == "") {
+		err = "You need to specify an interface";
+		return -1;
+	}
+
+	if (destinationIP == "" || destinationIP == "0.0.0.0" || destinationIP == "::") {
+		err = "You need to specify a destination";
+		return -1;
+	}
+
+	sourceIP = iface_address(ip->GetID(), iface);
+	if (sourceIP == "") {
+		err = "There is no source address for the specified protocol";
+		return -1;
+	}
+
+	ip->SetSourceIP(sourceIP);
+	ip->SetDestinationIP(destinationIP);
+
+	for (int ttl = 1; ttl <= hops_max; ++ttl) {
 		Packet* rcv = NULL;
+		PacketModifications *mod = NULL;
 
-		ip->SetSourceIP(sourceIP);
-		ip->SetDestinationIP(destinationIP);
-
-		switch (proto) {
+		switch (ip->GetID()) {
 		case IP::PROTO:
 			reinterpret_cast<IP *>(ip)->SetTTL(ttl);
 			break;
@@ -501,38 +555,33 @@ void SendProbe(int proto, const string& iface, Packet *pkt,
 			rcv = PcapSendRecv(pkt, iface, 1, 3);
 		else
 			rcv = pkt->SendRecv(iface, 1, 3);
-		if (rcv) {
-			mod = RecvReply(proto, pkt, rcv);
-			ip = rcv->GetLayer<IPLayer>();
-			if (!resolve)
-				cout << ttl << ": " << ip->GetSourceIP() << " ";
-			else
-				cout << ttl << ": " << GetHostname(ip->GetSourceIP()) << " (" << ip->GetSourceIP() << ") ";
-			if (mod)
-				mod->Print(cout, verbose);
-			else
-				cout << endl;
-		} else
-			cout << ttl << ": *" << endl;
 
-		/* Stop if we reached the destination */
-		if (ip->GetSourceIP() == destinationIP)
-			return;
+		/* If we have a reply then compute the differences */
+		if (rcv)
+			mod = RecvReply(ip->GetID(), pkt, rcv);
+
+		/* The callback can stop the iteration */
+		if (callback && callback(ctx, ttl, pkt, rcv, mod))
+			return 0;
+
+		/* Stop if we reached the server */
+		if (rcv && rcv->GetLayer<IPLayer>()->GetSourceIP() == destinationIP)
+			return 0;
 	}
+
+	return 0;
 }
 
 int main(int argc, char *argv[])
 {
 	char c;
-	string iface, destination;
-	string sourceIP, destinationIP;
-	int hops_max = 64, dport = 80;
-	bool resolve = true, verbose = false;
+	int dport = 80;
 	int net_proto = IP::PROTO, tr_proto = TCP::PROTO;
 	const char *script = NULL;
 	const char *probe = NULL;
 	Packet *pkt = NULL;
 	IPLayer *ip = NULL;
+	string err;
 
 	while ((c = getopt(argc, argv, ":i:m:s:p:d:hnv6u")) != -1) {
 		switch (c) {
@@ -575,6 +624,8 @@ int main(int argc, char *argv[])
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
 
+	if (optind < argc)
+		destination = argv[argc-1];
 
 	if (!probe && !script) {
 		pkt = BuildProbe(net_proto, tr_proto, dport);
@@ -593,38 +644,10 @@ int main(int argc, char *argv[])
 	if (!pkt)
 		goto out;
 
-	// is IPv4 or IPv6 ???
-	ip = pkt->GetLayer<IPLayer>();
-	if (!ip) {
-		cerr << "You need to specify at least an IPv4 or IPv6 header" << endl;
-		goto out;
-	}
-
-	destinationIP = destination = ip->GetDestinationIP();
-	if ((destinationIP == "0.0.0.0" || destinationIP == "::") && optind < argc) {
-		destination = argv[argc-1];
-		destinationIP = resolve_name(ip->GetID(), destination);
-	}
-
-	iface = iface == "" ? GetDefaultIface(ip->GetID() == IPv6::PROTO) : iface;
-	if (iface == "") {
-		cerr << "You need to specify an interface" << endl;
+	if (doTracebox(pkt, Callback, err) < 0) {
+		cerr << "Error: " << err << endl;
 		goto usage;
 	}
-
-	if (destinationIP == "" || destinationIP == "0.0.0.0" || destinationIP == "::") {
-		cerr << "You need to specify a destination" << endl;
-		goto out;
-	}
-
-	sourceIP = iface_address(ip->GetID(), iface);
-	if (sourceIP == "") {
-		cerr << "There is no source address for the specified protocol" << endl;
-		goto out;
-	}
-
-	SendProbe(ip->GetID(), iface, pkt, sourceIP, destinationIP, destination, hops_max, resolve, verbose);
-
 out:
 	return 0;
 

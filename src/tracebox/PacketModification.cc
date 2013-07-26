@@ -96,7 +96,6 @@ void PacketModifications::Print(std::ostream& out, bool verbose) const
 		(*it)->Print(out, verbose);
 		out << " ";
 	}
-	out << endl;
 }
 
 static bool deleteAll(Modification *m)
