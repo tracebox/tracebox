@@ -18,22 +18,23 @@ function watchit {
 set -e
 trap "cleanup" EXIT
 
-EXP=$(basename ${1%.click})
-EXPECTED_OUTPUT=${LAB_DIR}/${EXP}.out
+CONFIG=@config@
+EXP=$(basename ${CONFIG%.click})
+EXPECTED_OUTPUT=@lab_dir@/${EXP}.out
 
 # Retrieve tracebox args to use
-TRACEBOX_ARG=$(cat ${LAB_DIR}/${EXP}.args)
-TRACEBOX_IO="-i pcap:${OUTPUT}:${INPUT}"
-TRACEBOX_ARGS="-n -m ${HOP_LIMIT} ${TRACEBOX_ARG} ${TRACEBOX_IO} ${DEST_IP}"
+TRACEBOX_ARG=$(cat @lab_dir@/${EXP}.args)
+TRACEBOX_IO="-i pcap:@output@:@input@"
+TRACEBOX_ARGS="-n ${TRACEBOX_ARG} ${TRACEBOX_IO} 1.2.3.4"
 
 # Cleanup/init input/output
-rm -f ${OUTPUT} 2> /dev/null
-rm -f ${INPUT} 2> /dev/null
+rm -f @output@ 2> /dev/null
+rm -f @input@ 2> /dev/null
 echo -n -e "\xd4\xc3\xb2\xa1\x02\x00\x04\x00\x00\x00\x00\x00\x00" \
-           "\x00\x00\x00\xff\xff\x00\x00\x65\x00\x00\x00" > ${OUTPUT}
-mkfifo ${INPUT}
+           "\x00\x00\x00\xff\xff\x00\x00\x65\x00\x00\x00" > @output@
+mkfifo @input@
 
-${CLICK} -f $1 &
+@click@ -f ${CONFIG} &
 CLICK_PID=$!
 
 TRACEBOX_OUTPUT=$(mktemp /tmp/tracebox_test.XXXXXXXXXX)
@@ -41,7 +42,7 @@ TRACEBOX_OUTPUT=$(mktemp /tmp/tracebox_test.XXXXXXXXXX)
 watchit 60 & WATCH_PID=$!
 trap "cleanup_timeo" ALRM INT
 
-( ${TRACEBOX} ${TRACEBOX_ARGS} > ${TRACEBOX_OUTPUT} ) & wait $!
+( @tracebox@ ${TRACEBOX_ARGS} > ${TRACEBOX_OUTPUT} ) & wait $!
 
 kill -14 ${WATCH_PID}
 

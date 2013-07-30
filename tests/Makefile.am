@@ -6,6 +6,7 @@ click_configs_in = \
 	labs/test1.in
 
 click_configs = $(click_configs_in:.in=.click)
+test_scripts = $(click_configs:.click=.sh)
 tracebox_out  = $(click_configs:.click=.out)
 tracebox_args = $(click_configs:.click=.args)
 input_pcap = $(abs_builddir)/.in.pcap
@@ -23,14 +24,11 @@ AM_TESTS_ENVIRONMENT = \
 	TRACEBOX=$(abs_top_builddir)/src/tracebox/tracebox \
 	LAB_DIR=$(abs_srcdir)/labs
 
-LOG_COMPILER = \
-	$(srcdir)/runtest
+TESTS = $(test_scripts)
 
 TESTS_ENVIRONMENT = \
 	$(AM_TESTS_ENVIRONMENT) \
-	$(LOG_COMPILER)
-
-TESTS = $(click_configs)
+	$(CLICK_LOG_COMPILER)
 
 EXTRA_DIST = \
 	$(LOG_COMPILER) \
@@ -38,12 +36,26 @@ EXTRA_DIST = \
 	$(tracebox_out) \
 	$(tracebox_args)
 
-CLEANFILES = $(click_configs)
+CLEANFILES = \
+	$(click_configs) \
+	$(test_scripts)
 
-SUFFIXES = .in .click
+SUFFIXES = .in .click .sh
+
+$(test_scripts): runtest.in
 
 $(click_configs_in): $(tracebox_out) $(tracebox_args)
 
 .in.click:
 	@mkdir -p $(builddir)/labs
 	$(do_subst) < $(srcdir)/$< > $(builddir)/$@
+
+.click.sh:
+	$(SED) -e 's,[@]input[@],$(input_pcap),g' \
+	       -e 's,[@]output[@],$(output_pcap),g' \
+	       -e 's,[@]config[@],$(builddir)/$<,g' \
+	       -e 's,[@]lab_dir[@],$(abs_srcdir)/labs,g' \
+	       -e 's,[@]click[@],$(abs_top_builddir)/tests/tools/click/userlevel/click,g' \
+	       -e 's,[@]tracebox[@],$(abs_top_builddir)/src/tracebox/tracebox,g' \
+	       < $(srcdir)/runtest.in > $@
+	chmod +x $@
