@@ -1,0 +1,65 @@
+/* Glue */
+output0 :: Null -> input1 :: Null
+routput1 :: Null -> rinput0 :: Null
+output1 :: Null -> input2 :: Null
+routput2 :: Null -> rinput1 :: Null
+output2 :: Null -> input3 :: Null
+routput3 :: Null -> rinput2 :: Null
+output3 :: Null -> input4 :: Null
+routput4 :: Null -> rinput3 :: Null
+output4 :: Null -> input5 :: Null
+routput5 :: Null -> rinput4 :: Null
+output5 :: Null -> input6 :: Null
+routput6 :: Null -> rinput5 :: Null
+
+/* start of FileIO (0) */
+s0 :: Script(write dump0.active true, pause, loop)
+dump0 :: FromDump(@incap@, MMAP false, ACTIVE false, END_CALL s0.step) -> CheckIPHeader(CHECKSUM false) -> output0
+rinput0 -> ToDump(@outcap@, ENCAP IP, UNBUFFERED true) -> Discard
+/* end of FileIO (0) */
+
+/* start of ChangeMSS (1) */
+input1 -> ChangeMSS(DELTA 100) -> SetTCPChecksum() ->  output1
+rinput1 -> routput1
+/* end of ChangeMSS (1) */
+
+/* start of ChangeWin (2) */
+input2 -> ChangeWin(DELTA 100) -> SetTCPChecksum() -> output2
+rinput2 -> routput2/* end of ChangeWin (2) */
+
+/* start of ICMPResponderLimited (3) */
+dec3 :: DecIPTTL()
+error3 :: ICMPError(1.1.1.1, timeexceeded, MTU 70);
+
+dec3 [1] -> error3  -> routput3;
+input3 -> dec3  -> output3;
+
+rinput3 -> routput3
+/* end of ICMPResponderLimited (3) */
+
+/* start of ICMPResponder (4) */
+dec4 :: DecIPTTL()
+error4 :: ICMPError(2.2.2.2, timeexceeded);
+
+dec4 [1] -> error4  -> routput4;
+input4 -> dec4  -> output4;
+
+rinput4 -> routput4
+/* end of ICMPResponder (4) */
+
+/* start of ICMPResponder (5) */
+dec5 :: DecIPTTL()
+error5 :: ICMPError(1.2.3.4, timeexceeded);
+
+dec5 [1] -> error5  -> routput5;
+input5 -> dec5  -> output5;
+
+rinput5 -> routput5
+/* end of ICMPResponder (5) */
+
+/* start of BlackHole (6) */
+input6 -> Discard()
+InfiniteSource(LIMIT 0) -> routput6
+/* end of BlackHole (6) */
+
+

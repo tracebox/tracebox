@@ -1,0 +1,46 @@
+/* Glue */
+output0 :: Null -> input1 :: Null
+routput1 :: Null -> rinput0 :: Null
+output1 :: Null -> input2 :: Null
+routput2 :: Null -> rinput1 :: Null
+output2 :: Null -> input3 :: Null
+routput3 :: Null -> rinput2 :: Null
+output3 :: Null -> input4 :: Null
+routput4 :: Null -> rinput3 :: Null
+
+/* start of FileIO (0) */
+s0 :: Script(write dump0.active true, pause, loop)
+dump0 :: FromDump(@incap@, MMAP false, ACTIVE false, END_CALL s0.step) -> CheckIPHeader(CHECKSUM false) -> output0
+rinput0 -> ToDump(@outcap@, ENCAP IP, UNBUFFERED true) -> Discard
+/* end of FileIO (0) */
+
+/* start of ChangeSeq (1) */
+input1 -> ChangeSeq(DELTA 100) -> SetTCPChecksum() -> output1
+rinput1 -> ChangeSeq(DELTA 100, REVERSE true) -> SetTCPChecksum()-> routput1/* end of ChangeSeq (1) */
+
+/* start of ICMPResponder (2) */
+dec2 :: DecIPTTL()
+error2 :: ICMPError(1.1.1.1, timeexceeded);
+
+dec2 [1] -> error2  -> routput2;
+input2 -> dec2  -> output2;
+
+rinput2 -> routput2
+/* end of ICMPResponder (2) */
+
+/* start of ICMPResponder (3) */
+dec3 :: DecIPTTL()
+error3 :: ICMPError(1.2.3.4, timeexceeded);
+
+dec3 [1] -> error3  -> routput3;
+input3 -> dec3  -> output3;
+
+rinput3 -> routput3
+/* end of ICMPResponder (3) */
+
+/* start of BlackHole (4) */
+input4 -> Discard()
+InfiniteSource(LIMIT 0) -> routput4
+/* end of BlackHole (4) */
+
+

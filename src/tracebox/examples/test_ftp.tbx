@@ -1,0 +1,31 @@
+
+syn = IP / tcp{dst=21}
+
+fp = filter(syn)
+synack = tracebox(syn)
+
+if not synack then
+	print("Server did not reply...")
+	fp:close()
+	return
+end
+
+-- check if SYN+ACK flags are present
+if synack:tcp():getflags() ~= 18 then
+	print("Server does not seems to be a FTP server...")
+	fp:close()
+	return
+end
+
+-- build PORT probe
+ip_port = syn:source():gsub("%.", ",")
+data = IP / tcp{src=syn:tcp():getsource(), dst=21, seq=syn:tcp():getseq()+1, ack=synack:tcp():getseq()+1, flags=16} / raw('PORT '.. ip_port .. ',189,68\r\n')
+
+function cb(ttl, rip, pkt, reply, mods)
+	if mods and mods:__tostring():find("Raw") then
+		print("There is a NAT_FTP before " .. rip)
+		return 1
+	end
+end
+
+tracebox(data, {callback = "cb"})

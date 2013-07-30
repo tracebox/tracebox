@@ -1,0 +1,119 @@
+/* Glue */
+output0 :: Null -> input1 :: Null
+routput1 :: Null -> rinput0 :: Null
+output1 :: Null -> input2 :: Null
+routput2 :: Null -> rinput1 :: Null
+output2 :: Null -> input3 :: Null
+routput3 :: Null -> rinput2 :: Null
+output3 :: Null -> input4 :: Null
+routput4 :: Null -> rinput3 :: Null
+output4 :: Null -> input5 :: Null
+routput5 :: Null -> rinput4 :: Null
+output5 :: Null -> input6 :: Null
+routput6 :: Null -> rinput5 :: Null
+output6 :: Null -> input7 :: Null
+routput7 :: Null -> rinput6 :: Null
+output7 :: Null -> input8 :: Null
+routput8 :: Null -> rinput7 :: Null
+output8 :: Null -> input9 :: Null
+routput9 :: Null -> rinput8 :: Null
+output9 :: Null -> input10 :: Null
+routput10 :: Null -> rinput9 :: Null
+output10 :: Null -> input11 :: Null
+routput11 :: Null -> rinput10 :: Null
+output11 :: Null -> input12 :: Null
+routput12 :: Null -> rinput11 :: Null
+
+/* start of FileIO (0) */
+s0 :: Script(write dump0.active true, pause, loop)
+dump0 :: FromDump(@incap@, MMAP false, ACTIVE false, END_CALL s0.step) -> CheckIPHeader(CHECKSUM false) -> output0
+rinput0 -> ToDump(@outcap@, ENCAP IP, UNBUFFERED true) -> Discard
+/* end of FileIO (0) */
+
+/* start of ChangeMSS (1) */
+input1 -> ChangeMSS(DELTA 100) -> SetTCPChecksum() ->  output1
+rinput1 -> routput1
+/* end of ChangeMSS (1) */
+
+/* start of ICMPResponder (2) */
+dec2 :: DecIPTTL()
+error2 :: ICMPError(1.1.1.1, timeexceeded);
+
+dec2 [1] -> error2  -> routput2;
+input2 -> dec2  -> output2;
+
+rinput2 -> routput2
+/* end of ICMPResponder (2) */
+
+/* start of ChangeIPID (3) */
+input3 -> ChangeIPID(DELTA 100) -> SetIPChecksum() -> SetTCPChecksum() -> output3
+rinput3 -> routput3/* end of ChangeIPID (3) */
+
+/* start of ICMPResponder (4) */
+dec4 :: DecIPTTL()
+error4 :: ICMPError(2.2.2.2, timeexceeded);
+
+dec4 [1] -> error4  -> routput4;
+input4 -> dec4  -> output4;
+
+rinput4 -> routput4
+/* end of ICMPResponder (4) */
+
+/* start of ChangeSeq (5) */
+input5 -> ChangeSeq(DELTA 100) -> SetTCPChecksum() -> output5
+rinput5 -> ChangeSeq(DELTA 100, REVERSE true) -> SetTCPChecksum()-> routput5/* end of ChangeSeq (5) */
+
+/* start of ICMPResponder (6) */
+dec6 :: DecIPTTL()
+error6 :: ICMPError(3.3.3.3, timeexceeded);
+
+dec6 [1] -> error6  -> routput6;
+input6 -> dec6  -> output6;
+
+rinput6 -> routput6
+/* end of ICMPResponder (6) */
+
+/* start of ChangeWin (7) */
+input7 -> ChangeWin(DELTA 100) -> SetTCPChecksum() -> output7
+rinput7 -> routput7/* end of ChangeWin (7) */
+
+/* start of ICMPResponder (8) */
+dec8 :: DecIPTTL()
+error8 :: ICMPError(4.4.4.4, timeexceeded);
+
+dec8 [1] -> error8  -> routput8;
+input8 -> dec8  -> output8;
+
+rinput8 -> routput8
+/* end of ICMPResponder (8) */
+
+/* start of SetECN (9) */
+input9 -> SetIPECN(1) -> output9
+rinput9 -> routput9/* end of SetECN (9) */
+
+/* start of ICMPResponder (10) */
+dec10 :: DecIPTTL()
+error10 :: ICMPError(5.5.5.5, timeexceeded);
+
+dec10 [1] -> error10  -> routput10;
+input10 -> dec10  -> output10;
+
+rinput10 -> routput10
+/* end of ICMPResponder (10) */
+
+/* start of ICMPResponder (11) */
+dec11 :: DecIPTTL()
+error11 :: ICMPError(1.2.3.4, timeexceeded);
+
+dec11 [1] -> error11  -> routput11;
+input11 -> dec11  -> output11;
+
+rinput11 -> routput11
+/* end of ICMPResponder (11) */
+
+/* start of BlackHole (12) */
+input12 -> Discard()
+InfiniteSource(LIMIT 0) -> routput12
+/* end of BlackHole (12) */
+
+
