@@ -62,14 +62,17 @@ void *luaL_checkudata_ex(lua_State *l, int i, const char **names)
 	return NULL;
 }
 
-#define l_push(obj) \
+#define l_push_(obj, obj2) \
 static void lua_push##obj(lua_State *l, obj *o) \
 { \
-	obj **udata = (obj **)lua_newuserdata(l, sizeof(obj *)); \
+	 obj2 **udata = ( obj2 **)lua_newuserdata(l, sizeof( obj2 *)); \
 	*udata = o; \
 	luaL_getmetatable(l, #obj); \
 	lua_setmetatable(l, -2); \
 }
+
+#define l_push(obj) \
+	l_push_(obj, obj);
 
 #define l_new_(obj, obj2) \
 static obj2 *l_##obj2##_new(lua_State *l) \
@@ -125,6 +128,14 @@ static int l_##obj##_print(lua_State *l) \
 	return 1; \
 }
 
+#define l_Packet_layer(layer) \
+static int l_Packet_Get##layer(lua_State *l) \
+{ \
+	Packet *pkt = l_Packet_check(l, 1); \
+	lua_push##layer(l, pkt->GetLayer<layer>()); \
+	return 1; \
+}
+
 #define l_setter(obj, f, t) \
 static int l_##obj##_Set##f(lua_State *l) \
 { \
@@ -132,6 +143,18 @@ static int l_##obj##_Set##f(lua_State *l) \
 	o->Set##f(luaL_check##t(l, 2)); \
 	return 1; \
 }
+
+#define l_getter(obj, f, t) \
+static int l_##obj##_Get##f(lua_State *l) \
+{ \
+	obj *o= l_##obj##_check(l, 1); \
+	lua_push##t(l, o->Get##f()); \
+	return 1; \
+}
+
+#define l_setget(obj, f, t) \
+	l_setter(obj, f, t); \
+	l_getter(obj, f, t);
 
 #define l_constant(l, v, n) \
 	lua_pushnumber(l, v); \
@@ -156,6 +179,8 @@ l_constructor(IP);
 l_destructor(IP);
 l_print(IP);
 l_hexdump(IP);
+l_push(IP);
+l_Packet_layer(IP);
 l_setter(IP, SourceIP, string);
 l_setter(IP, DestinationIP, string);
 l_setter(IP, Flags, number);
@@ -180,6 +205,8 @@ l_constructor(IPv6);
 l_destructor(IPv6);
 l_print(IPv6);
 l_hexdump(IPv6);
+l_push(IPv6);
+l_Packet_layer(IPv6);
 l_setter(IPv6, SourceIP, string);
 l_setter(IPv6, DestinationIP, string);
 l_setter(IPv6, TrafficClass, number);
@@ -191,12 +218,14 @@ l_constructor(TCP);
 l_destructor(TCP);
 l_print(TCP);
 l_hexdump(TCP);
-l_setter(TCP, SrcPort, number);
-l_setter(TCP, DstPort, number);
-l_setter(TCP, SeqNumber, number);
-l_setter(TCP, AckNumber, number);
-l_setter(TCP, WindowsSize, number);
-l_setter(TCP, Flags, number);
+l_push(TCP);
+l_Packet_layer(TCP);
+l_setget(TCP, SrcPort, number);
+l_setget(TCP, DstPort, number);
+l_setget(TCP, SeqNumber, number);
+l_setget(TCP, AckNumber, number);
+l_setget(TCP, WindowsSize, number);
+l_setget(TCP, Flags, number);
 
 l_check(TCPOptionLayer);
 l_destructor(TCPOptionLayer);
@@ -218,6 +247,8 @@ l_constructor(UDP);
 l_destructor(UDP);
 l_print(UDP);
 l_hexdump(UDP);
+l_push(UDP);
+l_Packet_layer(UDP);
 l_setter(UDP, SrcPort, number);
 l_setter(UDP, DstPort, number);
 
@@ -226,6 +257,8 @@ l_constructor(ICMP);
 l_destructor(ICMP);
 l_print(ICMP);
 l_hexdump(ICMP);
+l_push(ICMP);
+l_Packet_layer(ICMP);
 l_setter(ICMP, Type, number);
 l_setter(ICMP, Code, number);
 l_setter(ICMP, Identifier, number);
@@ -240,6 +273,8 @@ l_constructor(Raw);
 l_destructor(Raw);
 l_print(Raw);
 l_hexdump(Raw);
+l_push(Raw);
+l_Packet_layer(Raw);
 l_setter(Raw, Payload, string);
 
 l_check(PacketModifications);
@@ -304,6 +339,56 @@ static int l_concat(lua_State *l)
 	return 1;
 }
 
+class FWFilter {
+	int src, dst, id;
+public:
+	FWFilter(int src, int dst) : src(src), dst(dst), id(src^dst){
+#ifdef __APPLE__
+		std::string cmd = "ipfw add " + StrPort(id) + " deny tcp from any " \
+			+ StrPort(dst) + " to any " + StrPort(src) + " in";
+#else /* Assume Linux */
+		std::string cmd = "iptables -A INPUT --sport" \
+					+ StrPort(dst) + " --dport " + StrPort(src) + " -j DROP";
+#endif
+		system(cmd.c_str());
+	};
+
+	~FWFilter() {
+		close();
+	}
+
+	void close() {
+#ifdef __APPLE__
+		std::string cmd = "ipfw del " + StrPort(id);
+#else /* Assume Linux */
+		std::string cmd = "iptables -D INPUT --sport" \
+					+ StrPort(dst) + " --dport " + StrPort(src) + " -j DROP";
+#endif
+		system(cmd.c_str());
+	}
+
+};
+
+l_check(FWFilter);
+l_destructor(FWFilter);
+
+int l_FWFilter_close(lua_State *l)
+{
+	FWFilter *fw = l_FWFilter_check(l, 1);
+	fw->close();
+	return 0;
+}
+
+static FWFilter *l_FWFilter_new(lua_State *l, int src, int dst)
+{
+	FWFilter **udata = (FWFilter **)lua_newuserdata(l, sizeof(FWFilter *));
+	*udata = new FWFilter(src, dst);
+	luaL_getmetatable(l, "FWFilter");
+	lua_setmetatable(l, -2);
+	return *udata;
+}
+
+
 #define l_defunc_(obj) \
 	{ "__gc", l_##obj##_destructor }, \
 	{ "__tostring", l_##obj##_print }, \
@@ -316,10 +401,20 @@ static int l_concat(lua_State *l)
 	{ "new", l_##obj##_constructor }, \
 	l_defunc_(obj)
 
+#define l_def_get_set(obj, ofunc, func) \
+	{ "set" #ofunc, l_##obj##_Set##func }, \
+	{ "get" #ofunc, l_##obj##_Get##func }
+
 static luaL_Reg sPacketRegs[] = {
 	l_defunc_(Packet),
 	{ "source", l_Packet_GetSource },
 	{ "dest", l_Packet_GetDestination },
+	{ "ip", l_Packet_GetIP },
+	{ "ipv6", l_Packet_GetIPv6 },
+	{ "tcp", l_Packet_GetTCP },
+	{ "udp", l_Packet_GetUDP },
+	{ "icmp", l_Packet_GetICMP },
+	{ "payload", l_Packet_GetRaw },
 	{ NULL, NULL }
 };
 
@@ -353,12 +448,12 @@ static luaL_Reg sIPv6Regs[] = {
 
 static luaL_Reg sTCPRegs[] = {
 	l_defunc(TCP),
-	{ "source", l_TCP_SetSrcPort },
-	{ "dest", l_TCP_SetDstPort },
-	{ "seq", l_TCP_SetSeqNumber },
-	{ "ack", l_TCP_SetAckNumber },
-	{ "win", l_TCP_SetWindowsSize },
-	{ "flags", l_TCP_SetFlags },
+	l_def_get_set(TCP, source, SrcPort),
+	l_def_get_set(TCP, dest, DstPort),
+	l_def_get_set(TCP, seq, SeqNumber),
+	l_def_get_set(TCP, ack, AckNumber),
+	l_def_get_set(TCP, win, WindowsSize),
+	l_def_get_set(TCP, flags, Flags),
 	{ NULL, NULL }
 };
 
@@ -400,6 +495,11 @@ static luaL_Reg sPacketModificationsRegs[] = {
 	{ NULL, NULL }
 };
 
+static luaL_Reg sFWFilterRegs[] = {
+	{ "__gc", l_FWFilter_destructor },
+	{ "close", l_FWFilter_close },
+	{ NULL, NULL }
+};
 
 static int v_arg(lua_State* L, int argt, const char* field)
 {
@@ -1001,6 +1101,32 @@ no_args:
 	return 1;
 }
 
+static int l_TraceboxFilter(lua_State *l)
+{
+	int dstPort, srcPort;
+	Packet *pkt = l_Packet_check(l, 1);
+	if (!pkt)
+		return 0;
+	TCP *tcp = pkt->GetLayer<TCP>();
+	UDP *udp = pkt->GetLayer<UDP>();
+
+	if (tcp) {
+		dstPort = tcp->GetDstPort();
+		srcPort = tcp->GetSrcPort();
+	} else if (udp) {
+		dstPort = udp->GetDstPort();
+		srcPort = udp->GetSrcPort();
+	} else {
+		const char* msg = lua_pushfstring(l, "filter only works with TCP or UDP");
+		luaL_argerror(l, -1, msg);
+		return 0;
+	}
+
+	l_FWFilter_new(l, srcPort, dstPort);
+
+	return 1;
+}
+
 static lua_State *l_init()
 {
 	lua_State * l = luaL_newstate();
@@ -1070,7 +1196,9 @@ static lua_State *l_init()
 
 	/* Register the tracebox function */
 	lua_register(l, "tracebox", l_Tracebox);
+	lua_register(l, "filter", l_TraceboxFilter);
 	l_register(l, PacketModifications, sPacketModificationsRegs);
+	l_register(l, FWFilter, sFWFilterRegs);
 
 	return l;
 }
