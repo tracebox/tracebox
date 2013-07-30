@@ -937,7 +937,7 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	if (!info->cb)
 		return 0;
 
-	lua_getfield(info->l, LUA_GLOBALSINDEX, info->cb);
+	lua_getglobal(info->l, info->cb);
 
 	if(lua_type(info->l, -1) != LUA_TFUNCTION) {
 		const char* msg = lua_pushfstring(info->l, "`%s' is not a function", info->cb);
