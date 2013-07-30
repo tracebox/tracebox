@@ -1,3 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
+AM_DISTCHECK_CONFIGURE_FLAGS = --enable-tests
 
 SUBDIRS = src
+if ENABLE_TESTS
+SUBDIRS += tests
+endif

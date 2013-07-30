@@ -203,19 +203,13 @@ static pcap_dumper_t *pdumper;
 Packet* PcapSendRecv(Packet *probe, const string& iface, double timeout, int retry)
 {
 	struct pcap_pkthdr hdr1, hdr2;
-	fd_set read_fd;
 	int ret;
-	struct timeval ts = {(int)timeout, 0};
 	uint8_t *packet;
 	Packet* reply = NULL;
 	string in_file, out_file;
 
 	if (!pd && !rd)
 		pcapParse(iface, out_file, in_file);
-
-retry:
-	if(!retry--)
-		return NULL;
 
 	memset(&hdr1, 0, sizeof(hdr2));
 	if (gettimeofday(&hdr2.ts, NULL) < 0)
@@ -242,7 +236,6 @@ retry:
 	DumperPcap(pdumper, &hdr2, probe->GetRawPtr());
 #endif
 	pcap_dump_flush(pdumper);
-
 	if (!rd) {
 		char pcap_errbuf[PCAP_ERRBUF_SIZE];
 
@@ -257,18 +250,8 @@ retry:
 		}
 	}
 
-	FD_ZERO(&read_fd);
-	FD_SET(rfd, &read_fd);
-	ret = select(rfd+1, &read_fd, NULL, NULL, &ts);
-	if (ret == 0)
-		goto retry;
-
-	if (ret < 0)
-		goto error;
-
+	/* Retrieve the reply from MB or server*/
 	packet = (uint8_t *)pcap_next(rd, &hdr1);
-	if (!packet)
-		goto retry;
 
 	reply = new Packet;
 	switch((packet[0] & 0xf0) >> 4) {

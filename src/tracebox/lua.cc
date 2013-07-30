@@ -960,7 +960,7 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	else
 		lua_pushPacketModifications(info->l, mod);
 
-	lua_pcall(info->l, 5, 1, NULL);
+	lua_pcall(info->l, 5, 1, 0);
 	if (!lua_isnumber(info->l, -1))
 		return 0;
 	ret = lua_tonumber(info->l, -1);
