@@ -447,10 +447,10 @@ Packet* TrimReplyIPv6(Packet *pkt, Packet *rcv)
 	return rcv;
 }
 
-PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
+PacketModifications* RecvReply(int proto, Packet *pkt, Packet **rcv)
 {
-	ICMPLayer *icmp = rcv->GetLayer<ICMPLayer>();
-	RawLayer *raw = rcv->GetLayer<RawLayer>();
+	ICMPLayer *icmp = (*rcv)->GetLayer<ICMPLayer>();
+	RawLayer *raw = (*rcv)->GetLayer<RawLayer>();
 	Packet *cnt;
 	bool partial = false;
 
@@ -472,14 +472,18 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet *rcv)
 		cnt = TrimReplyIPv6(pkt, cnt);
 		break;
 	default:
+		delete cnt;
 		return NULL;
 	}
+
+	delete *rcv;
+	*rcv = cnt;
 
 	return ComputeDifferences(pkt, cnt, partial);
 }
 
-static int Callback(void *ctx, int ttl, const Packet * const probe, Packet *rcv,
-	PacketModifications *mod)
+static int Callback(void *ctx, int ttl, string& router,
+	const Packet * const probe, Packet *rcv, PacketModifications *mod)
 {
 	IPLayer *ip = probe->GetLayer<IPLayer>();
 
@@ -489,9 +493,9 @@ static int Callback(void *ctx, int ttl, const Packet * const probe, Packet *rcv,
 	if (rcv) {
 		ip = rcv->GetLayer<IPLayer>();
 		if (!resolve)
-			cout << ttl << ": " << ip->GetSourceIP() << " ";
+			cout << ttl << ": " << router << " ";
 		else
-			cout << ttl << ": " << GetHostname(ip->GetSourceIP()) << " (" << ip->GetSourceIP() << ") ";
+			cout << ttl << ": " << GetHostname(router) << " (" << router << ") ";
 		if (mod)
 			mod->Print(cout, verbose);
 		cout << endl;
@@ -540,6 +544,7 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 	for (int ttl = 1; ttl <= hops_max; ++ttl) {
 		Packet* rcv = NULL;
 		PacketModifications *mod = NULL;
+		string sIP;
 
 		switch (ip->GetID()) {
 		case IP::PROTO:
@@ -557,16 +562,18 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 			rcv = pkt->SendRecv(iface, 1, 3);
 
 		/* If we have a reply then compute the differences */
-		if (rcv)
-			mod = RecvReply(ip->GetID(), pkt, rcv);
+		if (rcv) {
+			sIP = rcv->GetLayer<IPLayer>()->GetSourceIP();
+			mod = RecvReply(ip->GetID(), pkt, &rcv);
+		}
 
 		/* The callback can stop the iteration */
-		if (callback && callback(ctx, ttl, pkt, rcv, mod))
+		if (callback && callback(ctx, ttl, sIP, pkt, rcv, mod))
 			return 0;
 
 		/* Stop if we reached the server */
-		if (rcv && rcv->GetLayer<IPLayer>()->GetSourceIP() == destinationIP)
-			return 0;
+		if (rcv && sIP == destinationIP)
+			return 1;
 	}
 
 	return 0;

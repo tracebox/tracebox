@@ -1,14 +1,14 @@
 #!/usr/bin/env tracebox -s
 
-function cb(ttl, pkt, reply, mods)
+function cb(ttl, rip, pkt, reply, mods)
 	if ttl == 1 then
 		print("luatracebox to " .. pkt:dest())
 	end
-	
+
 	if reply and mods then
-		print(ttl, reply:source(), mods)
+		print(ttl, rip, mods)
 	elseif reply then
-		print(ttl, reply:source())
+		print(ttl, rip)
 	else
 		print(ttl, '*')
 	end

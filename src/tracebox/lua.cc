@@ -920,31 +920,22 @@ static int l_Raw(lua_State *l)
 	return 1;
 }
 
-static int l_Tracebox_Callback(lua_State *l, const char *cb)
-{
-	lua_getfield(l, LUA_GLOBALSINDEX, cb);
-
-	if(lua_type(l, -1) != LUA_TFUNCTION) {
-		const char* msg = lua_pushfstring(l, "%s is not afunction", cb);
-		luaL_argerror(l, -1, msg);
-		return -1;
-	}
-
-	lua_pushnumber(l, 42);
-	lua_pcall(l, 1, 0, NULL);
-	return 0;
-}
-
 struct tracebox_info {
 	const char *cb;
 	lua_State *l;
+	Packet *rcv;
 };
 
-static int tCallback(void *ctx, int ttl, const Packet * const probe, Packet *rcv,
-	PacketModifications *mod)
+static int tCallback(void *ctx, int ttl, std::string& ip,
+	const Packet * const probe, Packet *rcv, PacketModifications *mod)
 {
 	struct tracebox_info *info = (struct tracebox_info *)ctx;
 	int ret;
+
+	info->rcv = rcv;
+
+	if (!info->cb)
+		return 0;
 
 	lua_getfield(info->l, LUA_GLOBALSINDEX, info->cb);
 
@@ -955,17 +946,21 @@ static int tCallback(void *ctx, int ttl, const Packet * const probe, Packet *rcv
 	}
 
 	lua_pushnumber(info->l, ttl);
+	if (ip == "")
+		lua_pushnil(info->l);
+	else
+		lua_pushstring(info->l, ip.c_str());
 	lua_pushPacket(info->l, (Packet *)probe);
 	if (!rcv)
 		lua_pushnil(info->l);
-	 else
+	else
 		lua_pushPacket(info->l, (Packet *)rcv);
 	if (!mod)
 		lua_pushnil(info->l);
 	else
 		lua_pushPacketModifications(info->l, mod);
 
-	lua_pcall(info->l, 4, 1, NULL);
+	lua_pcall(info->l, 5, 1, NULL);
 	if (!lua_isnumber(info->l, -1))
 		return 0;
 	ret = lua_tonumber(info->l, -1);
@@ -975,20 +970,35 @@ static int tCallback(void *ctx, int ttl, const Packet * const probe, Packet *rcv
 
 static int l_Tracebox(lua_State *l)
 {
-	static struct tracebox_info info = {NULL, l};
+	static struct tracebox_info info = {NULL, l, NULL};
 	std::string err;
+	int ret = 0;
+	bool cb_set = false;
 
 	Packet *pkt = l_Packet_check(l, 1);
 	if (!pkt)
 		return 0;
-	bool cb_set = v_arg_string_opt(l, 2, "callback", &info.cb);
 
-	if (doTracebox(pkt, cb_set ? tCallback : NULL, err, &info) < 0) {
+	if (lua_gettop(l) == 1)
+		goto no_args;
+
+	cb_set = v_arg_string_opt(l, 2, "callback", &info.cb);
+
+no_args:
+	ret = doTracebox(pkt, tCallback, err, &info);
+	if (ret < 0) {
 		const char* msg = lua_pushfstring(l, "Tracebox error: %s", err.c_str());
 		luaL_argerror(l, -1, msg);
 		return 0;
 	}
-	return 0;
+
+	/* Did the server replied ? */
+	if (ret == 1 && info.rcv)
+		lua_pushPacket(l, (Packet *)info.rcv);
+	else
+		lua_pushnil(l);
+
+	return 1;
 }
 
 static lua_State *l_init()
