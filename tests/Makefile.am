@@ -31,6 +31,7 @@ TESTS_ENVIRONMENT = \
 	$(CLICK_LOG_COMPILER)
 
 EXTRA_DIST = \
+	runtest.in \
 	$(LOG_COMPILER) \
 	$(click_configs_in) \
 	$(tracebox_out) \
@@ -42,18 +43,18 @@ CLEANFILES = \
 
 SUFFIXES = .in .click .sh
 
-$(test_scripts): runtest.in
+$(test_scripts): $(click_configs) runtest.in
 
 $(click_configs_in): $(tracebox_out) $(tracebox_args)
 
 .in.click:
 	@mkdir -p $(builddir)/labs
-	$(do_subst) < $(srcdir)/$< > $(builddir)/$@
+	$(SED) -e 's,[@]incap[@],$@.out.pcap,g' \
+	       -e 's,[@]outcap[@],$@.in.pcap,g' \
+	       < $(srcdir)/$< > $@
 
 .click.sh:
-	$(SED) -e 's,[@]input[@],$(input_pcap),g' \
-	       -e 's,[@]output[@],$(output_pcap),g' \
-	       -e 's,[@]config[@],$(builddir)/$<,g' \
+	$(SED) -e 's,[@]config[@],$(builddir)/$<,g' \
 	       -e 's,[@]lab_dir[@],$(abs_srcdir)/labs,g' \
 	       -e 's,[@]click[@],$(abs_top_builddir)/tests/tools/click/userlevel/click,g' \
 	       -e 's,[@]tracebox[@],$(abs_top_builddir)/src/tracebox/tracebox,g' \

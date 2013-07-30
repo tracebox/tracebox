@@ -2,7 +2,7 @@ bin_PROGRAMS = tracebox
 
 dist_man_MANS = tracebox.1
 
-bin_SCRIPTS = luatracebox
+dist_bin_SCRIPTS = luatracebox
 
 tracebox_SOURCES = \
 	tracebox.cc \
