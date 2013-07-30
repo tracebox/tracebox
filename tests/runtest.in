@@ -1,0 +1,49 @@
+#!/bin/bash
+
+function cleanup {
+	[ -n "${CLICK_PID}" ] && kill ${CLICK_PID}
+	[ -n "${TRACEBOX_OUTPUT}" ] &&  rm -f ${TRACEBOX_OUTPUT}
+}
+
+function cleanup_timeo {
+	trap - ALRM
+	kill $! 2>/dev/null
+}
+
+function watchit {
+	sleep $1& wait
+	kill -14 $$
+}
+
+set -e
+trap "cleanup" EXIT
+
+CONFIG=@config@
+EXP=$(basename ${CONFIG%.click})
+EXPECTED_OUTPUT=@lab_dir@/${EXP}.out
+
+# Retrieve tracebox args to use
+TRACEBOX_ARG=$(cat @lab_dir@/${EXP}.args)
+TRACEBOX_IO="-i pcap:@output@:@input@"
+TRACEBOX_ARGS="-n ${TRACEBOX_ARG} ${TRACEBOX_IO} 1.2.3.4"
+
+# Cleanup/init input/output
+rm -f @output@ 2> /dev/null
+rm -f @input@ 2> /dev/null
+echo -n -e "\xd4\xc3\xb2\xa1\x02\x00\x04\x00\x00\x00\x00\x00\x00" \
+           "\x00\x00\x00\xff\xff\x00\x00\x65\x00\x00\x00" > @output@
+mkfifo @input@
+
+@click@ -f ${CONFIG} &
+CLICK_PID=$!
+
+TRACEBOX_OUTPUT=$(mktemp /tmp/tracebox_test.XXXXXXXXXX)
+
+watchit 60 & WATCH_PID=$!
+trap "cleanup_timeo" ALRM INT
+
+( @tracebox@ ${TRACEBOX_ARGS} > ${TRACEBOX_OUTPUT} ) & wait $!
+
+kill -14 ${WATCH_PID}
+
+diff ${TRACEBOX_OUTPUT} ${EXPECTED_OUTPUT}

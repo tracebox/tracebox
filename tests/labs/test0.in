@@ -1,0 +1,28 @@
+/* Glue */
+output0 :: Null -> input1 :: Null
+routput1 :: Null -> rinput0 :: Null
+output1 :: Null -> input2 :: Null
+routput2 :: Null -> rinput1 :: Null
+
+/* start of FileIO (0) */
+s0 :: Script(write dump0.active true, pause, loop)
+dump0 :: FromDump(@incap@, MMAP false, ACTIVE false, END_CALL s0.step) -> CheckIPHeader(CHECKSUM false) -> output0
+rinput0 -> ToDump(@outcap@, ENCAP IP, UNBUFFERED true)
+/* end of FileIO (0) */
+
+/* start of ICMPResponder (1) */
+dec1 :: DecIPTTL()
+error1 :: ICMPError(1.2.3.4, timeexceeded);
+
+dec1 [1] -> error1  -> routput1;
+input1 -> dec1  -> output1;
+
+rinput1 -> routput1
+/* end of ICMPResponder (1) */
+
+/* start of BlackHole (2) */
+input2 -> Discard()
+InfiniteSource(LIMIT 0) -> routput2
+/* end of BlackHole (2) */
+
+
