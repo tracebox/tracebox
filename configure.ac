@@ -52,5 +52,6 @@ AC_CONFIG_FILES([
 	src/tracebox/Makefile
 	tests/Makefile
 	tests/tools/Makefile
+	src/tracebox/examples/Makefile
 ])
 AC_OUTPUT

@@ -3,7 +3,16 @@ SUBDIRS = tools
 
 click_configs_in = \
 	labs/test0.in \
-	labs/test1.in
+	labs/test1.in \
+	labs/BASIC.in \
+	labs/MSS.in \
+	labs/IPID.in \
+	labs/SEQ.in \
+	labs/WIN.in \
+	labs/ECN.in \
+	labs/LIMITED.in \
+	labs/MULTI1.in \
+	labs/NAT.in
 
 click_configs = $(click_configs_in:.in=.click)
 test_scripts = $(click_configs:.click=.sh)
@@ -11,9 +20,6 @@ tracebox_out  = $(click_configs:.click=.out)
 tracebox_args = $(click_configs:.click=.args)
 input_pcap = $(abs_builddir)/.in.pcap
 output_pcap = $(abs_builddir)/.out.pcap
-
-do_subst = $(SED) -e 's,[@]incap[@],$(output_pcap),g' \
-                  -e 's,[@]outcap[@],$(input_pcap),g'
 
 AM_TESTS_ENVIRONMENT = \
 	INPUT=$(input_pcap) \
@@ -41,7 +47,7 @@ CLEANFILES = \
 	$(click_configs) \
 	$(test_scripts)
 
-SUFFIXES = .in .click .sh
+SUFFIXES = .in .click .sh .in.args .args
 
 $(test_scripts): $(click_configs) runtest.in
 
@@ -60,3 +66,7 @@ $(click_configs_in): $(tracebox_out) $(tracebox_args)
 	       -e 's,[@]tracebox[@],$(abs_top_builddir)/src/tracebox/tracebox,g' \
 	       < $(srcdir)/runtest.in > $@
 	chmod +x $@
+
+.in.args.args:
+	$(SED) -e 's,[@]example_dir[@],$(top_srcdir)/src/tracebox/examples,g' \
+	< $< > $@
