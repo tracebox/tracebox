@@ -4,6 +4,8 @@ dist_man_MANS = tracebox.1
 
 dist_bin_SCRIPTS = luatracebox
 
+SUBDIRS = examples
+
 tracebox_SOURCES = \
 	tracebox.cc \
 	lua.cc \

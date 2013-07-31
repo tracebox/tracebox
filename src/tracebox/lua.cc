@@ -347,7 +347,7 @@ public:
 		std::string cmd = "ipfw add " + StrPort(id) + " deny tcp from any " \
 			+ StrPort(dst) + " to any " + StrPort(src) + " in";
 #else /* Assume Linux */
-		std::string cmd = "iptables -A INPUT --sport" \
+		std::string cmd = "iptables -A INPUT -p tcp --sport " \
 					+ StrPort(dst) + " --dport " + StrPort(src) + " -j DROP";
 #endif
 		system(cmd.c_str());
@@ -361,7 +361,7 @@ public:
 #ifdef __APPLE__
 		std::string cmd = "ipfw del " + StrPort(id);
 #else /* Assume Linux */
-		std::string cmd = "iptables -D INPUT --sport" \
+		std::string cmd = "iptables -D INPUT -p tcp --sport " \
 					+ StrPort(dst) + " --dport " + StrPort(src) + " -j DROP";
 #endif
 		system(cmd.c_str());
