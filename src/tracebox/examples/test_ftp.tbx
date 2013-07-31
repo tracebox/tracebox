@@ -29,3 +29,4 @@ function cb(ttl, rip, pkt, reply, mods)
 end
 
 tracebox(data, {callback = "cb"})
+fp:close()
