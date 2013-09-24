@@ -17,7 +17,9 @@ INPUT=./labs/${EXP}.click.in.pcap
 OUTPUT=./labs/${EXP}.click.out.pcap
 
 # Retrieve tracebox args to use
-TRACEBOX_ARG=$(cat @lab_dir@/${EXP}.args)
+ARGS=@lab_dir@/${EXP}.args
+[ ! -e @lab_dir@/${EXP}.args ] && ARGS=@lab_dir_alt@/${EXP}.args
+TRACEBOX_ARG=$(cat ${ARGS})
 TRACEBOX_IO="-i pcap:${OUTPUT}:${INPUT}"
 TRACEBOX_ARGS="-n ${TRACEBOX_ARG} ${TRACEBOX_IO} 1.2.3.4"
 

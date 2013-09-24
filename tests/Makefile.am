@@ -28,7 +28,8 @@ AM_TESTS_ENVIRONMENT = \
 	DEST_IP=1.2.3.4 \
 	CLICK=$(abs_top_builddir)/tests/tools/click/userlevel/click \
 	TRACEBOX=$(abs_top_builddir)/src/tracebox/tracebox \
-	LAB_DIR=$(abs_srcdir)/labs
+	LAB_DIR=$(abs_srcdir)/labs \
+	LAB_DIR_ALT=$(abs_builddir)/labs
 
 TESTS = $(test_scripts)
 
@@ -41,7 +42,8 @@ EXTRA_DIST = \
 	$(LOG_COMPILER) \
 	$(click_configs_in) \
 	$(tracebox_out) \
-	$(tracebox_args)
+	$(tracebox_args) \
+	labs/NAT.in.args
 
 CLEANFILES = \
 	$(click_configs) \
@@ -57,11 +59,12 @@ $(click_configs_in): $(tracebox_out) $(tracebox_args)
 	@mkdir -p $(builddir)/labs
 	$(SED) -e 's,[@]incap[@],$@.out.pcap,g' \
 	       -e 's,[@]outcap[@],$@.in.pcap,g' \
-	       < $(srcdir)/$< > $@
+	       < $< > $@
 
 .click.sh:
 	$(SED) -e 's,[@]config[@],$(builddir)/$<,g' \
 	       -e 's,[@]lab_dir[@],$(abs_srcdir)/labs,g' \
+	       -e 's,[@]lab_dir_alt[@],$(abs_builddir)/labs,g' \
 	       -e 's,[@]click[@],$(abs_top_builddir)/tests/tools/click/userlevel/click,g' \
 	       -e 's,[@]tracebox[@],$(abs_top_builddir)/src/tracebox/tracebox,g' \
 	       < $(srcdir)/runtest.in > $@
