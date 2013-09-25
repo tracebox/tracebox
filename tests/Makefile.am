@@ -11,11 +11,15 @@ click_configs_in = \
 	labs/WIN.in \
 	labs/ECN.in \
 	labs/LIMITED.in \
-	labs/MULTI1.in \
+	labs/MULTI1.in
+
+click_configs_in_args = \
 	labs/NAT.in
 
-click_configs = $(click_configs_in:.in=.click)
-test_scripts = $(click_configs:.click=.sh)
+click_configs = \
+	$(click_configs_in:.in=.click) \
+	$(click_configs_in_args:.in=.click)
+test_scripts = 	$(click_configs:.click=.sh)
 tracebox_out  = $(click_configs:.click=.out)
 tracebox_args = $(click_configs:.click=.args)
 
@@ -24,13 +28,15 @@ TESTS = $(test_scripts)
 EXTRA_DIST = \
 	runtest.in \
 	$(click_configs_in) \
+	$(click_configs_in_args) \
 	$(tracebox_out) \
-	$(tracebox_args) \
-	labs/NAT.in.args
+	$(click_configs_in:.in=.args) \
+	$(click_configs_in_args:.in=.in.args)
 
 CLEANFILES = \
 	$(click_configs) \
-	$(test_scripts)
+	$(test_scripts) \
+	$(click_configs_in_args:.in=.args)
 
 SUFFIXES = .in .click .sh .in.args .args
 
@@ -42,7 +48,7 @@ $(click_configs_in): $(tracebox_out) $(tracebox_args)
 	@mkdir -p $(builddir)/labs
 	$(SED) -e 's,[@]incap[@],$@.out.pcap,g' \
 	       -e 's,[@]outcap[@],$@.in.pcap,g' \
-	       < $< > $@
+	       < $(srcdir)/$(subst $(srcdir)/,,$<) > $@
 
 .click.sh:
 	$(SED) -e 's,[@]config[@],$(builddir)/$<,g' \
@@ -54,5 +60,6 @@ $(click_configs_in): $(tracebox_out) $(tracebox_args)
 	chmod +x $@
 
 .in.args.args:
+	@mkdir -p $(builddir)/labs
 	$(SED) -e 's,[@]example_dir[@],$(top_srcdir)/src/tracebox/examples,g' \
-	< $< > $@
+	< $(srcdir)/$(subst $(srcdir)/,,$<) > $@
