@@ -7,3 +7,6 @@ endif
 
 SUBDIRS = noinst src $(MAYBE_OPT)
 DIST_SUBDIRS = noinst src $(MAYBE_OPT)
+
+debian-package:
+	dpkg-buildpackage -rfakeroot -tc -us -uc

@@ -22,6 +22,16 @@ fi
 AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Enable tests]))
 AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" == "xyes"])
 
+AC_ARG_ENABLE(deb, AC_HELP_STRING([--enable-deb], [build deb and debsrc packages (no)]))
+AM_CONDITIONAL([ENABLE_DEB], [test "x$enable_deb" == "xyes"])
+
+AS_IF([test "x$enable_deb" = "xyes"], [
+	AC_PATH_PROG([DPKG_BUILDPACKAGE], [dpkg-buildpackage], [no])
+	AS_IF([test "X$DPKG_BUILDPACKAGE" = "xno"], [
+		AC_MSG_ERROR(Cannot find dpkg-buildpackage. Install dpkg-dev.)
+	])
+])
+
 # Make sure libcrafter build a static library by adding the --disable-shared
 # argument to the configure script.
 ac_configure_args_pre="$ac_configure_args"
