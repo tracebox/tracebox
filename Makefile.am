@@ -1,7 +1,9 @@
 ACLOCAL_AMFLAGS = -I m4
 AM_DISTCHECK_CONFIGURE_FLAGS = --enable-tests
 
-SUBDIRS = src
 if ENABLE_TESTS
-SUBDIRS += tests
+MAYBE_OPT = tests
 endif
+
+SUBDIRS = noinst src $(MAYBE_OPT)
+DIST_SUBDIRS = noinst src $(MAYBE_OPT)

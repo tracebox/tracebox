@@ -30,7 +30,7 @@ ac_configure_args="$ac_configure_args_post"
 
 AC_CONFIG_COMMANDS_PRE([ac_configure_args="$ac_configure_args_pre"])
 AC_CONFIG_COMMANDS_POST([ac_configure_args="$ac_configure_args_post"])
-AC_CONFIG_SUBDIRS(src/libcrafter/libcrafter)
+AC_CONFIG_SUBDIRS(noinst/libcrafter/libcrafter)
 
 # Enable click submodule
 AS_IF([test "x$enable_tests" == "xyes"], [
@@ -48,6 +48,7 @@ AC_SUBST(LUA_LIB)
 
 AC_CONFIG_FILES([
 	Makefile
+	noinst/Makefile
 	src/Makefile
 	src/tracebox/Makefile
 	tests/Makefile

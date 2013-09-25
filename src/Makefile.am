@@ -1,1 +1,1 @@
-SUBDIRS = libcrafter/libcrafter tracebox
+SUBDIRS = tracebox

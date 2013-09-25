@@ -18,8 +18,8 @@ noinst_HEADERS = \
 	tracebox.h
 
 tracebox_LDADD = \
-	$(abs_top_builddir)/src/libcrafter/libcrafter/libcrafter.la \
+	$(abs_top_builddir)/noinst/libcrafter/libcrafter/libcrafter.la \
 	$(LUA_LIB)
 tracebox_CPPFLAGS = \
-	-I$(top_srcdir)/src/libcrafter/libcrafter \
+	-I$(top_srcdir)/noinst/libcrafter/libcrafter \
 	$(LUA_INCLUDE)
