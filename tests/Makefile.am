@@ -18,28 +18,11 @@ click_configs = $(click_configs_in:.in=.click)
 test_scripts = $(click_configs:.click=.sh)
 tracebox_out  = $(click_configs:.click=.out)
 tracebox_args = $(click_configs:.click=.args)
-input_pcap = $(abs_builddir)/.in.pcap
-output_pcap = $(abs_builddir)/.out.pcap
-
-AM_TESTS_ENVIRONMENT = \
-	INPUT=$(input_pcap) \
-	OUTPUT=$(output_pcap) \
-	HOP_LIMIT=64 \
-	DEST_IP=1.2.3.4 \
-	CLICK=$(abs_top_builddir)/tests/tools/click/userlevel/click \
-	TRACEBOX=$(abs_top_builddir)/src/tracebox/tracebox \
-	LAB_DIR=$(abs_srcdir)/labs \
-	LAB_DIR_ALT=$(abs_builddir)/labs
 
 TESTS = $(test_scripts)
 
-TESTS_ENVIRONMENT = \
-	$(AM_TESTS_ENVIRONMENT) \
-	$(CLICK_LOG_COMPILER)
-
 EXTRA_DIST = \
 	runtest.in \
-	$(LOG_COMPILER) \
 	$(click_configs_in) \
 	$(tracebox_out) \
 	$(tracebox_args) \
