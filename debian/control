@@ -1,0 +1,15 @@
+Source: tracebox
+Section: net
+Priority: extra
+Maintainer: Gregory Detal <gregory.detal@uclouvain.be>
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, autoconf, libpcap-dev, liblua5.2-dev
+Standards-Version: 0.1
+Homepage: http://www.tracebox.org
+
+Package: tracebox
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, liblua5.2-0, libpcap0.8
+Description: Tracebox
+ Tracebox is a tool that allows to detect middleboxes on any paths, i.e.,
+ between a source and any destination. Tracebox can be viewed as a tool similar
+ to traceroute as it uses ICMP replies to identify changes in the packets.
