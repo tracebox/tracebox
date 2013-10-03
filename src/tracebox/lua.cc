@@ -239,6 +239,7 @@ l_new_(TCPOptionLayer, TCPOptionMaxSegSize);
 l_new_(TCPOptionLayer, TCPOptionTimestamp);
 l_new_(TCPOptionLayer, TCPOptionWindowScale);
 l_new_(TCPOptionLayer, TCPOptionMPTCPCapable);
+l_new_(TCPOptionLayer, TCPOptionMPTCPJoin);
 l_new_(TCPOptionLayer, TCPOptionPad);
 l_new_(TCPOptionLayer, TCPOption);
 
@@ -934,6 +935,31 @@ static int l_TCP_WindowScale(lua_State *l)
 	return 1;
 }
 
+static int l_TCP_MPTCPJoin(lua_State *l)
+{
+	TCPOptionMPTCPJoin *opt;
+	bool backup = false;
+	int token = 0, nonce = 0, addr_id = 1;
+	bool token_set = v_arg_integer_opt(l, 1, "token", &token);
+	bool nonce_set = v_arg_integer_opt(l, 1, "nonce", &nonce);
+	bool addr_id_set = v_arg_integer_opt(l, 1, "id", &addr_id);
+	v_arg_boolean_opt(l, 1, "backup", &backup);
+
+	opt = l_TCPOptionMPTCPJoin_new(l);
+	if (!opt)
+		return 0;
+
+	if (backup)
+		opt->EnableBackupPath();
+
+	if (addr_id_set)
+		opt->SetAddrID(addr_id);
+	opt->SetReceiverToken(token_set ? token : ((uint32_t)rand()) << 16 | rand());
+	opt->SetSenderRandomNumber(nonce_set ? nonce : ((uint32_t)rand()) << 16 | rand());
+
+	return 1;
+}
+
 static int l_TCP_MPTCPCapable(lua_State *l)
 {
 	TCPOptionMPTCPCapable *opt;
@@ -1185,6 +1211,7 @@ static lua_State *l_init()
 	lua_register(l, "timestamp", l_TCP_Timestamp);
 	lua_register(l, "wscale", l_TCP_WindowScale);
 	lua_register(l, "mpcapable", l_TCP_MPTCPCapable);
+	lua_register(l, "mpjoin", l_TCP_MPTCPJoin);
 	luaL_dostring(l, "NOP=nop()");
 	luaL_dostring(l, "EOL=eol()");
 	luaL_dostring(l, "SACKP=NOP/NOP/sackp()");
@@ -1193,6 +1220,7 @@ static lua_State *l_init()
 	luaL_dostring(l, "function SACK(blocks) return NOP/NOP/sack(blocks) end");
 	luaL_dostring(l, "WSCALE=wscale(14)/NOP");
 	luaL_dostring(l, "MPCAPABLE=mpcapable{}");
+	luaL_dostring(l, "MPJOIN=mpjoin{}");
 
 	/* Register the tracebox function */
 	lua_register(l, "tracebox", l_Tracebox);
