@@ -9,4 +9,5 @@ install:
 
 script:
 - make distcheck
+- make check
 
