@@ -43,7 +43,7 @@ AC_CONFIG_COMMANDS_POST([ac_configure_args="$ac_configure_args_post"])
 AC_CONFIG_SUBDIRS(noinst/libcrafter/libcrafter)
 
 # Enable click submodule
-AS_IF([test "x$enable_tests" == "xyes"], [
+AS_IF([test "x$enable_tests" = "xyes"], [
 	ac_configure_args_pre="$ac_configure_args"
 	ac_configure_args_post="$ac_configure_args --disable-shared --enable-local --disable-linuxmodule"
 	ac_configure_args="$ac_configure_args_post"
