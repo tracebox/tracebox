@@ -565,6 +565,7 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 int main(int argc, char *argv[])
 {
 	char c;
+	int ret = 1;
 	int dport = 80;
 	int net_proto = IP::PROTO, tr_proto = TCP::PROTO;
 	const char *script = NULL;
@@ -603,6 +604,7 @@ int main(int argc, char *argv[])
 				verbose = true;
 				break;
 			case 'h':
+				ret = 0;
 				goto usage;
 			case ':':
 				cerr << "missing option argument" << endl;
@@ -658,5 +660,5 @@ usage:
 "  -p probe                    Specify the probe to send.\n"
 "  -s script                   Run a script.\n"
 "", argv[0]);
-	exit(EXIT_FAILURE);
+	return ret;
 }
