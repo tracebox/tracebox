@@ -613,6 +613,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (getuid() != 0) {
+		fprintf(stderr, "tracebox requires superuser permissions!\n");
+		return 1;
+	}
+
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
 
