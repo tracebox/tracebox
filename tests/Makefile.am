@@ -55,7 +55,7 @@ $(click_configs_in): $(tracebox_out) $(tracebox_args)
 	       -e 's,[@]lab_dir[@],$(abs_srcdir)/labs,g' \
 	       -e 's,[@]lab_dir_alt[@],$(abs_builddir)/labs,g' \
 	       -e 's,[@]click[@],$(abs_top_builddir)/tests/tools/click/userlevel/click,g' \
-	       -e 's,[@]tracebox[@],$(abs_top_builddir)/src/tracebox/tracebox,g' \
+	       -e 's,[@]tracebox[@],$(FAKEROOT) $(abs_top_builddir)/src/tracebox/tracebox,g' \
 	       < $(srcdir)/runtest.in > $@
 	chmod +x $@
 

@@ -51,6 +51,11 @@ AS_IF([test "x$enable_tests" = "xyes"], [
 	AC_CONFIG_COMMANDS_PRE([ac_configure_args="$ac_configure_args_pre"])
 	AC_CONFIG_COMMANDS_POST([ac_configure_args="$ac_configure_args_post"])
 	AC_CONFIG_SUBDIRS(tests/tools/click)
+
+	AC_PATH_PROG([FAKEROOT], [fakeroot])
+	AS_IF([test -z "$FAKEROOT"], [
+		AC_MSG_ERROR([Couldn't locate `fakeroot'])
+	])
 ])
 
 AC_SUBST(LUA_INCLUDE)
