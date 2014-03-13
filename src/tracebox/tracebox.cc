@@ -37,6 +37,13 @@ extern "C" {
 #define PCAP_IPv4 "1.1.1.1"
 #define PCAP_IPv6 "dead::beef"
 
+#define	IN_LOOPBACK(a)		((ntohl((long int) (a)) & 0xff000000) == 0x7f000000)
+#define IN6_LOOPBACK(a) \
+        (((__const uint32_t *) (a))[0] == 0                                   \
+         && ((__const uint32_t *) (a))[1] == 0                                \
+         && ((__const uint32_t *) (a))[2] == 0                                \
+         && ((__const uint32_t *) (a))[3] == htonl (1))
+
 using namespace Crafter;
 using namespace std;
 
@@ -488,6 +495,26 @@ static int Callback(void *ctx, int ttl, string& router,
 	return 0;
 }
 
+bool validIPv4Address(const string& ipAddress) {
+        struct in_addr addr4;
+        inet_pton(AF_INET, ipAddress.c_str(), &(addr4));
+        return !IN_LOOPBACK(addr4.s_addr);
+}
+
+bool validIPv6Address(const string& ipAddress) {
+        struct in6_addr addr6;
+        inet_pton(AF_INET6, ipAddress.c_str(), &addr6);
+	return !IN6_LOOPBACK(&addr6);
+}
+
+bool validIPAddress(bool ipv6, const string& ipAddress)
+{
+	if (ipv6)
+		return validIPv6Address(ipAddress);
+	else
+		return validIPv4Address(ipAddress);
+}
+
 int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 {
 	IPLayer *ip = pkt->GetLayer<IPLayer>();
@@ -512,6 +539,11 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 
 	if (destinationIP == "" || destinationIP == "0.0.0.0" || destinationIP == "::") {
 		err = "You need to specify a destination";
+		return -1;
+	}
+
+	if (!validIPAddress(ip->GetID() == IPv6::PROTO, destinationIP)) {
+		err = "The specified address is not valid";
 		return -1;
 	}
 
