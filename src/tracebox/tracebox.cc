@@ -154,15 +154,17 @@ string GetDefaultIface(bool ipv6)
 	for (ifa = ifaces; ifa != 0; ifa = ifa->ifa_next) {
 		if (ifa->ifa_addr && ifa->ifa_addr->sa_family == af) {
 			void *ifa_addr, *saddr;
+			char name[IF_NAMESIZE];
 			size_t len = ipv6 ? sizeof(struct in6_addr) : sizeof(struct in_addr);
 			ifa_addr = ipv6 ? (void *)&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr :
 					(void *)&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
 			saddr = ipv6 ? (void *)&((struct sockaddr_in6 *)&sa)->sin6_addr :
 					(void *)&((struct sockaddr_in *)&sa)->sin_addr;
+			memcpy(name, ifa->ifa_name, IF_NAMESIZE);
 			if (!memcmp(ifa_addr, saddr, len)) {
 				freeifaddrs(ifaces);
 				close(fd);
-				return ifa->ifa_name;
+				return name;
 			}
 		}
 	}
