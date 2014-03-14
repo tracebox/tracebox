@@ -37,7 +37,10 @@ extern "C" {
 #define PCAP_IPv4 "1.1.1.1"
 #define PCAP_IPv6 "dead::beef"
 
+#ifndef IN_LOOPBACK
 #define	IN_LOOPBACK(a)		((ntohl((long int) (a)) & 0xff000000) == 0x7f000000)
+#endif
+
 #define IN6_LOOPBACK(a) \
         (((__const uint32_t *) (a))[0] == 0                                   \
          && ((__const uint32_t *) (a))[1] == 0                                \
