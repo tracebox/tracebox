@@ -221,6 +221,32 @@ void Modification::Print(std::ostream& out, bool verbose) const
 		out << GetModifRepr();
 }
 
+void Modification::Print_JSON(json_object *res, json_object *add, json_object *del, bool verbose) const
+{
+	if (verbose)
+	{
+			json_object *modif = GetModifRepr_JSON();
+			json_object *modif_header = json_object_new_object();
+			json_object_object_add(modif_header,name.c_str(), modif);
+			json_object_array_add(res,modif_header);
+			
+	}
+	else
+	{
+		json_object_array_add(res, json_object_new_string(name.c_str()));
+	}
+}
+
+json_object* Modification::GetModifRepr_JSON() const
+{
+	json_object *modif = json_object_new_object();
+	if (field1_repr != "" && field2_repr != ""){
+		json_object_object_add(modif,"Expected", json_object_new_string(field1_repr.c_str()));
+		json_object_object_add(modif,"Received", json_object_new_string(field2_repr.c_str()));
+	}
+	return modif;
+}
+
 std::string Modification::GetModifRepr() const
 {
 	if (field1_repr != "" && field2_repr != "")
@@ -239,6 +265,25 @@ void Addition::Print(std::ostream& out, bool verbose) const
 		out << " " << field1_repr;
 }
 
+void Addition::Print_JSON(json_object *res, json_object *add, json_object *del, bool verbose) const
+{
+	if (verbose)
+	{
+			json_object *modif = json_object_new_object();
+
+			json_object_object_add(modif,"Info", json_object_new_string(field1_repr.c_str()));
+
+			json_object *modif_header = json_object_new_object();
+			json_object_object_add(modif_header,GetName().c_str(), modif);
+			json_object_array_add(add,modif_header);
+
+	}
+	else
+	{
+		json_object_array_add(add, json_object_new_string(GetName().c_str()));
+	}
+}
+
 Deletion::Deletion(Layer *l) : Modification(l, l)
 {
 }
@@ -250,11 +295,37 @@ void Deletion::Print(std::ostream& out, bool verbose) const
 		out << " " << field1_repr;
 }
 
+void Deletion::Print_JSON(json_object *res, json_object *add, json_object *del, bool verbose) const
+{
+	if (verbose)
+	{
+			json_object *modif = json_object_new_object();
+
+			json_object_object_add(modif,"Info", json_object_new_string(field1_repr.c_str()));
+
+			json_object *modif_header = json_object_new_object();
+			json_object_object_add(modif_header,GetName().c_str(), modif);
+			json_object_array_add(del,modif_header);
+
+	}
+	else
+	{
+		json_object_array_add(del, json_object_new_string(GetName().c_str()));
+	}
+}
+
 void PacketModifications::Print(std::ostream& out, bool verbose) const
 {
 	for(const_iterator it = begin() ; it != end() ; it++) {
 		(*it)->Print(out, verbose);
 		out << " ";
+	}
+}
+
+void PacketModifications::Print_JSON(json_object *res,json_object *icmp, json_object *add, json_object *del, bool verbose) const
+{
+	for(const_iterator it = begin() ; it != end() ; it++) {
+		(*it)->Print_JSON(res, add, del, verbose);
 	}
 }
 

@@ -12,7 +12,8 @@
 
 ### Linux
 
-Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev
+Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev, libjson0, libjson0-dev
+
 To build:
 
     $ ./bootstrap.sh
@@ -37,3 +38,73 @@ It can be generated using [LDoc](https://github.com/stevedonovan/LDoc) from the 
     $ ldoc .
 
 The documentation should be created under doc/
+=======
+### JSON Format
+
+To change the output format of Tracebox to JSOn format, use the j option.
+
+Output format:
+
+    {
+    "addr": IP of the destination,
+    "name": Name of the destination [Optionnal],
+    "max_hops": Number of maximum hops,
+    "Hops": [
+        Array containing each hop information
+        {
+            "hop": Number of the hop,
+            "from": IP of the hop,
+            "name": Name of the hop [Optionnal],
+            "Modifications": [
+                Two possibilities depending on the verbose mode
+                if verbose:
+                    Array containing each modification
+                    {
+                        Name of the modification: {
+                            "Expected": Value injected,
+                            "Received": Value receveid
+                        }
+                    }
+                else:
+                    Array containing just the name of the modification
+            ],
+            "Aditions": [
+                Two possibilities depending on the verbose mode
+                if verbose:
+                    Array containing each modification
+                    {
+                        Name of the modification: {
+                            "Info": Information added
+                        }
+                    }
+                else:
+                    Array containing just the name of the field(s) added
+            ],
+            "Deletions": [
+                Two possibilities depending on the verbose mode
+                if verbose:
+                    Array containing each modification
+                    {
+                        Name of the modification: {
+                            "Info": Information deleted
+                        }
+                    }
+                else:
+                    Array containing just the name of the field(s) deleted
+            ],
+            "ICMPExtension": [Optionnal] [
+                Two possibilities depending on the verbose mode
+                if verbose:
+                    Array containing each modification
+                    {
+                        Name of the extension: {
+                            "Info": Information of the extension
+                        }
+                    }
+                else:
+                    Array containing just the name of the extension(s)
+
+            ]    
+        }
+    ]
+    }
