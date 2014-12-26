@@ -13,6 +13,8 @@ AC_PROG_LIBTOOL
 AC_HEADER_STDC
 AC_HEADER_ASSERT
 
+PKG_CHECK_MODULES([LIBJSON], [json >= 0.9])
+
 AX_PROG_LUA
 AX_LUA_HEADERS
 AX_LUA_LIBS
@@ -57,6 +59,9 @@ AS_IF([test "x$enable_tests" = "xyes"], [
 
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
+AC_SUBST([LIBJSON_CFLAGS])
+AC_SUBST([LIBJSON_LIBS])
+
 
 AC_ARG_ENABLE([sniffer], AS_HELP_STRING([--enable-sniffer], [Build the sniffer component]))
 AM_CONDITIONAL([ENABLE_SNIFFER], [test "x$enable_sniffer" = "xyes"])

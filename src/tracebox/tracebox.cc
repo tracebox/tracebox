@@ -11,10 +11,13 @@
 #include "script.h"
 #include "PacketModification.h"
 
+
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <vector>
+
+#include <json/json.h>
 
 extern "C" {
 #include <pcap.h>
@@ -43,6 +46,9 @@ static string destination;
 static string iface;
 static bool resolve = true;
 static bool verbose = false;
+//static bool json_output = false;
+static json_object * jobj = NULL;
+static json_object *j_results = NULL;
 
 template<int n> void BuildNetworkLayer(Packet *) { }
 template<int n> void BuildTransportLayer(Packet *, int) { }
@@ -297,6 +303,7 @@ string iface_address(int proto, string& iface)
 	}
 }
 
+
 static int Callback(void *ctx, int ttl, string& router,
 	const Packet * const probe, Packet *rcv, PacketModifications *mod)
 {
@@ -320,6 +327,51 @@ static int Callback(void *ctx, int ttl, string& router,
 		delete rcv;
 	} else
 		cout << ttl << ": *" << endl;
+
+	return 0;
+}
+
+static int Callback_JSON(void *ctx, int ttl, string& router,
+		const Packet * const probe, Packet *rcv, PacketModifications *mod)
+{
+	IPLayer *ip = probe->GetLayer<IPLayer>();
+
+	if (ttl == 1){
+		json_object_object_add(jobj,"addr", json_object_new_string(ip->GetDestinationIP().c_str()));
+		json_object_object_add(jobj,"name", json_object_new_string(destination.c_str()));
+		json_object_object_add(jobj,"max_hops", json_object_new_int(hops_max));
+	}
+
+	json_object * hop = json_object_new_object();
+
+	if (rcv) {
+			ip = rcv->GetLayer<IPLayer>();
+
+
+			json_object_object_add(hop,"hop", json_object_new_int(ttl));
+			json_object_object_add(hop,"from", json_object_new_string(router.c_str()));
+			if (resolve)
+				json_object_object_add(hop,"name", json_object_new_string(GetHostname(router).c_str()));
+			if (mod){
+				json_object *modif = json_object_new_array();
+				json_object *icmp = json_object_new_array();
+				json_object *add = json_object_new_array();
+				json_object *del = json_object_new_array();
+
+				mod->Print_JSON(modif, icmp, add, del, verbose);
+
+				json_object_object_add(hop,"Modifications", modif);
+				json_object_object_add(hop,"Aditions", add);
+				json_object_object_add(hop,"Deletions", del);
+
+			}
+	}
+	else{
+		json_object_object_add(hop,"hop", json_object_new_int(ttl));
+		json_object_object_add(hop,"from", json_object_new_string("*"));
+	}
+
+	json_object_array_add(j_results,hop);
 
 	return 0;
 }
@@ -436,9 +488,11 @@ int main(int argc, char *argv[])
 	string err;
 	bool inline_script = false;
 
+	tracebox_cb_t *callback = Callback;
+	
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, ":l:i:m:s:p:d:hnv6uw")) != -1) {
+	while ((c = getopt(argc, argv, ":l:i:m:s:p:d:hnv6uwj")) != -1) {
 		switch (c) {
 			case 'i':
 				iface = optarg;
@@ -466,6 +520,11 @@ int main(int argc, char *argv[])
 				break;
 			case 'v':
 				verbose = true;
+				break;
+			case 'j':
+				callback = Callback_JSON;
+				jobj = json_object_new_object();
+				j_results = json_object_new_array();
 				break;
 			case 'h':
 				ret = 0;
@@ -517,11 +576,17 @@ int main(int argc, char *argv[])
 	if (!pkt)
 		return EXIT_FAILURE;
 
-	if (doTracebox(pkt, Callback, err) < 0) {
+	if (doTracebox(pkt, callback, err) < 0) {
 		cerr << "Error: " << err << endl;
 		goto usage;
 	}
+
 	delete pkt;
+
+	if (jobj != NULL) {
+		json_object_object_add(jobj,"Hops", j_results);
+		printf ("%s\n",json_object_to_json_string(jobj));
+	}
 out:
 	return ret;
 
@@ -539,6 +604,7 @@ usage:
 "  -m hops_max                 Set the max number of hops (max TTL to be\n"
 "                              reached). Default is 30.\n"
 "  -v                          Print more information.\n"
+"  -j                          Change the format of the output to JSON.\n"
 "  -p probe                    Specify the probe to send.\n"
 "  -s script_file              Run a script file.\n"
 "  -l inline_script            Run a script.\n"

@@ -9,6 +9,7 @@
 #define __PACKETMODIFICATION_H__
 
 #include "crafter.h"
+#include <json/json.h>
 
 using namespace Crafter;
 
@@ -29,12 +30,12 @@ class Modification {
 
 	/* Some private functions */
 	std::string GetModifRepr() const;
+	json_object* GetModifRepr_JSON() const;
 
 protected:
 	/* Field values helper */
 	std::string field1_repr;
 	std::string field2_repr;
-
 
 public:
 	Modification(int proto, std::string name, size_t offset, size_t len);
@@ -60,18 +61,24 @@ public:
 	virtual ~Modification() {}
 
 	virtual void Print(std::ostream& out = std::cout, bool verbose = false) const;
+	
+	virtual void Print_JSON(json_object *res = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
 };
 
 struct Addition : public Modification {
 	Addition(Layer *l);
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
+
+	virtual void Print_JSON(json_object *res = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
 };
 
 struct Deletion : public Modification {
 	Deletion(Layer *l);
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
+
+	virtual void Print_JSON(json_object *res = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
 };
 
 struct PacketModifications : public std::vector<Modification *> {
@@ -85,6 +92,7 @@ struct PacketModifications : public std::vector<Modification *> {
 
 	static PacketModifications* ComputeModifications(Crafter::Packet *pkt, Crafter::Packet **rcv);
 
+	void Print_JSON(json_object *res = json_object_new_array(), json_object *icmp = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
 };
 
 #endif
