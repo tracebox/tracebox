@@ -31,9 +31,10 @@ using namespace Crafter;
 
 /* Dummy class to facilitate macros */
 class Raw : public RawLayer { };
+class IPv6SRH : public IPv6SegmentRoutingHeader {};
 
 static const char *layer_names[] = {
-	"IP", "IPv6", "TCP", "UDP", "ICMP", "Raw",
+	"IP", "IPv6", "IPv6SRH", "TCP", "UDP", "ICMP", "Raw",
 	"TCPOptionLayer", "IPOptionLayer",
 	NULL
 };
@@ -274,7 +275,18 @@ l_setter(IPv6, TrafficClass, number);
 l_setter(IPv6, FlowLabel, number);
 l_setter(IPv6, HopLimit, number);
 
-l_push(TCP);
+l_push(IPv6SRH);
+l_check(IPv6SRH);
+l_constructor(IPv6SRH);
+l_print(IPv6SRH);
+l_hexdump(IPv6SRH);
+l_Packet_layer(IPv6SRH);
+l_setter(IPv6SRH, SegmentLeft, number);
+l_setter(IPv6SRH, CFlag, number);
+l_setter(IPv6SRH, PFlag, number);
+l_setter(IPv6SRH, HMACKeyID, number);
+
+l_push(TCP)
 l_check(TCP);
 l_constructor(TCP);
 l_print(TCP);
@@ -443,6 +455,165 @@ static FWFilter *l_FWFilter_new(lua_State *l, int src, int dst)
 	return f;
 }
 
+/* Assumes that the top of the stack is a table listing all segments */
+static int l_IPv6SRH_SetSegments_(
+		IPv6SRH *srh, lua_State *l)
+{
+	/* Argument is a list of segments */
+	luaL_checktype(l, -1, LUA_TTABLE);
+	/* Iterate through the segment list */
+	std::vector<IPv6SRH::segment_t> segments;
+	for (int i = 1; ; ++i, lua_pop(l, 1)) {
+		lua_rawgeti(l, -1, i);
+		/* We reached the end */
+		if (lua_isnil(l, -1)) {
+			lua_pop(l, 1);
+			break;
+		}
+		/* Segments are strings */
+		const std::string ip = luaL_checklstring(l, -1, NULL);
+		/* Representing an IPv6 address */
+		IPv6SRH::segment_t s;
+		if (s.ReadIPv6(ip) < 0) {
+			const std::string msg = "Invalid IPv6 address: " + ip;
+			return luaL_argerror(l, -1, msg.c_str());
+		}
+		segments.push_back(s);
+	}
+	/* Pop the segment list */
+	lua_pop(l, 1);
+	/* Replace the segment list in the srh */
+	srh->Segments = segments;
+	return 0;
+}
+
+static int l_IPv6SRH_SetSegments(lua_State *l)
+{
+	IPv6SRH *srh = l_IPv6SRH_check(l, 1);
+	l_IPv6SRH_SetSegments_(srh, l);
+	/* We don't want to keep anything on the stack */
+	return 0;
+}
+
+static int l_IPv6SRH_SetPolicyList_(
+		IPv6SRH *srh, lua_State *l)
+{
+	std::stringstream msg;
+	/* Argument is a list of policies */
+	luaL_checktype(l, -1, LUA_TTABLE);
+	/* The number of policies is limited */
+	const size_t policy_count = IPv6SRH::policy_list_t::GetSize();
+
+	/* Iterate through the policies list */
+	IPv6SRH::policy_list_t policies;
+	IPv6SRH::policy_type_t policy_types[policy_count];
+	for (size_t i = 0; i < policy_count; ++i)
+		policy_types[i] = IPv6SRH::POLICY_UNSET;
+	size_t idx;
+	/* Will silently ignore policies if too many are specified */
+	for (idx = 1; idx <= policy_count; ++idx, lua_pop(l, 1)) {
+		lua_rawgeti(l, -1, idx);
+		/* We reached the last element */
+		if (lua_isnil(l, -1)) {
+			/* Keep track of how many elements we read */
+			--idx;
+			lua_pop(l, 1);
+			break;
+		}
+		/* Policies are table */
+		if (!lua_istable(l, -1)) {
+			msg << "Expected a table at index " << idx;
+			return luaL_argerror(l, -1, msg.str().c_str());
+		}
+
+		/* Retrieve the policy type */
+		lua_getfield(l, -1, "type");
+		if (lua_isnil(l, -1)) {
+			msg << "Missing policy type key at index " << idx;
+			return luaL_argerror(l, -2, msg.str().c_str());
+		}
+		if (!lua_isnumber(l, -1)) {
+			msg << "Policy type at index " << idx << " is not a number.";
+			return luaL_argerror(l, -1, msg.str().c_str());
+		}
+		const int policy_type = lua_tointeger(l, -1);
+		lua_pop(l, 1);
+		/* Retrieve the policy value */
+		lua_getfield(l, -1, "value");
+		if (lua_isnil(l, -1)) {
+			msg << "Missing policy value key at index " << idx;
+			return luaL_argerror(l, -2, msg.str().c_str());
+		}
+		if (!lua_isstring(l, -1)) {
+			msg << "Policy value at index " << idx << " is not a string";
+			return luaL_argerror(l, -1, msg.str().c_str());
+
+		}
+		IPv6SRH::policy_t policy_val;
+		if (policy_val.ReadIPv6(lua_tolstring(l, -1, NULL)) < 0) {
+			msg << "Policy value at index " << idx << " is not an IPv6 address";
+			return luaL_argerror(l, -1, msg.str().c_str());
+		}
+		lua_pop(l, 1);
+
+		/* Store the policy */
+		policies[idx-1] = policy_val;
+		policy_types[idx-1] = (IPv6SRH::policy_type_t)policy_type;
+	}
+
+	/* Apply all policies, idx is <= policy_count */
+	for (size_t i = 0; i < idx; ++i)
+		srh->SetPolicy(i, policies[i], policy_types[i]);
+	/* Pop the policy list */
+	lua_pop(l, 1);
+	return 0;
+}
+
+static int l_IPv6SRH_SetPolicyList(lua_State *l)
+{
+	IPv6SRH *srh = l_IPv6SRH_check(l, 1);
+	l_IPv6SRH_SetPolicyList_(srh, l);
+	/* We don't want to keep anything on the stack */
+	return 0;
+}
+
+static int l_IPv6SRH_SetHMAC_(
+		IPv6SRH *srh, lua_State *l)
+{
+	/* Argument is a list of bytes (small integers) */
+	luaL_checktype(l, -1, LUA_TTABLE);
+	/* Iterate through the integer list */
+	IPv6SRH::hmac_t hmac;
+	for (size_t i = 1; i <= hmac.GetSize(); ++i, lua_pop(l, 1)) {
+		lua_rawgeti(l, -1, i);
+		/* We reached the end */
+		if (lua_isnil(l, -1)) {
+			lua_pop(l, 1);
+			break;
+		}
+
+		if (!lua_isnumber(l, -1)) {
+			std::stringstream msg;
+			msg << "Expected a byte value at index " << i;
+			return luaL_argerror(l, -1, msg.str().c_str());
+		}
+		hmac[i-1] = lua_tointeger(l, -1);
+	}
+
+	srh->HMAC = hmac;
+	/* Pop the hmac attributes */
+	lua_pop(l, 1);
+	return 0;
+}
+
+static int l_IPv6SRH_SetHMAC(lua_State *l)
+{
+	IPv6SRH *srh = l_IPv6SRH_check(l, 1);
+	l_IPv6SRH_SetHMAC_(srh, l);
+	/* We don't want to keep anything on the stack */
+	return 0;
+}
+
 
 #define l_defunc_(obj) \
 	{ "__gc", l_ref_base<obj>::destroy }, \
@@ -466,6 +637,7 @@ static luaL_Reg sPacketRegs[] = {
 	{ "dest", l_Packet_GetDestination },
 	{ "ip", l_Packet_GetIP },
 	{ "ipv6", l_Packet_GetIPv6 },
+	{ "srh", l_Packet_GetIPv6SRH },
 	{ "tcp", l_Packet_GetTCP },
 	{ "udp", l_Packet_GetUDP },
 	{ "icmp", l_Packet_GetICMP },
@@ -498,6 +670,18 @@ static luaL_Reg sIPv6Regs[] = {
 	{ "tc", l_IPv6_SetTrafficClass },
 	{ "flowlabel", l_IPv6_SetFlowLabel },
 	{ "hoplimit", l_IPv6_SetHopLimit },
+	{ NULL, NULL }
+};
+
+static luaL_Reg sIPv6SRHRegs[] = {
+	l_defunc(IPv6SRH),
+	{ "segmentleft", l_IPv6SRH_SetSegmentLeft },
+	{ "c", l_IPv6SRH_SetCFlag },
+	{ "p", l_IPv6SRH_SetPFlag },
+	{ "hmackey", l_IPv6SRH_SetHMACKeyID },
+	{ "setsegments", l_IPv6SRH_SetSegments },
+	{ "setpolicies", l_IPv6SRH_SetPolicyList },
+	{ "sethmac", l_IPv6SRH_SetHMAC },
 	{ NULL, NULL }
 };
 
@@ -841,6 +1025,44 @@ static int l_IPv6(lua_State *l)
 		ipv6->SetHopLimit(hoplimit);
 	if (flabel_set)
 		ipv6->SetFlowLabel(flabel);
+	return 1;
+}
+
+static int l_IPv6SRH(lua_State *l)
+{
+	IPv6SRH *srh;
+
+	int segleft, hmackey;
+	bool cflag, pflag;
+	bool segleft_set = v_arg_integer_opt(l, 1, "segmentleft", &segleft);
+	bool hmackey_set = v_arg_integer_opt(l, 1, "hmackey", &hmackey);
+	bool cflag_set = v_arg_boolean_opt(l, 1, "cflag", &cflag);
+	bool pflag_set = v_arg_boolean_opt(l, 1, "pflag", &pflag);
+
+	srh = l_IPv6SRH_new(l);
+	if (!srh)
+		return 0;
+
+	if (segleft_set)
+		srh->SetSegmentLeft(segleft);
+	if (hmackey_set)
+		srh->SetHMACKeyID(hmackey);
+	if (cflag_set)
+		srh->SetCFlag(cflag);
+	if(pflag_set)
+		srh->SetPFlag(pflag);
+
+	if (v_arg(l, 1, "segments"))
+		if (l_IPv6SRH_SetSegments_(srh, l) < 0)
+			return 0;
+
+	if (v_arg(l, 1, "hmac"))
+		if (l_IPv6SRH_SetHMAC_(srh, l) < 0)
+			return 0;
+
+	if (v_arg(l, 1, "policies"))
+		if (l_IPv6SRH_SetPolicyList_(srh, l) < 0)
+			return 0;
 	return 1;
 }
 
@@ -1217,6 +1439,7 @@ static lua_State *l_init()
 
 	lua_register(l, "ip", l_IP);
 	lua_register(l, "ipv6", l_IPv6);
+	lua_register(l, "srh", l_IPv6SRH);
 	lua_register(l, "tcp", l_TCP);
 	lua_register(l, "udp", l_UDP);
 	lua_register(l, "icmp", l_ICMP);
@@ -1225,6 +1448,7 @@ static lua_State *l_init()
 	l_register(l, Packet, sPacketRegs);
 	l_register(l, IP, sIPRegs);
 	l_register(l, IPv6, sIPv6Regs);
+	l_register(l, IPv6SRH, sIPv6SRHRegs);
 	l_register(l, TCP, sTCPRegs);
 	l_register(l, UDP, sUDPRegs);
 	l_register(l, ICMP, sICMPRegs);
@@ -1232,6 +1456,7 @@ static lua_State *l_init()
 
 	luaL_dostring(l, "IP=ip({})");
 	luaL_dostring(l, "IPv6=ipv6({})");
+	luaL_dostring(l, "function SRH(segs) return srh{segments=segs} end");
 	luaL_dostring(l, "TCP=tcp({dst=80})");
 	luaL_dostring(l, "UDP=udp({dst=53})");
 	luaL_dostring(l, "function ICMPEchoReq(id,seq) return icmp{type=8,id=id,seqno=seq} end");
@@ -1310,6 +1535,7 @@ void script_execfile(std::string& filename)
 	int ret;
 
 	lua_State *l = l_init();
+	ShowWarnings = 0;
 	ret = luaL_dofile(l, filename.c_str());
 	if(ret)
 		std::cout << "Lua error: " << luaL_checkstring(l, -1) << std::endl;
