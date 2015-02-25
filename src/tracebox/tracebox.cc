@@ -494,7 +494,7 @@ static int Callback(void *ctx, int ttl, string& router,
 		if (mod)
 			mod->Print(cout, verbose);
 		cout << endl;
-        delete rcv;
+		delete rcv;
 	} else
 		cout << ttl << ": *" << endl;
 

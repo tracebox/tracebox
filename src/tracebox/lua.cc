@@ -48,7 +48,7 @@ void *__checkudata(lua_State *l, int i, const char *name)
 	luaL_getmetatable(l, name);
 	if (lua_equal(l, -1, -2))
 		udata = *(void **)lua_touserdata(l, i);
-        lua_pop(l, 2);
+	lua_pop(l, 2);
 	return udata;
 }
 
@@ -103,9 +103,9 @@ static int l_##obj##_constructor(lua_State *l) \
 #define l_destructor(obj) \
 static int l_##obj##_destructor(lua_State *l) \
 { \
-    obj *o= l_##obj##_check(l, 1); \
-    delete o; \
-    return 0; \
+	obj *o= l_##obj##_check(l, 1); \
+	delete o; \
+	return 0; \
 }
 
 #define l_hexdump(obj) \
@@ -1058,8 +1058,8 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	struct tracebox_info *info = (struct tracebox_info *)ctx;
 	int ret;
 
-    if (info->rcv)
-        delete info->rcv;
+	if (info->rcv)
+		delete info->rcv;
 	info->rcv = rcv;
 
 	if (!info->cb)
