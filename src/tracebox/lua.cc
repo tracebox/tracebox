@@ -105,7 +105,7 @@ static int l_##obj##_destructor(lua_State *l) \
 { \
     obj *o= l_##obj##_check(l, 1); \
     delete o; \
-    return 1; \
+    return 0; \
 }
 
 #define l_hexdump(obj) \
