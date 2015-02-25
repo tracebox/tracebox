@@ -141,7 +141,7 @@ static int l_##obj##_Set##f(lua_State *l) \
 { \
 	obj *o= l_##obj##_check(l, 1); \
 	o->Set##f(luaL_check##t(l, 2)); \
-	return 1; \
+	return 0; \
 }
 
 #define l_getter(obj, f, t) \
