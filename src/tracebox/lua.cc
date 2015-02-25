@@ -105,7 +105,7 @@ static int l_##obj##_destructor(lua_State *l) \
 { \
     obj *o= l_##obj##_check(l, 1); \
     delete o; \
-    return 1; \
+    return 0; \
 }
 
 #define l_hexdump(obj) \
@@ -141,7 +141,7 @@ static int l_##obj##_Set##f(lua_State *l) \
 { \
 	obj *o= l_##obj##_check(l, 1); \
 	o->Set##f(luaL_check##t(l, 2)); \
-	return 1; \
+	return 0; \
 }
 
 #define l_getter(obj, f, t) \
@@ -1058,6 +1058,8 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	struct tracebox_info *info = (struct tracebox_info *)ctx;
 	int ret;
 
+    if (info->rcv)
+        delete info->rcv;
 	info->rcv = rcv;
 
 	if (!info->cb)
@@ -1118,7 +1120,7 @@ no_args:
 		return 0;
 	}
 
-	/* Did the server replied ? */
+	/* Did the server reply ? */
 	if (ret == 1 && info.rcv)
 		lua_pushPacket(l, (Packet *)info.rcv);
 	else
@@ -1247,7 +1249,7 @@ Packet *script_packet(std::string& cmd)
 	Packet *pkt = l_Packet_check(l, -1);
 	if (!pkt)
 		return NULL;
-	
+
 	return pkt;
 }
 
