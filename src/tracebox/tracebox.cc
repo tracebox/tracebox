@@ -491,8 +491,10 @@ static int Callback(void *ctx, int ttl, string& router,
 			cout << ttl << ": " << router << " ";
 		else
 			cout << ttl << ": " << GetHostname(router) << " (" << router << ") ";
-		if (mod)
+		if (mod) {
 			mod->Print(cout, verbose);
+			delete mod;
+		}
 		cout << endl;
 		delete rcv;
 	} else
