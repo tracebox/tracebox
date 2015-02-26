@@ -1058,8 +1058,6 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	struct tracebox_info *info = (struct tracebox_info *)ctx;
 	int ret;
 
-	if (info->rcv)
-		delete info->rcv;
 	info->rcv = rcv;
 
 	if (!info->cb)

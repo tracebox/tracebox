@@ -107,7 +107,6 @@ static bool deleteAll(Modification *m)
 PacketModifications::~PacketModifications()
 {
 	delete orig;
-	delete modif;
 
 	for(const_iterator it = begin() ; it != end() ; it++)
 		delete *it;

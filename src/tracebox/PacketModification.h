@@ -25,13 +25,13 @@
 using namespace Crafter;
 
 class Modification {
-	/* Representation of the modification */
-	std::string name;
-
 	/* Layer protocol where the modification occured. The protocol is as defined
 	 * in Libcrafter.
 	 */
 	int layer_proto;
+
+	/* Representation of the modification */
+	std::string name;
 
 	/* Offset compared to the start of the layer (in bits) */
 	size_t offset;
@@ -91,7 +91,7 @@ class PacketModifications : public std::vector<Modification *> {
 	Packet *modif;
 
 public:
-	PacketModifications(Packet *orig, Packet *modif) : orig(orig), modif(modif) { }
+	PacketModifications(Packet *orig, Packet *modif) : orig(new Packet(*orig)), modif(modif) { }
 	~PacketModifications();
 
 	void Print(std::ostream& out = std::cout, bool verbose = false) const;
