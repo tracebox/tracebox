@@ -39,58 +39,130 @@ static const char *layer_names[] = {
 };
 static const char *pkt_names[] = {"Packet", NULL};
 
-void *__checkudata(lua_State *l, int i, const char *name)
+/* Base wrapper class to expose cpp object pointers to lua */
+template<class C>
+class l_ref_base {
+	const char *name;
+
+	protected:
+	lua_State *l;
+
+	l_ref_base(C *instance, lua_State *l, const char *name)
+		: i(instance), l(l), name(name) {}
+
+	public:
+	C *i;
+
+	virtual ~l_ref_base() {}
+
+	void push()
+	{
+		l_ref_base<C> **udata = (l_ref_base<C> **)lua_newuserdata(l,
+				sizeof(l_ref_base<C> *));
+		*udata = this;
+		luaL_getmetatable(l, name);
+		lua_setmetatable(l, -2);
+	}
+
+	static int destroy(lua_State *l)
+	{
+		delete *static_cast<l_ref_base<C>**>(lua_touserdata(l, 1));
+		return 0;
+	}
+};
+
+/* l_weak_ref holds a pointer that lua owns, thus can GC */
+template<class C>
+class l_weak_ref : public l_ref_base<C> {
+	public:
+	l_weak_ref(C *i, lua_State *l, const char *name)
+		: l_ref_base<C>(i, l, name) {}
+
+	~l_weak_ref()
+	{
+		delete this->i;
+	}
+};
+
+/* l_strong_ref holds a pointer towards a cpp object not owned by the reference,
+ * as such lua cannot GC the underlying object. It also maintains a strong
+ * lua reference to the orignal lua object owning the cpp object */
+template<class C>
+class l_strong_ref : public l_ref_base<C> {
+	int key;
+
+	public:
+	l_strong_ref(C *i, lua_State *l, const char *name)
+		:  l_ref_base<C>(i, l, name)
+	{
+		/* Add a (strong) reference to original object on top of the stack*/
+		key = luaL_ref(l , LUA_REGISTRYINDEX);
+	}
+
+	~l_strong_ref()
+	{
+		/* Unref the original object so it can be GCed */
+		luaL_unref(this->l, LUA_REGISTRYINDEX, key);
+	}
+};
+
+template<class C>
+C *__checkudata(lua_State *l, int i, const char *name)
 {
-	void *udata = NULL;
+	C *udata = NULL;
 
 	luaL_checktype(l, i, LUA_TUSERDATA);
 	lua_getmetatable(l, i);
 	luaL_getmetatable(l, name);
 	if (lua_equal(l, -1, -2))
-		udata = *(void **)lua_touserdata(l, i);
+			udata = (*((l_ref_base<C>**)lua_touserdata(l, i)))->i;
 	lua_pop(l, 2);
 	return udata;
 }
 
-void *luaL_checkudata_ex(lua_State *l, int i, const char **names)
+template<class C>
+C *luaL_checkudata_ex(lua_State *l, int i, const char **names)
 {
-	void *udata;
+	C *udata;
 
 	while (*names)
-		if (udata = __checkudata(l, i, *names++))
+		if ((udata = __checkudata<C>(l, i, *names++)))
 			return udata;
 	return NULL;
 }
 
-#define l_push_(obj, obj2) \
+#define l_push_(obj) \
 static void lua_push##obj(lua_State *l, obj *o) \
 { \
-	 obj2 **udata = ( obj2 **)lua_newuserdata(l, sizeof( obj2 *)); \
-	*udata = o; \
-	luaL_getmetatable(l, #obj); \
-	lua_setmetatable(l, -2); \
-}
+	l_weak_ref<obj> *ref = new l_weak_ref<obj>(o, l, #obj); \
+	ref->push(); \
+} \
+
+#define l_push_ref_(obj) \
+/* Assuming a l_weak_weak_ref is on top of the stack */ \
+static void lua_pushref##obj(lua_State *l, obj *o) \
+{ \
+	l_strong_ref<obj> *ref = new l_strong_ref<obj>(o, l, #obj); \
+	ref->push(); \
+};
 
 #define l_push(obj) \
-	l_push_(obj, obj);
+	l_push_(obj) \
+	l_push_ref_(obj)
 
-#define l_new_(obj, obj2) \
-static obj2 *l_##obj2##_new(lua_State *l) \
+#define l_new_(base_type,obj_type) \
+static obj_type *l_##obj_type##_new(lua_State *l) \
 { \
-	 obj2 **udata = (obj2 **)lua_newuserdata(l, sizeof(obj2 *)); \
-	*udata = new obj2(); \
-	luaL_getmetatable(l, #obj); \
-	lua_setmetatable(l, -2); \
-	return *udata; \
+	obj_type *o = new obj_type(); \
+	lua_push##base_type(l, o); \
+	return o; \
 }
-
-#define l_new(obj) \
-	l_new_(obj, obj);
+#define l_new(obj) l_new_(obj,obj)
 
 #define l_check(obj) \
 static obj *l_##obj##_check(lua_State *l, int n) \
 { \
-	return *(obj **)luaL_checkudata(l, n, #obj); \
+	return (*(l_ref_base<obj> **)luaL_checkudata(l, n, #obj))->i; \
 }
 
 #define l_constructor(obj) \
@@ -98,14 +170,6 @@ l_new(obj); \
 static int l_##obj##_constructor(lua_State *l) \
 { \
 	return l_##obj##_new(l) != NULL; \
-}
-
-#define l_destructor(obj) \
-static int l_##obj##_destructor(lua_State *l) \
-{ \
-	obj *o= l_##obj##_check(l, 1); \
-	delete o; \
-	return 0; \
 }
 
 #define l_hexdump(obj) \
@@ -132,7 +196,7 @@ static int l_##obj##_print(lua_State *l) \
 static int l_Packet_Get##layer(lua_State *l) \
 { \
 	Packet *pkt = l_Packet_check(l, 1); \
-	lua_push##layer(l, pkt->GetLayer<layer>()); \
+	lua_pushref##layer(l, pkt->GetLayer<layer>()); \
 	return 1; \
 }
 
@@ -167,19 +231,17 @@ static int l_##obj##_Get##f(lua_State *l) \
 	lua_setfield(l, -1, "__index"); \
 	lua_setglobal(l,  #obj);
 
+l_push(Packet);
 l_check(Packet);
 l_new(Packet);
-l_destructor(Packet);
 l_print(Packet);
 l_hexdump(Packet);
-l_push(Packet);
 
+l_push(IP);
 l_check(IP);
 l_constructor(IP);
-l_destructor(IP);
 l_print(IP);
 l_hexdump(IP);
-l_push(IP);
 l_Packet_layer(IP);
 l_setter(IP, SourceIP, string);
 l_setter(IP, DestinationIP, string);
@@ -191,21 +253,20 @@ l_setter(IP, DiffServicesCP, number);
 l_setter(IP, ExpCongestionNot, number);
 
 l_check(IPOptionLayer);
-l_destructor(IPOptionLayer);
 l_print(IPOptionLayer);
 l_hexdump(IPOptionLayer);
+l_push_(IPOptionLayer);
 l_new_(IPOptionLayer, IPOptionRR);
 l_new_(IPOptionLayer, IPOptionLSRR);
 l_new_(IPOptionLayer, IPOptionSSRR);
 l_new_(IPOptionLayer, IPOptionPad);
 l_new_(IPOptionLayer, IPOptionTraceroute);
 
+l_push(IPv6);
 l_check(IPv6);
 l_constructor(IPv6);
-l_destructor(IPv6);
 l_print(IPv6);
 l_hexdump(IPv6);
-l_push(IPv6);
 l_Packet_layer(IPv6);
 l_setter(IPv6, SourceIP, string);
 l_setter(IPv6, DestinationIP, string);
@@ -213,12 +274,11 @@ l_setter(IPv6, TrafficClass, number);
 l_setter(IPv6, FlowLabel, number);
 l_setter(IPv6, HopLimit, number);
 
+l_push(TCP);
 l_check(TCP);
 l_constructor(TCP);
-l_destructor(TCP);
 l_print(TCP);
 l_hexdump(TCP);
-l_push(TCP);
 l_Packet_layer(TCP);
 l_setget(TCP, SrcPort, number);
 l_setget(TCP, DstPort, number);
@@ -228,11 +288,11 @@ l_setget(TCP, WindowsSize, number);
 l_setget(TCP, Flags, number);
 
 l_check(TCPOptionLayer);
-l_destructor(TCPOptionLayer);
 l_print(TCPOptionLayer);
 l_hexdump(TCPOptionLayer);
 l_setter(TCPOptionLayer, Kind, number);
 l_setter(TCPOptionLayer, Payload, string);
+l_push_(TCPOptionLayer);
 l_new_(TCPOptionLayer, TCPOptionSACKPermitted);
 l_new_(TCPOptionLayer, TCPOptionSACK);
 l_new_(TCPOptionLayer, TCPOptionMaxSegSize);
@@ -243,22 +303,20 @@ l_new_(TCPOptionLayer, TCPOptionMPTCPJoin);
 l_new_(TCPOptionLayer, TCPOptionPad);
 l_new_(TCPOptionLayer, TCPOption);
 
+l_push(UDP);
 l_check(UDP);
 l_constructor(UDP);
-l_destructor(UDP);
 l_print(UDP);
 l_hexdump(UDP);
-l_push(UDP);
 l_Packet_layer(UDP);
 l_setter(UDP, SrcPort, number);
 l_setter(UDP, DstPort, number);
 
+l_push(ICMP);
 l_check(ICMP);
 l_constructor(ICMP);
-l_destructor(ICMP);
 l_print(ICMP);
 l_hexdump(ICMP);
-l_push(ICMP);
 l_Packet_layer(ICMP);
 l_setter(ICMP, Type, number);
 l_setter(ICMP, Code, number);
@@ -269,18 +327,16 @@ l_setter(ICMP, Gateway, string);
 l_setter(ICMP, Length, number);
 l_setter(ICMP, MTU, number);
 
+l_push(Raw);
 l_check(Raw);
 l_constructor(Raw);
-l_destructor(Raw);
 l_print(Raw);
 l_hexdump(Raw);
-l_push(Raw);
 l_Packet_layer(Raw);
 l_setter(Raw, Payload, string);
 
-l_check(PacketModifications);
-l_destructor(PacketModifications);
 l_push(PacketModifications);
+l_check(PacketModifications);
 
 static int l_PacketModifications_print(lua_State *l)
 {
@@ -315,10 +371,10 @@ static int l_Packet_GetDestination(lua_State *l)
 
 static int l_concat(lua_State *l)
 {
-	Layer *l1 = (Layer *)luaL_checkudata_ex(l, 1, layer_names);
-	Packet *p1 = (Packet *)luaL_checkudata_ex(l, 1, pkt_names);
-	Layer *l2 = (Layer *)luaL_checkudata_ex(l, 2, layer_names);
-	Packet *p2 = (Packet *)luaL_checkudata_ex(l, 2, pkt_names);
+	Layer *l1 = luaL_checkudata_ex<Layer>(l, 1, layer_names);
+	Packet *p1 = luaL_checkudata_ex<Packet>(l, 1, pkt_names);
+	Layer *l2 = luaL_checkudata_ex<Layer>(l, 2, layer_names);
+	Packet *p2 = luaL_checkudata_ex<Packet>(l, 2, pkt_names);
 
 	if (l1 && l2) {
 		Packet *pkt = l_Packet_new(l);
@@ -371,7 +427,7 @@ public:
 };
 
 l_check(FWFilter);
-l_destructor(FWFilter);
+l_push(FWFilter);
 
 int l_FWFilter_close(lua_State *l)
 {
@@ -382,16 +438,14 @@ int l_FWFilter_close(lua_State *l)
 
 static FWFilter *l_FWFilter_new(lua_State *l, int src, int dst)
 {
-	FWFilter **udata = (FWFilter **)lua_newuserdata(l, sizeof(FWFilter *));
-	*udata = new FWFilter(src, dst);
-	luaL_getmetatable(l, "FWFilter");
-	lua_setmetatable(l, -2);
-	return *udata;
+	FWFilter *f = new FWFilter(src, dst);
+	lua_pushFWFilter(l, f);
+	return f;
 }
 
 
 #define l_defunc_(obj) \
-	{ "__gc", l_##obj##_destructor }, \
+	{ "__gc", l_ref_base<obj>::destroy }, \
 	{ "__tostring", l_##obj##_print }, \
 	{ "__concat", l_concat }, \
 	{ "__add", l_concat }, \
@@ -497,7 +551,7 @@ static luaL_Reg sPacketModificationsRegs[] = {
 };
 
 static luaL_Reg sFWFilterRegs[] = {
-	{ "__gc", l_FWFilter_destructor },
+	{ "__gc", l_ref_base<FWFilter>::destroy },
 	{ "close", l_FWFilter_close },
 	{ NULL, NULL }
 };
