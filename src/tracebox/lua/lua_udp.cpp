@@ -4,6 +4,23 @@
 using namespace Crafter;
 using namespace std;
 
+/***
+ * The UDP Layer, inherits from @{Base_Object}
+ * @classmod UDP
+ */
+/***
+ * Constructor for an UDP Layer
+ * @function new
+ * @tparam[opt] table args arguments, all grouped inside a table, see @{new_args}
+ * @treturn UDP a new UDP object
+ * @usage UDP.new{ dst=53 }
+ * */
+/***
+ * Constructor arguments
+ * @table new_args
+ * @tfield num src the source port
+ * @tfield num dst the destination port
+ */
 int l_udp_ref::l_UDP(lua_State *l)
 {
 	UDP *udp;
@@ -23,13 +40,17 @@ int l_udp_ref::l_UDP(lua_State *l)
 void l_udp_ref::register_members(lua_State *l)
 {
 	l_layer_ref<UDP>::register_members(l);
+	meta_bind_func(l, "new", l_UDP);
+	/***
+	 * Set the UDP source port
+	 * @function source
+	 * @tparam num source port number
+	 * */
 	meta_bind_func(l, "source", L_SETTER(short_word, UDP, SrcPort));
+	/***
+	 * Set the UDP destination port
+	 * @function dest
+	 * @tparam num dest destination port number
+	 * */
 	meta_bind_func(l, "dest", L_SETTER(short_word, UDP, DstPort));
-}
-
-void l_udp_ref::register_globals(lua_State *l)
-{
-	l_layer_ref<UDP>::register_globals(l);
-	lua_register(l, "udp", l_UDP);
-	l_do(l, "UDP=udp({dst=53})");
 }

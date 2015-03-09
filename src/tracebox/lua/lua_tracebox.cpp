@@ -2,12 +2,32 @@
 #include "lua_arg.h"
 #include "../tracebox.h"
 
+/***
+ * @module Globals
+ * */
+
+
 struct tracebox_info {
 	const char *cb;
 	lua_State *l;
 	Packet *rcv;
 };
 
+/***
+ * Callback function type, to be provided as argument to tracebox
+ * @function tracebox_callback
+ * @see tracebox
+ * @tparam num ttl the current TTL value
+ * @tparam string r_ip the ip of the router that echoed the probe
+ * @tparam Packet probe the probe packet
+ * @tparam Packet rcv the echoed packet
+ * @tparam PacketModifications mod the packet modifications list
+ * @treturn[opt] num 1 to force tracebox to stop sending probes
+ * @usage
+ * function callback_func(ttl, r_ip, probe, rcv, mod)
+ * 	print("Sent probe n#" .. tll)
+ * end
+ * */
 static int tCallback(void *ctx, int ttl, std::string& ip,
 	const Packet * const probe, Packet *rcv, PacketModifications *mod)
 {
@@ -64,6 +84,16 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	return ret;
 }
 
+/***
+ * Start sending the packet with increasing TTL values and compute the
+ * differences
+ * @function tracebox
+ * @tparam Packet pkt the probe packet
+ * @tparam[opt] table args a table with the name of a callback function at key 'callback'
+ * @treturn Packet the echoed packet from the destination or nil
+ * @see tracebox_callback
+ * @usage tracebox(IP/TCP, { callback = 'callback_func'})
+ * */
 int l_Tracebox(lua_State *l)
 {
 	static struct tracebox_info info = {NULL, l, NULL};

@@ -4,6 +4,11 @@
 using namespace Crafter;
 using namespace std;
 
+/***
+ * The IPv6SegmentRoutingHeader Layer, inherits from @{Base_Object}
+ * @classmod IPv6SegmentRoutingHeader
+ */
+
 /* Assumes that the top of the stack is a table listing all segments */
 int l_IPv6SegmentRoutingHeader_SetSegments_(
 		IPv6SegmentRoutingHeader *srh, lua_State *l)
@@ -36,6 +41,16 @@ int l_IPv6SegmentRoutingHeader_SetSegments_(
 	return 0;
 }
 
+/***
+ * Set the segment list
+ * @function setsegments
+ * @tparam table segments a list IPv6Addresses (strings)
+ * @usage srh:setsegments{
+ *   '2001:db8:1234::1',
+ *   '2001:db8:5678::1',
+ *   '2001:db8:9abc::1'
+ * }
+ */
 int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader_SetSegments(lua_State *l)
 {
 	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::get(l, 1);
@@ -118,6 +133,15 @@ int l_IPv6SegmentRoutingHeader_SetPolicyList_(
 	return 0;
 }
 
+/***
+ * Set the policy list
+ * @function setpolicies
+ * @tparam table segments a list of pairs {type=num, value=string} for all 4 policies
+ * @usage srh:setpolicies{
+ *   {type=IPv6SegmentRoutingHeader.policy_destination, value='2001:db8::1'},
+ *   {type=IPv6SegmentRoutingHeader.policy_source, value='2001:db8::2'},
+ * }
+ */
 int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader_SetPolicyList(lua_State *l)
 {
 	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::get(l, 1);
@@ -155,6 +179,12 @@ int l_IPv6SegmentRoutingHeader_SetHMAC_(
 	return 0;
 }
 
+/***
+ * Set the HMAC field
+ * @function sethmac
+ * @tparam table hmac a list of at most 32 bytes for the HMAC value, 0-padded
+ * @usage srh:sethmac{0x1, 0x2, 0x3, 0x4, ...}
+ */
 int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader_SetHMAC(lua_State *l)
 {
 	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::get(l, 1);
@@ -163,6 +193,30 @@ int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader_SetHMAC(lua_State
 	return 0;
 }
 
+/***
+ * Constructor for an IPv6SegmentRoutingHeader Layer
+ * @function new
+ * @tparam[opt] table args arguments, all grouped inside a table, see @{new_args}
+ * @treturn IPv6SegmentRoutingHeader a new IPv6SegmentRoutingHeader object
+ * @usage IPv6SegmentRoutingHeader.new{
+ *   segmentleft=3,
+ *   cflag=1,
+ *   segments={ '2001:db8::1', '2001:db8::2' },
+ *   hmackey=4,
+ *   hmac={ 0xe, 0xa, 0x12 } -- will be 0-padded
+ * }
+ */
+/***
+ * Constructor arguments
+ * @table new_args
+ * @tfield num segmentleft the number of segments left
+ * @tfield num hmackey the hmac key index
+ * @tfield num cflag the Cleanup flag
+ * @tfield num pflag the Protected flag
+ * @tfield table segments See @{setsegments}
+ * @tfield table policies See @{setpolicies}
+ * @tfield table hmac See @{sethmac}
+ */
 int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader(lua_State *l)
 {
 	IPv6SegmentRoutingHeader *srh;
@@ -211,18 +265,32 @@ static int set_segleft(lua_State *l)
 void l_ipv6segmentroutingheader_ref::register_members(lua_State *l)
 {
 	l_layer_ref<IPv6SegmentRoutingHeader>::register_members(l);
+	meta_bind_func(l, "new", l_IPv6SegmentRoutingHeader);
+	/***
+	 * Set the number of segment left to be processed in the segment list
+	 * @function segmentleft
+	 * @tfield num n
+	 */
 	meta_bind_func(l, "segmentleft", set_segleft);
+	/***
+	 * Set the cleanup flag
+	 * @function cflag
+	 * @tfield num cleanup?
+	 */
 	meta_bind_func(l, "cflag", L_SETTER(word, IPv6SegmentRoutingHeader, CFlag));
+	/***
+	 * Set the protected flag
+	 * @function pflag
+	 * @tfield num protected?
+	 */
 	meta_bind_func(l, "pflag", L_SETTER(word, IPv6SegmentRoutingHeader, PFlag));
+	/***
+	 * Set the hmac key
+	 * @function hmackey
+	 * @tfield num key
+	 */
 	meta_bind_func(l, "hmackey", L_SETTER(byte, IPv6SegmentRoutingHeader, HMACKeyID));
 	meta_bind_func(l, "setsegments", l_IPv6SegmentRoutingHeader_SetSegments);
 	meta_bind_func(l, "setpolicies", l_IPv6SegmentRoutingHeader_SetPolicyList);
 	meta_bind_func(l, "sethmac", l_IPv6SegmentRoutingHeader_SetHMAC);
-}
-
-void l_ipv6segmentroutingheader_ref::register_globals(lua_State *l)
-{
-	l_layer_ref<IPv6SegmentRoutingHeader>::register_globals(l);
-	lua_register(l, "srh", l_IPv6SegmentRoutingHeader);
-	l_do(l, "function SRH(segs) return srh{segments=segs} end");
 }

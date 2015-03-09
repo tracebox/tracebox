@@ -1,5 +1,42 @@
 #include "lua_base.hpp"
 
+/***
+ * The basic methods supported by most objects
+ * @classmod Base_Object
+ */
+/***
+ * Return the textual representation of the object.
+ * @function print
+ * @see tostring
+ * @treturn string
+ */
+/***
+ * Return the Hexdacimal representation of the object.
+ * @function hexdump
+ * @treturn string
+ */
+/***
+ * Concatenate two objects into a Packet
+ * @function __concat
+ * @usage pkt = IP / TCP / raw("Hello World!")
+ * @treturn Packet
+ */
+/***
+ * Same than @{__concat}
+ * @function __add
+ * @see __concat
+ */
+/***
+ * Same than @{__concat}
+ * @function __div
+ * @see __concat
+ */
+/***
+ * Same than @{print}
+ * @function __tostring
+ * @see print
+ */
+
 void stackDump (lua_State *L, const char* f, size_t l) {
 	int i;
 	int top = lua_gettop(L);

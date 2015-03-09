@@ -24,7 +24,17 @@ void FWFilter::close() {
 #endif
 	system(cmd.c_str());
 }
-
+/***
+ * A simple firewall rule on the host machine. Create one with @{Globals.filter}
+ * @classmod FWFilter
+ */
+/***Close the Firewall
+ * @function close
+ */
+/*** Same than @{close}
+ * @function __gc
+ * @see close
+ */
 int l_fwfilter_ref::l_FWFilter_close(lua_State *l)
 {
 	FWFilter *fw = l_fwfilter_ref::get(l, 1);
@@ -66,8 +76,3 @@ void l_fwfilter_ref::register_members(lua_State *l)
 	meta_bind_func(l, "close", l_FWFilter_close);
 }
 
-void l_fwfilter_ref::register_globals(lua_State *l)
-{
-	l_ref<FWFilter>::register_globals(l);
-	lua_register(l, "filter", l_TraceboxFilter);
-}

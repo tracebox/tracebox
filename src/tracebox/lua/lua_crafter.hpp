@@ -46,7 +46,6 @@ struct l_crafter_ref : public l_ref<C> {
 
 	static int l_concat(lua_State *l);
 
-
 	template<class Base>
 	static void register_members(lua_State *l)
 	{

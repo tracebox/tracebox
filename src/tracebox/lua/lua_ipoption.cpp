@@ -4,6 +4,15 @@
 using namespace Crafter;
 using namespace std;
 
+/***
+ * Options for the IP Layer, inherits from @{Base_Object}
+ * @classmod IPOption
+ */
+/***
+ * Create a new NOP Option (Option=1)
+ * @function new_nop
+ * @treturn IPOption
+ */
 int l_ipoption_ref::l_IP_NOP(lua_State *l)
 {
 	IPOptionPad *opt = l_ipoption_ref::new_option_ref<IPOptionPad>(l);
@@ -13,6 +22,11 @@ int l_ipoption_ref::l_IP_NOP(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new EOL Option (Option=0)
+ * @function new_eol
+ * @treturn IPOption
+ */
 int l_ipoption_ref::l_IP_EOL(lua_State *l)
 {
 	IPOptionPad *opt = l_ipoption_ref::new_option_ref<IPOptionPad>(l);
@@ -22,6 +36,13 @@ int l_ipoption_ref::l_IP_EOL(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new SSRR Option
+ * @function new_ssrr
+ * @tparam table ips a list of IPs
+ * @treturn IPOption
+ * @usage IPOption.new{'1.1.1.1', '2.2.2.2', '3.3.3.3'}
+ */
 int l_ipoption_ref::l_IP_SSRR(lua_State *l)
 {
 	IPOptionSSRR *opt;
@@ -51,6 +72,12 @@ int l_ipoption_ref::l_IP_SSRR(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new LSRR Option
+ * @function new_lsrr
+ * @tparam table ips a list of IPs
+ * @treturn IPOption
+ */
 int l_ipoption_ref::l_IP_LSRR(lua_State *l)
 {
 	IPOptionLSRR *opt;
@@ -80,6 +107,12 @@ int l_ipoption_ref::l_IP_LSRR(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new RR Option
+ * @function new_rr
+ * @tparam number n the number of NULL(0.0.0.0) addresses to put in the RR
+ * @treturn IPOption
+ */
 int l_ipoption_ref::l_IP_RR(lua_State *l)
 {
 	IPOptionRR *opt;
@@ -97,6 +130,12 @@ int l_ipoption_ref::l_IP_RR(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new Traceroute Option
+ * @function new_traceroute
+ * @tparam string orig_ip the original IP
+ * @treturn IPOption
+ */
 int l_ipoption_ref::l_IP_Traceroute(lua_State *l)
 {
 	IPOptionTraceroute *opt;
@@ -112,18 +151,13 @@ int l_ipoption_ref::l_IP_Traceroute(lua_State *l)
 	return 1;
 }
 
-void l_ipoption_ref::register_globals(lua_State *l)
+void l_ipoption_ref::register_members(lua_State *l)
 {
-	l_layer_ref<IPOption>::register_globals(l);
-	lua_register(l, "ip_nop", l_IP_NOP);
-	lua_register(l, "ip_eol", l_IP_EOL);
-	lua_register(l, "rr", l_IP_RR);
-	lua_register(l, "ssrr", l_IP_SSRR);
-	lua_register(l, "lsrr", l_IP_LSRR);
-	lua_register(l, "traceroute", l_IP_Traceroute);
-	l_do(l, "IP_NOP=ip_nop()");
-	l_do(l, "IP_EOL=ip_eol()");
-	l_do(l, "function RR(n) return rr(n)/IP_NOP end");
-	l_do(l, "function SSRR(addrs) return ssrr(addrs)/IP_NOP end");
-	l_do(l, "function LSRR(addrs) return lsrr(addrs)/IP_NOP end");
+	l_layer_ref<IPOptionLayer>::register_members(l);
+	meta_bind_func(l, "new_nop", l_IP_NOP);
+	meta_bind_func(l, "new_eol", l_IP_EOL);
+	meta_bind_func(l, "new_ssrr", l_IP_SSRR);
+	meta_bind_func(l, "new_lsrr", l_IP_LSRR);
+	meta_bind_func(l, "new_rr", l_IP_RR);
+	meta_bind_func(l, "new_traceroute", l_IP_Traceroute);
 }
