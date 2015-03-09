@@ -25,6 +25,7 @@ struct l_ipoption_ref : public l_layer_ref<Crafter::IPOptionLayer> {
 	static int l_IP_RR(lua_State *l);
 	static int l_IP_Traceroute(lua_State *l);
 	static void register_globals(lua_State *l);
+	static void register_members(lua_State *l);
 };
 
 #endif

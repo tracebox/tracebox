@@ -4,6 +4,30 @@
 using namespace Crafter;
 using namespace std;
 
+/***
+ * The TCP Layer, inherits from @{Base_Object}
+ * @classmod TCP
+ */
+/***
+ * Constructor for a TCP Layer
+ * @function new
+ * @tparam[opt] table args arguments, all grouped inside a table, see @{new_args}
+ * @treturn TCP a new TCP object
+ * @usage TCP.new{
+ * 	 dst=80,
+ * 	 flags=18
+ * }
+ */
+/***
+ * Constructor arguments
+ * @table new_args
+ * @tfield num src the source port
+ * @tfield num dst the destination port
+ * @tfield num seq the sequence number
+ * @tfield num ack the acknowledgment number
+ * @tfield num win the window size
+ * @tfield num flags the flags (all at once)
+ */
 int l_tcp_ref::l_TCP(lua_State *l)
 {
 	TCP *tcp;
@@ -32,17 +56,71 @@ int l_tcp_ref::l_TCP(lua_State *l)
 void l_tcp_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCP>::register_members(l);
+	meta_bind_func(l, "new", l_TCP);
+	/***
+	 * Set the TCP source port
+	 * @function setsource
+	 * @tparam num source the TCP source port
+	 * */
+	/***
+	 * Get the TCP source port
+	 * @function getsource
+	 * @treturn num source the TCP source port
+	 * */
 	META_GETTER_SETTER(l, source, short_word,  TCP, SrcPort);
+	/***
+	 * Set the TCP destination port
+	 * @function sedest
+	 * @tparam num dest the TCP destination port
+	 * */
+	/***
+	 * Get the TCP destination port
+	 * @function gedest
+	 * @treturn num dest the TCP destination port
+	 * */
 	META_GETTER_SETTER(l, dest,   short_word,  TCP, DstPort);
+	/***
+	 * Set the TCP sequence number
+	 * @function setseq
+	 * @tparam num seq the TCP sequence number
+	 * */
+	/***
+	 * Get the TCP sequence number
+	 * @function getseq
+	 * @treturn num seq the TCP sequence number
+	 * */
 	META_GETTER_SETTER(l, seq,    word,        TCP, SeqNumber);
+	/***
+	 * Set the TCP acknowledgment number
+	 * @function setack
+	 * @tparam num ack the TCP acknowledgment number
+	 * */
+	/***
+	 * Get the TCP acknowledgment number
+	 * @function getack
+	 * @treturn num ack the TCP acknowledgment number
+	 * */
 	META_GETTER_SETTER(l, ack,    word,        TCP, AckNumber);
+	/***
+	 * Set the TCP window size
+	 * @function setwin
+	 * @tparam num win the TCP window size
+	 * */
+	/***
+	 * Get the TCP window size
+	 * @function getwin
+	 * @treturn num win the TCP window size
+	 * */
 	META_GETTER_SETTER(l, win,    short_word,  TCP, WindowsSize);
+	/***
+	 * Set the TCP flags
+	 * @function setflags
+	 * @tparam num flags the TCP flags
+	 * */
+	/***
+	 * Get the TCP flags
+	 * @function getflags
+	 * @treturn num flags the TCP flags
+	 * */
 	META_GETTER_SETTER(l, flags,  byte,        TCP, Flags);
-}
-
-void l_tcp_ref::register_globals(lua_State *l)
-{
-	l_layer_ref<TCP>::register_globals(l);
-	lua_register(l, "tcp", l_TCP);
-	l_do(l, "TCP=tcp({dst=80})");
 }

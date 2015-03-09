@@ -4,6 +4,15 @@
 using namespace Crafter;
 using namespace std;
 
+/***
+ * Options for the TCP Layer, inherits from @{Base_Object}
+ * @classmod TCPOption
+ */
+/***
+ * Create a new NOP Option (Kind=1)
+ * @function new_nop
+ * @treturn TCPOption
+ */
 int l_tcpoption_ref::l_TCP_NOP(lua_State *l)
 {
 	TCPOptionPad *opt = l_tcpoption_ref::new_option_ref<TCPOptionPad>(l);
@@ -13,6 +22,11 @@ int l_tcpoption_ref::l_TCP_NOP(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new EOL Option (Kind=0)
+ * @function new_eol
+ * @treturn TCPOption
+ */
 int l_tcpoption_ref::l_TCP_EOL(lua_State *l)
 {
 	TCPOptionPad *opt = l_tcpoption_ref::new_option_ref<TCPOptionPad>(l);
@@ -22,6 +36,11 @@ int l_tcpoption_ref::l_TCP_EOL(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new SACKPermitted Option
+ * @function new_sackp
+ * @treturn TCPOption
+ */
 int l_tcpoption_ref::l_TCP_SACKP(lua_State *l)
 {
 	TCPOptionSACKPermitted *opt = l_tcpoption_ref::new_option_ref<TCPOptionSACKPermitted>(l);
@@ -42,6 +61,14 @@ static TCPOptionSACK::Pair extract_pair(lua_State *l, int i)
 	return TCPOptionSACK::Pair(left, right);
 }
 
+/***
+ * Create a new SACK Option
+ * @function new_sack
+ * @tparam table a list of pairs, either grouped in subtables or in one single flat table
+ * @usage l = TCPOption:new_sack{1, 2, 3, 4} -- Will create a SACK option with pairs (1,2) and (3,4)
+ * l = TCPOption:new_sack{{1, 2}, {3, 4}} -- Equivalent to the above
+ * @treturn TCPOption
+ */
 int l_tcpoption_ref::l_TCP_SACK(lua_State *l)
 {
 	TCPOptionSACK *opt;
@@ -79,6 +106,12 @@ int l_tcpoption_ref::l_TCP_SACK(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new MSS Option
+ * @function new_mss
+ * @tparam num the MSS value value
+ * @treturn TCPOption
+ */
 int l_tcpoption_ref::l_TCP_MSS(lua_State *l)
 {
 	TCPOptionMaxSegSize *opt;
@@ -92,6 +125,19 @@ int l_tcpoption_ref::l_TCP_MSS(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new Timestamp Option
+ * @function new_timestamp
+ * @tparam[opt] table args the timestamp options, see @{Timestamp_args}
+ * @treturn TCPOption
+ */
+/***
+ * The Timestamp Option arguments
+ * @see new_timestamp
+ * @table Timestamp_args
+ * @tfield num val the timestamp value
+ * @tfield num ecr the timestamp echo value
+ */
 int l_tcpoption_ref::l_TCP_Timestamp(lua_State *l)
 {
 	TCPOptionTimestamp *opt;
@@ -109,6 +155,12 @@ int l_tcpoption_ref::l_TCP_Timestamp(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new WindowScale Option
+ * @function new_wscale
+ * @tparam num wscale the window scaling factor
+ * @treturn TCPOption
+ */
 int l_tcpoption_ref::l_TCP_WindowScale(lua_State *l)
 {
 	TCPOptionWindowScale *opt;
@@ -123,6 +175,21 @@ int l_tcpoption_ref::l_TCP_WindowScale(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new MPTCPJoin Option
+ * @function new_mpjoin
+ * @tparam[opt] table the MPJoin options, see @{MPJoin_args}
+ * @treturn TCPOption
+ */
+/***
+ * The MPTCPJoin Option arguments
+ * @see new_mpjoin
+ * @table MPJoin_args
+ * @tfield num token
+ * @tfield num nonce
+ * @tfield num id address ID
+ * @tfield bool backup
+ */
 int l_tcpoption_ref::l_TCP_MPTCPJoin(lua_State *l)
 {
 	TCPOptionMPTCPJoin *opt;
@@ -148,6 +215,20 @@ int l_tcpoption_ref::l_TCP_MPTCPJoin(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new MPTCPCapable Option
+ * @function new_mpcapable
+ * @tparam[opt] table the MPCapable options, see @{MPCapable_args}
+ * @treturn TCPOption
+ */
+/***
+ * The MPTCPCapable Option arguments
+ * @see new_mpjoin
+ * @table MPCapable_args
+ * @tfield num skey sender key
+ * @tfield num rkey receiver key
+ * @tfield bool csum checksum
+ */
 int l_tcpoption_ref::l_TCP_MPTCPCapable(lua_State *l)
 {
 	TCPOptionMPTCPCapable *opt;
@@ -172,29 +253,16 @@ int l_tcpoption_ref::l_TCP_MPTCPCapable(lua_State *l)
 void l_tcpoption_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCPOptionLayer>::register_members(l);
+	/***
+	 * Set the Option Kind
+	 * @function kind
+	 * @tparam num kind
+	 */
 	meta_bind_func(l, "kind", L_SETTER(byte, TCPOptionLayer, Kind));
+	/***
+	 * Set the Option data (raw access)
+	 * @function data
+	 * @tparam string data
+	 */
 	meta_bind_func(l, "data", set_payload<TCPOptionLayer>);
-}
-
-void l_tcpoption_ref::register_globals(lua_State *l)
-{
-	l_layer_ref<TCPOptionLayer>::register_globals(l);
-	lua_register(l, "nop", l_TCP_NOP);
-	lua_register(l, "eol", l_TCP_EOL);
-	lua_register(l, "sackp", l_TCP_SACKP);
-	lua_register(l, "sack", l_TCP_SACK);
-	lua_register(l, "mss", l_TCP_MSS);
-	lua_register(l, "timestamp", l_TCP_Timestamp);
-	lua_register(l, "wscale", l_TCP_WindowScale);
-	lua_register(l, "mpcapable", l_TCP_MPTCPCapable);
-	lua_register(l, "mpjoin", l_TCP_MPTCPJoin);
-	l_do(l, "NOP=nop()");
-	l_do(l, "EOL=eol()");
-	l_do(l, "SACKP=NOP/NOP/sackp()");
-	l_do(l, "MSS=mss(1460)");
-	l_do(l, "TS=NOP/NOP/timestamp{}");
-	l_do(l, "function SACK(blocks) return NOP/NOP/sack(blocks) end");
-	l_do(l, "WSCALE=wscale(14)/NOP");
-	l_do(l, "MPCAPABLE=mpcapable{}");
-	l_do(l, "MPJOIN=mpjoin{}");
 }

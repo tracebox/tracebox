@@ -49,8 +49,16 @@ int lua_tbx::l_concat(lua_State *l)
 	return 1;
 }
 
-/* --- l_packet_ref */
+/***
+ * An object representing a Packet, inherits from @{Base_Object}
+ * @classmod Packet
+ */
 
+/***
+ * Get the Source IP address of this packet
+ * @function source
+ * @treturn string IP address
+ */
 int l_packet_ref::source(lua_State *l)
 {
 	Packet *pkt = l_packet_ref::get(l, 1);
@@ -61,6 +69,11 @@ int l_packet_ref::source(lua_State *l)
 	return 1;
 }
 
+/***
+ * Get the Destination IP address of this packet
+ * @function destination
+ * @treturn string IP address
+ */
 int l_packet_ref::destination(lua_State *l)
 {
 	Packet *pkt = l_packet_ref::get(l, 1);
@@ -71,17 +84,65 @@ int l_packet_ref::destination(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new Packet
+ * @function new
+ * @treturn Packet a new empty Packet
+ */
+static int new_packet(lua_State *l)
+{
+	Packet *p = l_packet_ref::new_ref(l);
+	return p != NULL;
+}
+
 void l_packet_ref::register_members(lua_State *l)
 {
 	l_crafter_ref<Packet>::register_members<Packet>(l);
+	meta_bind_func(l, "new", new_packet);
 	meta_bind_func(l, "source", source);
 	meta_bind_func(l, "destination", destination);
 	/* Bind all available layers */
+	/***
+	 * Get the IP Layer of this packet
+	 * @function ip
+	 * @treturn IP the IP layer or nil
+	 */
 	meta_bind_func(l, "ip", get_layer<IP>);
+	/***
+	 * Get the IPv6 Layer of this packet
+	 * @function ipv6
+	 * @treturn IPv6 the IPv6 layer or nil
+	 */
 	meta_bind_func(l, "ipv6", get_layer<IPv6>);
+	/***
+	 * Get the IPv6SegmentRoutingHeader Layer of this packet
+	 * @function srh
+	 * @treturn IPv6SegmentRoutingHeader the IPv6SegmentRoutingHeader layer or nil
+	 */
 	meta_bind_func(l, "srh", get_layer<IPv6SegmentRoutingHeader>);
+	/***
+	 * Get the TCP Layer of this packet
+	 * @function tcp
+	 * @treturn TCP the TCP layer or nil
+	 */
 	meta_bind_func(l, "tcp", get_layer<TCP>);
+	/***
+	 * Get the UDP Layer of this packet
+	 * @function udp
+	 * @treturn UDP the UDP layer or nil
+	 */
 	meta_bind_func(l, "udp", get_layer<UDP>);
+	/***
+	 * Get the ICMP Layer of this packet
+	 * @function icmp
+	 * @treturn ICMP the ICMP layer or nil
+	 */
 	meta_bind_func(l, "icmp", get_layer<ICMP>);
+	/***
+	 * Get the Raw Layer of this packet
+	 * (a.k.a. all the data after the last known layer)
+	 * @function payload
+	 * @treturn Raw the Raw layer or nil
+	 */
 	meta_bind_func(l, "payload", get_layer<RawLayer>);
 }

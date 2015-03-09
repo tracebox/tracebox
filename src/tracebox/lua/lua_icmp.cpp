@@ -4,6 +4,34 @@
 using namespace Crafter;
 using namespace std;
 
+/***
+ * The ICMP Layer, inherits from @{Base_Object}
+ * @classmod ICMP
+ */
+/***
+ * Constructor for an ICMP Layer
+ * @function new
+ * @tparam[opt] table args arguments, all grouped inside a table, see @{new_args}
+ * @treturn ICMP a new ICMP object
+ * @usage ICMP.new{
+ *   type=1,
+ *   code=2,
+ *   id=37,
+ *   seqno=17
+ * }
+ */
+/***
+ * Constructor arguments
+ * @table new_args
+ * @tfield num type the ICMP type
+ * @tfield num code the ICMP code
+ * @tfield num id the ICMP identifier
+ * @tfield num seqno the ICMP seq. number
+ * @tfield num ptr the ICMP pointer
+ * @tfield num len the ICMP length
+ * @tfield num mtu the ICMP mtu
+ * @tfield string gw the ICMP gateway
+ */
 int l_icmp_ref::l_ICMP(lua_State *l)
 {
 	ICMP *icmp;
@@ -43,24 +71,54 @@ int l_icmp_ref::l_ICMP(lua_State *l)
 void l_icmp_ref::register_members(lua_State *l)
 {
 	l_layer_ref<ICMP>::register_members(l);
+	meta_bind_func(l, "new", l_ICMP);
+	/***
+	 * Set the ICMP type
+	 * @function type
+	 * @tparam num type
+	 * */
 	meta_bind_func(l, "type", L_SETTER(byte, ICMP, Type));
+	/***
+	 * Set the ICMP code
+	 * @function code
+	 * @tparam num code
+	 * */
 	meta_bind_func(l, "code", L_SETTER(byte, ICMP, Code));
+	/***
+	 * Set the ICMP identifier
+	 * @function id
+	 * @tparam num id
+	 * */
 	meta_bind_func(l, "id", L_SETTER(short_word, ICMP, Identifier));
+	/***
+	 * Set the ICMP sequence number
+	 * @function seqno
+	 * @tparam num seqno
+	 * */
 	meta_bind_func(l, "seqno", L_SETTER(short_word, ICMP, SequenceNumber));
+	/***
+	 * Set the ICMP pointer
+	 * @function ptr
+	 * @tparam num ptr
+	 * */
 	meta_bind_func(l, "ptr", L_SETTER(byte, ICMP, Pointer));
+	/***
+	 * Set the ICMP gateway
+	 * @function gw
+	 * @tparam string gw the IP address of the gateway
+	 * */
 	meta_bind_func(l, "gw", L_SETTER(string, ICMP, Gateway));
+	/***
+	 * Set the ICMP length
+	 * @function len
+	 * @tparam num len
+	 * */
 	meta_bind_func(l, "len", L_SETTER(byte, ICMP, Length));
+	/***
+	 * Set the ICMP MTU
+	 * @function mtu
+	 * @tparam num mtu
+	 * */
 	meta_bind_func(l, "mtu", L_SETTER(short_word, ICMP, MTU));
 }
 
-void l_icmp_ref::register_globals(lua_State *l)
-{
-	l_layer_ref<ICMP>::register_globals(l);
-	lua_register(l, "icmp", l_ICMP);
-	l_do(l, "function ICMPEchoReq(id,seq) return icmp{type=8,id=id,seqno=seq} end");
-	l_do(l, "function ICMPEchoRep(id,seq) return icmp{type=0,id=id,seqno=seq} end");
-	l_do(l, "function ICMPDstUnreach(mtu) return icmp{type=3,mtu=mtu} end");
-	l_do(l, "ICMPSrcQuench=icmp{type=4}");
-	l_do(l, "function ICMPRedirect(addr) return icmp{type=5,gw=addr} end");
-	l_do(l, "ICMPTimeExceeded=icmp{type=11}");
-}
