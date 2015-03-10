@@ -5,3 +5,6 @@ export DH_VERBOSE=1
 %:
 	dh $@  --with autotools-dev
 
+override_dh_auto_configure:
+	autoreconf --force --install --verbose
+	dh_auto_configure
