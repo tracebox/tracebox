@@ -69,6 +69,8 @@ public:
 		return name;
 	}
 
+	virtual ~Modification() {}
+
 	virtual void Print(std::ostream& out = std::cout, bool verbose = false) const;
 };
 

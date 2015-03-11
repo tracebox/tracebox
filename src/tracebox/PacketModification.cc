@@ -98,12 +98,6 @@ void PacketModifications::Print(std::ostream& out, bool verbose) const
 	}
 }
 
-static bool deleteAll(Modification *m)
-{
-	delete m;
-	return true;
-}
-
 PacketModifications::~PacketModifications()
 {
 	delete orig;

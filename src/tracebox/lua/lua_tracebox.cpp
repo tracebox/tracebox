@@ -99,7 +99,6 @@ int l_Tracebox(lua_State *l)
 	static struct tracebox_info info = {NULL, l, NULL};
 	std::string err;
 	int ret = 0;
-	bool cb_set = false;
 	Packet *pkt = l_packet_ref::get(l, 1);
 	if (!pkt) {
 		std::cerr << "doTracebox: no packet!" << std::endl;
@@ -109,7 +108,7 @@ int l_Tracebox(lua_State *l)
 	if (lua_gettop(l) == 1)
 		goto no_args;
 
-	cb_set = v_arg_string_opt(l, 2, "callback", &info.cb);
+	v_arg_string_opt(l, 2, "callback", &info.cb);
 
 no_args:
 	ret = doTracebox(pkt, tCallback, err, &info);

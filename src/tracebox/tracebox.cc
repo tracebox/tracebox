@@ -120,7 +120,7 @@ Packet *BuildProbe(int net, int tr, int dport)
 string GetDefaultIface(bool ipv6)
 {
 	struct sockaddr_storage sa;
-	int i, fd, af = ipv6 ? AF_INET6 : AF_INET;
+	int fd, af = ipv6 ? AF_INET6 : AF_INET;
 	socklen_t n;
 	size_t sa_len;
 	struct ifaddrs *ifaces, *ifa;
@@ -212,10 +212,9 @@ static int rfd;
 static pcap_t *rd = NULL;
 static pcap_dumper_t *pdumper;
 
-Packet* PcapSendRecv(Packet *probe, const string& iface, double timeout, int retry)
+Packet* PcapSendRecv(Packet *probe, const string& iface)
 {
 	struct pcap_pkthdr hdr1, hdr2;
-	int ret;
 	uint8_t *packet;
 	Packet* reply = NULL;
 	string in_file, out_file;
@@ -385,7 +384,7 @@ PacketModifications* ComputeDifferences(Packet *orig, Packet *modified, bool par
 	return modifs;
 }
 
-Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv, bool *partial)
+Packet* TrimReplyIPv4(Packet *rcv, bool *partial)
 {
 	IP *ip = GetIP(*rcv);
 
@@ -424,12 +423,12 @@ Packet* TrimReplyIPv4(Packet *pkt, Packet *rcv, bool *partial)
 	return rcv;
 }
 
-Packet* TrimReplyIPv6(Packet *pkt, Packet *rcv)
+Packet* TrimReplyIPv6(Packet *rcv)
 {
 	IPv6 *ip = GetIPv6(*rcv);
 
 	/* Remove any extension. */
-	if (ip->GetPayloadLength() + 40 < rcv->GetSize()) {
+	if ((size_t)ip->GetPayloadLength() + 40 < rcv->GetSize()) {
 		RawLayer *raw = GetRawLayer(*rcv);
 		int len = raw->GetSize() - (rcv->GetSize() - (ip->GetPayloadLength() + 40));
 		RawLayer new_raw(raw->GetPayload().GetRawPointer(), len);
@@ -460,11 +459,11 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet **rcv)
 		 * echoed packet or with ICMP extensions. We thus
 		 * remove undesired parts and parse partial headers.
 		 */
-		cnt = TrimReplyIPv4(pkt, cnt, &partial);
+		cnt = TrimReplyIPv4(cnt, &partial);
 		break;
 	case IPv6::PROTO:
 		cnt->PacketFromIPv6(*raw);
-		cnt = TrimReplyIPv6(pkt, cnt);
+		cnt = TrimReplyIPv6(cnt);
 		break;
 	default:
 		delete cnt;
@@ -480,6 +479,7 @@ PacketModifications* RecvReply(int proto, Packet *pkt, Packet **rcv)
 static int Callback(void *ctx, int ttl, string& router,
 	const Packet * const probe, Packet *rcv, PacketModifications *mod)
 {
+	(void)ctx;
 	IPLayer *ip = probe->GetLayer<IPLayer>();
 
 	if (ttl == 1)
@@ -580,7 +580,7 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 		pkt->PreCraft();
 
 		if (isPcap(iface))
-			rcv = PcapSendRecv(pkt, iface, 1, 3);
+			rcv = PcapSendRecv(pkt, iface);
 		else
 			rcv = pkt->SendRecv(iface, 1, 3);
 

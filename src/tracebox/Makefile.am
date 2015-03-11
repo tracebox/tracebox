@@ -58,4 +58,5 @@ tracebox_LDADD = \
 tracebox_CPPFLAGS = \
 	-I$(top_srcdir)/noinst/libcrafter/libcrafter \
 	$(LUA_INCLUDE) \
-	-fno-omit-frame-pointer
+	-fno-omit-frame-pointer \
+	-Wall

@@ -7,8 +7,9 @@
 #define LUA_COMPAT_ALL
 #include <lua.hpp>
 
-static void stackDump (lua_State *L, const char* file, size_t line);
+void stackDump (lua_State *L, const char* file, size_t line);
 #define L_DUMP_STACK(l) stackDump(l, __FILE__, __LINE__)
+
 void l_do(lua_State *l, const char*);
 
 /* Wrapper around lua types */
