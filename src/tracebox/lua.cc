@@ -33,7 +33,8 @@ Packet *script_packet(std::string& cmd)
 	}
 
 	lua_getglobal(l, "pkt");
-	Packet *pkt = l_packet_ref::get(l, -1);
+	/* As we'll clean the lua state, copy the produced packet */
+	Packet *pkt = new Packet(*l_packet_ref::get(l, -1));
 	if (!pkt)
 		return NULL;
 

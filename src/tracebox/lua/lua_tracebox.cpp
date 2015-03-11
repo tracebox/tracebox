@@ -8,6 +8,7 @@
 
 
 struct tracebox_info {
+	l_packet_ref *probe;
 	const char *cb;
 	lua_State *l;
 	Packet *rcv;
@@ -31,6 +32,7 @@ struct tracebox_info {
 static int tCallback(void *ctx, int ttl, std::string& ip,
 	const Packet * const probe, Packet *rcv, PacketModifications *mod)
 {
+	(void)probe;
 	struct tracebox_info *info = (struct tracebox_info *)ctx;
 	int ret;
 
@@ -53,7 +55,8 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	else
 		l_data_type<std::string>(ip).push(info->l);
 
-	new l_packet_ref((Packet *)probe, info->l);
+	info->probe->push(info->l);
+	new l_packet_ref(info->probe, info->probe->val);
 
 	l_packet_ref *rcv_ref = NULL;
 	if (!rcv)
@@ -70,6 +73,7 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 		new l_packetmodifications_ref(mod, info->l);
 
 	int err = lua_pcall(info->l, 5, 1, 0);
+
 	if (err) {
 		std::cerr << "Error in the callback: " << luaL_checkstring(info->l, -1) << std::endl;
 		lua_pop(info->l, 1);
@@ -80,7 +84,7 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 		return 0;
 	}
 	ret = lua_tonumber(info->l, -1);
-	lua_pop(info->l, 2);
+	lua_pop(info->l, 1);
 	return ret;
 }
 
@@ -96,15 +100,15 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
  * */
 int l_Tracebox(lua_State *l)
 {
-	static struct tracebox_info info = {NULL, l, NULL};
 	std::string err;
 	int ret = 0;
-	Packet *pkt = l_packet_ref::get(l, 1);
+	l_packet_ref *pref = static_cast<l_packet_ref*>(l_packet_ref::get_instance(l, 1));
+	static struct tracebox_info info = {pref, NULL, l, NULL};
+	Packet *pkt = pref->val;
 	if (!pkt) {
 		std::cerr << "doTracebox: no packet!" << std::endl;
 		return 0;
 	}
-
 	if (lua_gettop(l) == 1)
 		goto no_args;
 
