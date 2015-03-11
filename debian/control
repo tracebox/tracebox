@@ -2,7 +2,7 @@ Source: tracebox
 Section: net
 Priority: extra
 Maintainer: Gregory Detal <gregory.detal@uclouvain.be>
-Build-Depends: debhelper (>= 8.0.0), autotools-dev, autoconf, libpcap-dev, liblua5.2-dev
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, autoconf, libpcap-dev, liblua5.2-dev, git
 Standards-Version: 0.1
 Homepage: http://www.tracebox.org
 
