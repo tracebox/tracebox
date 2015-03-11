@@ -20,5 +20,6 @@ extern lua_State *l_init();
 
 extern int l_Tracebox(lua_State *l);
 
+extern int l_sleep(lua_State *l);
 
 #endif

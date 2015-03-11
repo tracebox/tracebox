@@ -613,7 +613,6 @@ int main(int argc, char *argv[])
 	Packet *pkt = NULL;
 	string err;
 	bool inline_script = false;
-	bool need_su = true;
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
@@ -663,7 +662,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (need_su && getuid() != 0) {
+	if (getuid() != 0) {
 		fprintf(stderr, "tracebox requires superuser permissions!\n");
 		return 1;
 	}
@@ -694,6 +693,7 @@ int main(int argc, char *argv[])
 		cerr << "Error: " << err << endl;
 		goto usage;
 	}
+	delete pkt;
 out:
 	return 0;
 

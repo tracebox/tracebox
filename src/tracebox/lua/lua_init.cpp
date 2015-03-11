@@ -73,6 +73,9 @@ lua_State *l_init()
 	/* Register the tracebox function */
 	lua_register(l, "tracebox", l_Tracebox);
 
+	/* Register the utility functions */
+	lua_register(l, "sleep", l_sleep);
+
 	return l;
 }
 

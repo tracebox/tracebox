@@ -28,7 +28,8 @@ tracebox_SOURCES = \
 	lua/lua_tcp.cpp \
 	lua/lua_tcpoption.cpp \
 	lua/lua_udp.cpp \
-	lua/lua_tracebox.cpp
+	lua/lua_tracebox.cpp \
+	lua/lua_utils.cpp
 
 noinst_HEADERS = \
 	script.h \

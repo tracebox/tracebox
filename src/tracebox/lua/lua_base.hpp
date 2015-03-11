@@ -7,10 +7,12 @@
 #define LUA_COMPAT_ALL
 #include <lua.hpp>
 
-void stackDump (lua_State *L, const char* file, size_t line);
+extern void stackDump (lua_State *L, const char* file, size_t line);
 #define L_DUMP_STACK(l) stackDump(l, __FILE__, __LINE__)
 
-void l_do(lua_State *l, const char*);
+extern void l_do(lua_State *l, const char*);
+
+extern const char *l_classname_field;
 
 /* Wrapper around lua types */
 template<typename T>
@@ -34,7 +36,7 @@ void metatable_bind(lua_State *l, const char *key, l_data_type<C> data)
 	data.push(l);
 	lua_setfield(l, -2, key);
 }
-void meta_bind_func(lua_State *l, const char *key, lua_CFunction f);
+extern void meta_bind_func(lua_State *l, const char *key, lua_CFunction f);
 
 template<class C>
 struct tname {
@@ -81,7 +83,7 @@ struct l_ref : public l_data_type<C*> {
 
 	virtual void debug(std::ostream &out)
 	{
-		out << "[" << TNAME(C) << "]";
+		out << "[" << TNAME(C) << "] ";
 	}
 
 	l_ref& operator=(const l_ref& v)
@@ -124,6 +126,7 @@ struct l_ref : public l_data_type<C*> {
 	/* Called to initialize this reference kind metatable */
 	static void register_members(lua_State *l)
 	{
+		metatable_bind<const char*>(l, l_classname_field, l_data_type<const char*>(TNAME(C)));
 		meta_bind_func(l, "__gc", destroy);
 	}
 

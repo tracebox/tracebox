@@ -37,35 +37,7 @@
  * @see print
  */
 
-void stackDump (lua_State *L, const char* f, size_t l) {
-	int i;
-	int top = lua_gettop(L);
-	std::cerr << "Stack content (at " << f << "/" << l << "):" << std::endl;
-	for (i = 1; i <= top; i++) {/* repeat for each level */
-		int t = lua_type(L, i);
-		std::cerr << "[" << i << "] " << lua_typename(L, t) << ": ";
-		switch (t) {
-			case LUA_TSTRING:  /* strings */
-				std::cerr << lua_tostring(L, i);
-				break;
-
-			case LUA_TBOOLEAN:  /* booleans */
-				std::cerr << (lua_toboolean(L, i) ? "true" : "false");
-				break;
-
-			case LUA_TNUMBER:  /* numbers */
-				std::cerr << lua_tonumber(L, i);
-				break;
-
-			case LUA_TUSERDATA:
-				(*static_cast<l_ref<Crafter::Layer>**>(lua_touserdata(L, i)))->debug(std::cerr);
-
-			default:  /* other values */
-				break;
-		}
-		std::cerr << std::endl;
-	}
-}
+const char *l_classname_field = "__tbx_classname";
 
 void l_do(lua_State *l, const char *m)
 {
