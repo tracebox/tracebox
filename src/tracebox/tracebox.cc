@@ -611,10 +611,13 @@ int main(int argc, char *argv[])
 	const char *script = NULL;
 	const char *probe = NULL;
 	Packet *pkt = NULL;
-	IPLayer *ip = NULL;
 	string err;
+	bool inline_script = false;
+	bool need_su = true;
 
-	while ((c = getopt(argc, argv, ":i:m:s:p:d:hnv6u")) != -1) {
+	/* disable libcrafter warnings */
+	ShowWarnings = 0;
+	while ((c = getopt(argc, argv, ":l:i:m:s:p:d:hnv6uw")) != -1) {
 		switch (c) {
 			case 'i':
 				iface = optarg;
@@ -646,6 +649,13 @@ int main(int argc, char *argv[])
 			case 'h':
 				ret = 0;
 				goto usage;
+			case 'w':
+				ShowWarnings = 1;
+				break;
+			case 'l':
+				script = optarg;
+				inline_script = true;
+				break;
 			case ':':
 				cerr << "missing option argument" << endl;
 			default:
@@ -653,13 +663,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (getuid() != 0) {
+	if (need_su && getuid() != 0) {
 		fprintf(stderr, "tracebox requires superuser permissions!\n");
 		return 1;
 	}
-
-	/* disable libcrafter warnings */
-	ShowWarnings = 0;
 
 	if (optind < argc)
 		destination = argv[argc-1];
@@ -670,8 +677,10 @@ int main(int argc, char *argv[])
 		string cmd = probe;
 		pkt = script_packet(cmd);
 	} else if (script && !probe) {
-		string f = script;
-		script_execfile(f);
+		if (inline_script)
+			script_exec(script);
+		else
+			script_execfile(script);
 		goto out;
 	} else {
 		cerr << "You cannot specify a script and a probe at the same time" << endl;
@@ -703,7 +712,9 @@ usage:
 "                              reached). Default is 30.\n"
 "  -v                          Print more information.\n"
 "  -p probe                    Specify the probe to send.\n"
-"  -s script                   Run a script.\n"
+"  -s script_file              Run a script file.\n"
+"  -l inline_script            Run a script.\n"
+"  -w                          Show warnings when crafting packets.\n"
 "", argv[0]);
 	return ret;
 }

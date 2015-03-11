@@ -37,16 +37,32 @@ Packet *script_packet(std::string& cmd)
 	if (!pkt)
 		return NULL;
 
+	lua_close(l);
 	return pkt;
 }
 
-void script_execfile(std::string& filename)
+int script_exec(const char *script)
 {
 	int ret;
 
 	lua_State *l = l_init();
-	ShowWarnings = 0;
-	ret = luaL_dofile(l, filename.c_str());
+	ret = luaL_dostring(l, script);
+	if (ret)
+		std::cout << "Lua error: " << luaL_checkstring(l, -1) << std::endl;
+
+	lua_close(l);
+	return ret;
+}
+
+int script_execfile(const char *filename)
+{
+	int ret;
+
+	lua_State *l = l_init();
+	ret = luaL_dofile(l, filename);
 	if(ret)
 		std::cout << "Lua error: " << luaL_checkstring(l, -1) << std::endl;
+
+	lua_close(l);
+	return ret;
 }
