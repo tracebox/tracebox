@@ -7,7 +7,8 @@ before_install:
 - sudo apt-get install -qq automake libtool lua5.2 liblua5.2-dev liblua5.2 liblua5.2-0-dbg libpcap-dev g++ autoconf gdb
 
 install:
-- sh bootstrap.sh --enable-tests
+- sh bootstrap.sh
+- ./configure --enable-tests
 - ulimit -c
 
 before_script:
