@@ -19,5 +19,6 @@ script:
 - make check
 
 after_failure:
+- cat tests/test-suite.log
 - COREFILE=$(find . -maxdepth 5 -name "core*" | head -n 1)
 - if [[ -f "$COREFILE" ]]; then sudo  gdb -c "$COREFILE" ./src/tracebox/tracebox -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
