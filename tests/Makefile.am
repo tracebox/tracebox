@@ -1,7 +1,8 @@
 
 SUBDIRS = tools
 
-lua_scripts = lua/refcounting.lua
+lua_scripts = lua/refcounting.lua \
+			  lua/sleep.lua
 
 click_configs_in = \
 	labs/test0.in \
