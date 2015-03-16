@@ -30,3 +30,6 @@ src/tracebox/tracebox
 tags
 .ycm_extra_conf.py
 *.pyc
+*.sh.log
+*.sh.trs
+tests/test-suite.log
