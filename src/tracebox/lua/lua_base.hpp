@@ -45,9 +45,9 @@ struct tname {
 #define TNAME(C) tname<C>::name
 #define L_EXPOSE_TYPE(x) template<> const char *tname<x>::name = #x
 
-class _ref_count {
+struct _ref_count {
 	size_t c;
-public:
+
 	_ref_count() : c(0) {}
 	void inc() { ++c; }
 	size_t dec() { return --c; }
@@ -169,10 +169,27 @@ struct l_ref : public _ref_base {
 	{
 		metatable_bind<const char*>(l, l_classname_field, l_data_type<const char*>(TNAME(C)));
 		meta_bind_func(l, "__gc", destroy);
+		/* Undocumented, for debug purposes */
+		meta_bind_func(l, "__cpp_ref_count", _get_ref_count);
+		meta_bind_func(l, "__cpp_auxref_count", _get_auxref_count);
 	}
 
 	/* Called once all types have registered */
 	static void register_globals(lua_State *l) { (void)l; }
+
+	static int _get_ref_count(lua_State *l)
+	{
+		l_ref *r = get_instance(l, 1);
+		lua_pushnumber(l, r->ref->c);
+		return 1;
+	}
+
+	static int _get_auxref_count(lua_State *l)
+	{
+		l_ref *r = get_instance(l, 1);
+		lua_pushnumber(l, r->aux_ref->ref->c);
+		return 1;
+	}
 };
 
 #endif
