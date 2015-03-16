@@ -16,7 +16,7 @@ Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev
 To build:
 
     $ ./bootstrap.sh
-    $ ./configure [--prefix=instal_prefix [--enable-tests]]
+    $ ./configure [--prefix=install_prefix [--enable-tests]]
     $ make
     # make install
 
