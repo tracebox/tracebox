@@ -605,7 +605,7 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 int main(int argc, char *argv[])
 {
 	char c;
-	int ret = 1;
+	int ret = EXIT_SUCCESS;
 	int dport = 80;
 	int net_proto = IP::PROTO, tr_proto = TCP::PROTO;
 	const char *script = NULL;
@@ -677,9 +677,9 @@ int main(int argc, char *argv[])
 		pkt = script_packet(cmd);
 	} else if (script && !probe) {
 		if (inline_script)
-			script_exec(script);
+			ret = script_exec(script);
 		else
-			script_execfile(script);
+			ret = script_execfile(script);
 		goto out;
 	} else {
 		cerr << "You cannot specify a script and a probe at the same time" << endl;
@@ -687,7 +687,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (!pkt)
-		goto out;
+		return EXIT_FAILURE;
 
 	if (doTracebox(pkt, Callback, err) < 0) {
 		cerr << "Error: " << err << endl;
@@ -695,7 +695,7 @@ int main(int argc, char *argv[])
 	}
 	delete pkt;
 out:
-	return 0;
+	return ret;
 
 usage:
 	fprintf(stderr, "Usage:\n"
