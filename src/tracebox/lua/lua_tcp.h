@@ -5,6 +5,7 @@
 
 struct l_tcp_ref : public l_layer_ref<Crafter::TCP> {
 	l_tcp_ref (Crafter::TCP *i, lua_State *l) : l_layer_ref<Crafter::TCP>(i, l) {}
+	l_tcp_ref(l_tcp_ref *r) : l_layer_ref<Crafter::TCP>(r) {}
 	template<class T>
 	l_tcp_ref(l_ref<T> *r, Crafter::TCP *i) : l_layer_ref<Crafter::TCP>(r, i) {}
 	~l_tcp_ref() {}

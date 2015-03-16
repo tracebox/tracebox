@@ -30,6 +30,7 @@ int push_streamfunc(lua_State *l, void (C::*f)(std::ostream&) const)
 template<class C>
 struct l_crafter_ref : public l_ref<C> {
 	l_crafter_ref(C *i, lua_State *l) : l_ref<C>(i, l) {}
+	l_crafter_ref(l_crafter_ref *r) : l_ref<C>(r) {}
 	template<class T>
 	l_crafter_ref(l_ref<T> *r, C *i) : l_ref<C>(r, i) {}
 	virtual ~l_crafter_ref() {}
@@ -37,6 +38,7 @@ struct l_crafter_ref : public l_ref<C> {
 	void debug(std::ostream& out)
 	{
 		l_ref<C>::debug(out);
+		out << (void*) this << " ";
 		this->val->Print(out);
 	}
 
@@ -65,6 +67,7 @@ struct l_crafter_ref : public l_ref<C> {
 template<class C>
 struct l_layer_ref : public l_crafter_ref<C> {
 	l_layer_ref(C *i, lua_State *l) : l_crafter_ref<C>(i, l) {}
+	l_layer_ref(l_layer_ref *r) : l_crafter_ref<C>(r) {}
 	template<class T>
 	l_layer_ref(l_ref<T> *r, C *i) : l_crafter_ref<C>(r, i) {}
 	virtual ~l_layer_ref() {}
@@ -104,6 +107,7 @@ struct l_layer_ref : public l_crafter_ref<C> {
 
 struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
 	l_packet_ref(Crafter::Packet *i, lua_State *l) : l_crafter_ref<Crafter::Packet>(i, l) {}
+	l_packet_ref(l_packet_ref *r) : l_crafter_ref<Crafter::Packet>(r) {}
 	template<class T>
 	l_packet_ref(l_ref<T> *r, Crafter::Packet *i = NULL) : l_crafter_ref<Crafter::Packet>(r, i) {}
 	~l_packet_ref() {}

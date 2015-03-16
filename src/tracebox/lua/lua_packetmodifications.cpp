@@ -19,5 +19,6 @@ void l_packetmodifications_ref::register_members(lua_State *l)
 void l_packetmodifications_ref::debug(std::ostream& out)
 {
 	l_ref<PacketModifications>::debug(out);
+	out << (void*) this << " ";
 	this->val->Print(out, true);
 }

@@ -5,6 +5,7 @@
 
 struct l_icmp_ref : public l_layer_ref<Crafter::ICMP> {
 	l_icmp_ref (Crafter::ICMP *i, lua_State *l) : l_layer_ref<Crafter::ICMP>(i, l) {}
+	l_icmp_ref(l_icmp_ref *r) : l_layer_ref<Crafter::ICMP>(r) {}
 	template<class T>
 	l_icmp_ref(l_ref<T> *r, Crafter::ICMP *i) : l_layer_ref<Crafter::ICMP>(r, i) {}
 	~l_icmp_ref() {}

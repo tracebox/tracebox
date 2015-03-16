@@ -56,7 +56,6 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 		l_data_type<std::string>(ip).push(info->l);
 
 	info->probe->push(info->l);
-	new l_packet_ref(info->probe, info->probe->val);
 
 	l_packet_ref *rcv_ref = NULL;
 	if (!rcv)
@@ -64,12 +63,12 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	else
 		rcv_ref = new l_packet_ref((Packet *)rcv, info->l);
 
+
 	if (!mod)
 		lua_pushnil(info->l);
-	else if (rcv_ref) {
-		rcv_ref->push(info->l); /* Will be popped when creating the reference */
+	else if (rcv_ref)
 		new l_packetmodifications_ref(rcv_ref, mod);
-	} else
+	 else
 		new l_packetmodifications_ref(mod, info->l);
 
 	int err = lua_pcall(info->l, 5, 1, 0);

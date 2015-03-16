@@ -6,7 +6,8 @@
 struct l_raw_ref : public l_layer_ref<Crafter::RawLayer> {
 	l_raw_ref (Crafter::RawLayer *i, lua_State *l)
 		: l_layer_ref<Crafter::RawLayer>(i, l) {}
- 	template<class T>
+ 	l_raw_ref(l_raw_ref *r) : l_layer_ref<Crafter::RawLayer>(r) {}
+	template<class T>
 	l_raw_ref(l_ref<T> *r, Crafter::RawLayer *i)
 		: l_layer_ref<Crafter::RawLayer>(r, i) {}
 	~l_raw_ref() {}

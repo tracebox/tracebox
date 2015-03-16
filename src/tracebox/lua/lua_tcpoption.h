@@ -6,6 +6,7 @@
 struct l_tcpoption_ref : public l_layer_ref<Crafter::TCPOptionLayer> {
 	l_tcpoption_ref (Crafter::TCPOptionLayer *i, lua_State *l)
 		: l_layer_ref<Crafter::TCPOptionLayer>(i, l) {}
+	l_tcpoption_ref(l_tcpoption_ref *r) : l_layer_ref<Crafter::TCPOptionLayer>(r) {}
 	template<class T>
 	l_tcpoption_ref(l_ref<T> *r, Crafter::TCPOptionLayer *i)
 		: l_layer_ref<Crafter::TCPOptionLayer>(r, i) {}

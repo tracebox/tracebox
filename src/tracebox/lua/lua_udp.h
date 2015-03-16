@@ -5,6 +5,7 @@
 
 struct l_udp_ref : public l_layer_ref<Crafter::UDP> {
 	l_udp_ref (Crafter::UDP *i, lua_State *l) : l_layer_ref<Crafter::UDP>(i, l) {}
+	l_udp_ref(l_udp_ref *r) : l_layer_ref<Crafter::UDP>(r) {}
 	template<class T>
 	l_udp_ref(l_ref<T> *r, Crafter::UDP *i) : l_layer_ref<Crafter::UDP>(r, i) {}
 	~l_udp_ref() {}

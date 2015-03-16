@@ -6,6 +6,7 @@
 struct l_ipoption_ref : public l_layer_ref<Crafter::IPOptionLayer> {
 	l_ipoption_ref (Crafter::IPOptionLayer *i, lua_State *l)
 		: l_layer_ref<Crafter::IPOptionLayer>(i, l) {}
+	l_ipoption_ref(l_ipoption_ref *r) : l_layer_ref<Crafter::IPOptionLayer>(r) {}
 	template<class T>
 	l_ipoption_ref(l_ref<T> *r, Crafter::IPOptionLayer *i)
 		: l_layer_ref<Crafter::IPOptionLayer>(r, i) {}

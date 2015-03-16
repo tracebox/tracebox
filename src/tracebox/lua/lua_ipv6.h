@@ -5,6 +5,7 @@
 
 struct l_ipv6_ref : public l_layer_ref<Crafter::IPv6> {
 	l_ipv6_ref (Crafter::IPv6 *i, lua_State *l) : l_layer_ref<Crafter::IPv6>(i, l) {}
+	l_ipv6_ref(l_ipv6_ref *r) : l_layer_ref<Crafter::IPv6>(r) {}
 	template<class T>
 	l_ipv6_ref(l_ref<T> *r, Crafter::IPv6 *i) : l_layer_ref<Crafter::IPv6>(r, i) {}
 	~l_ipv6_ref() {}

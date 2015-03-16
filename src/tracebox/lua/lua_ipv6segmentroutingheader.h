@@ -6,6 +6,8 @@
 struct l_ipv6segmentroutingheader_ref : public l_layer_ref<Crafter::IPv6SegmentRoutingHeader> {
 	l_ipv6segmentroutingheader_ref (Crafter::IPv6SegmentRoutingHeader *i, lua_State *l)
 		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(i, l) {}
+	l_ipv6segmentroutingheader_ref(l_ipv6segmentroutingheader_ref *r)
+		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(r) {}
 	template<class T>
 	l_ipv6segmentroutingheader_ref(l_ref<T> *r, Crafter::IPv6SegmentRoutingHeader *i)
 		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(r, i) {}
