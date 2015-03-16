@@ -55,15 +55,15 @@ struct _ref_count {
 
 struct _ref_base {
 	_ref_count *ref;
-	void (*_del)(void*);
+	void (_ref_base::*_del)();
 
 	_ref_base() : ref(new _ref_count), _del(NULL) { retain(); }
-	_ref_base(void (*f)(void*)) : ref(new _ref_count), _del(f) { retain(); }
+	_ref_base(void (_ref_base::*f)()) : ref(new _ref_count), _del(f) { retain(); }
 	_ref_base(const _ref_base& r) : ref(r.ref), _del(r._del) { retain(); }
 	void retain() { ref->inc(); }
 
 	virtual ~_ref_base() { release(); }
-	void release() { if (!ref->dec()) { if (_del) _del(this); delete ref; } }
+	void release() { if (!ref->dec()) { if (_del) (this->*_del)(); delete ref; } }
 
 	virtual void debug(std::ostream&) = 0;
 };
@@ -77,10 +77,10 @@ struct l_ref : public _ref_base {
 	_ref_base *aux_ref;
 
 	/* Empty reference */
-	l_ref() : _ref_base(_ref_expired), val(NULL), l(NULL), aux_ref(NULL) {}
+	l_ref() : val(NULL), l(NULL), aux_ref(NULL) {}
 	/* New reference */
 	l_ref(C *instance, lua_State *l)
-		: _ref_base(_ref_expired), val(instance), l(l), aux_ref(NULL) { push(l, this); }
+		: val(instance), l(l), aux_ref(NULL) { push(l, this); }
 	/* Copy reference */
 	l_ref(l_ref *r) : _ref_base(*r), val(r->val), l(r->l), aux_ref(NULL){
 		if (r->aux_ref) {
@@ -93,7 +93,6 @@ struct l_ref : public _ref_base {
 	template<class T>
 	l_ref(l_ref<T> *r, C *i) : val(i), l(r->l), aux_ref(r)
 	{
-		ref->inc();
 		aux_ref->retain();
 		push(l, this);
 	}
@@ -106,18 +105,21 @@ struct l_ref : public _ref_base {
 		new l_ref(o, l);
 		return o;
 	}
-	static void _ref_expired(void *o)
+	void _ref_expired()
 	{
-		l_ref *r = static_cast<l_ref*>(o);
-		/* We no longer need our pointer, notify the original owner */
-		if (r->aux_ref) {
-			if (!r->aux_ref->ref->dec())
-				delete r->aux_ref;
-		} else { /* We were owning it, delete it */
-			delete r->val;
+		if (!aux_ref)
+			delete val;
+	}
+
+	~l_ref()
+	{
+		if (aux_ref) {
+			if (aux_ref->ref->c == 1)
+				delete aux_ref;
+			else
+				aux_ref->release();
 		}
 	}
-	~l_ref() { /* Everything is handled via _ref_expired */ }
 
 	virtual void debug(std::ostream &out)
 	{
@@ -187,7 +189,10 @@ struct l_ref : public _ref_base {
 	static int _get_auxref_count(lua_State *l)
 	{
 		l_ref *r = get_instance(l, 1);
-		lua_pushnumber(l, r->aux_ref->ref->c);
+		if (r->aux_ref)
+			lua_pushnumber(l, r->aux_ref->ref->c);
+		else
+			lua_pushnil(l);
 		return 1;
 	}
 };
