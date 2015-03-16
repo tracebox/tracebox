@@ -17,4 +17,16 @@ test-driver
 *.Po
 *.dirstamp
 *.swp
-
+tests/labs/*.sh
+tests/lua/*.sh
+bin
+config.log
+config.status
+libtool
+*Makefile
+tests/labs/*out.pcap
+tests/labs/*.args
+src/tracebox/tracebox
+tags
+.ycm_extra_conf.py
+*.pyc
