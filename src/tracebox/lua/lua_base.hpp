@@ -40,29 +40,65 @@ extern void meta_bind_func(lua_State *l, const char *key, lua_CFunction f);
 
 template<class C>
 struct tname {
-	public:
 	static const char *name;
 };
 #define TNAME(C) tname<C>::name
 #define L_EXPOSE_TYPE(x) template<> const char *tname<x>::name = #x
 
+class _ref_count {
+	size_t c;
+public:
+	_ref_count() : c(0) {}
+	void inc() { ++c; }
+	size_t dec() { return --c; }
+};
+
+struct _ref_base {
+	_ref_count *ref;
+	void (*_del)(void*);
+
+	_ref_base() : ref(new _ref_count), _del(NULL) { retain(); }
+	_ref_base(void (*f)(void*)) : ref(new _ref_count), _del(f) { retain(); }
+	_ref_base(const _ref_base& r) : ref(r.ref), _del(r._del) { retain(); }
+	void retain() { ref->inc(); }
+
+	virtual ~_ref_base() { release(); }
+	void release() { if (!ref->dec()) { if (_del) _del(this); delete ref; } }
+
+	virtual void debug(std::ostream&) = 0;
+};
+
 /* Base wrapper class to expose cpp object pointers to lua */
 template<class C>
-struct l_ref : public l_data_type<C*> {
-	int key;
+struct l_ref : public _ref_base {
+	C *val;
 	lua_State *l;
+	/* Original owner of the pointer, if its not ourselves */
+	_ref_base *aux_ref;
 
-	l_ref() : l_data_type<C*>(NULL) {}
-	/* Acquire ownership of i */
+	/* Empty reference */
+	l_ref() : _ref_base(_ref_expired), val(NULL), l(NULL), aux_ref(NULL) {}
+	/* New reference */
 	l_ref(C *instance, lua_State *l)
-		: l_data_type<C*>(instance), key(LUA_NOREF), l(l) { push(l); }
-	/* Reference an owner of i, and copy its instance pointer
-	 * Assumes that ref is on top of the stack!
-	 * */
+		: _ref_base(_ref_expired), val(instance), l(l), aux_ref(NULL) { push(l, this); }
+	/* Copy reference */
+	l_ref(l_ref *r) : _ref_base(*r), val(r->val), l(r->l), aux_ref(NULL){
+		if (r->aux_ref) {
+			aux_ref = r->aux_ref;
+			aux_ref->retain();
+		}
+		push(l, this);
+	}
+	/* New reference, and register dependance to other one */
 	template<class T>
-	l_ref(l_ref<T> *ref, C *i)
-		: l_data_type<C*>(i), key(luaL_ref(ref->l, LUA_REGISTRYINDEX)), l(ref->l)
-		{ push(l); }
+	l_ref(l_ref<T> *r, C *i) : val(i), l(r->l), aux_ref(r)
+	{
+		ref->inc();
+		aux_ref->retain();
+		push(l, this);
+	}
+
+	operator C*() { return val; }
 
 	static C* new_ref(lua_State *l)
 	{
@@ -70,46 +106,53 @@ struct l_ref : public l_data_type<C*> {
 		new l_ref(o, l);
 		return o;
 	}
-
-	virtual ~l_ref()
+	static void _ref_expired(void *o)
 	{
-		/* Delete the instance if we own it */
-		if (key == LUA_NOREF)
-			delete this->val;
-		else
-			/* Otherwise just unref the owner to allow it to be GCed */
-			luaL_unref(l, LUA_REGISTRYINDEX, key);
+		l_ref *r = static_cast<l_ref*>(o);
+		/* We no longer need our pointer, notify the original owner */
+		if (r->aux_ref) {
+			if (!r->aux_ref->ref->dec())
+				delete r->aux_ref;
+		} else { /* We were owning it, delete it */
+			delete r->val;
+		}
 	}
+	~l_ref() { /* Everything is handled via _ref_expired */ }
 
 	virtual void debug(std::ostream &out)
 	{
 		out << "[" << TNAME(C) << "] ";
 	}
 
+	C& operator* () { return *this->val; }
+    C* operator-> () { return this->val; }
+
 	l_ref& operator=(const l_ref& v)
 	{
-		if (key != LUA_NOREF)
-			luaL_unref(l, LUA_REGISTRYINDEX, key);
-		else if (this->val)
-			delete this->val;
-
-		key = luaL_ref(v.l, LUA_REGISTRYINDEX);
-		l = v.l;
-		return l_data_type<C*>::operator=(v.i);
+		if (this != &v) {
+			this->release();
+			this->val = v.val;
+			ref = v.ref;
+			ref->inc();
+			aux_ref = v.aux_ref;
+			if (aux_ref)
+				aux_ref->retain();
+		}
+		return *this;
 	}
 	l_ref& operator=(const l_ref* v) { return this->operator=(*v); }
 
-	void push(lua_State *l)
+
+	static void push(lua_State *l, l_ref *r)
 	{
-		this->l = l;
-		l_ref **udata = static_cast<l_ref **>(
-				lua_newuserdata(l, sizeof(l_ref *)));
-		*udata = this;
+		l_ref **udata = static_cast<l_ref **>(lua_newuserdata(l, sizeof(l_ref *)));
+		*udata = r;
 		luaL_getmetatable(l, TNAME(C));
 		lua_setmetatable(l, -2);
 	}
+	void push(lua_State *l) { this->l = l; new l_ref(this); }
 
-	static C* get(lua_State *l, int n) { return get_instance(l, n)->val; }
+	static C* get(lua_State *l, int n) { return (C*)get_instance(l, n)->val; }
 	static l_ref* get_instance(lua_State *l, int n)
 	{
 		return *static_cast<l_ref **>(luaL_checkudata(l, n, TNAME(C)));
@@ -117,9 +160,7 @@ struct l_ref : public l_data_type<C*> {
 
 	static int destroy(lua_State *l)
 	{
-		l_ref *r = l_ref::get_instance(l, 1);
-		r->l = l;
-		delete r;
+		delete l_ref::get_instance(l, 1);
 		return 0;
 	}
 
