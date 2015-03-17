@@ -511,7 +511,7 @@ bool validIPAddress(bool ipv6, const string& ipAddress)
 		return validateIpv4Address(ipAddress);
 }
 
-IPLayer* probe_sanity_check(Packet *pkt, string& err)
+IPLayer* probe_sanity_check(Packet *pkt, string& err, string& iface)
 {
 	IPLayer *ip = pkt->GetLayer<IPLayer>();
 	string sourceIP;
@@ -561,7 +561,7 @@ IPLayer* probe_sanity_check(Packet *pkt, string& err)
 
 int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 {
-	IPLayer *ip = probe_sanity_check(pkt, err);
+	IPLayer *ip = probe_sanity_check(pkt, err, iface);
 	if (!ip)
 		return -1;
 

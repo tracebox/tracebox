@@ -3,7 +3,8 @@ SUBDIRS = tools
 
 lua_scripts = lua/refcounting.lua \
 			  lua/sleep.lua \
-			  lua/dns.lua
+			  lua/dns.lua \
+			  lua/packet.lua
 
 click_configs_in = \
 	labs/test0.in \
