@@ -77,6 +77,7 @@ lua_State *l_init()
 	lua_register(l, "sleep", l_sleep);
 	lua_register(l, "dn4", l_dn4);
 	lua_register(l, "dn6", l_dn6);
+	lua_register(l, "gethostname", l_gethostname);
 
 	/* Debug call */
 	lua_register(l, "__dump_c_stack", l_dump_stack);

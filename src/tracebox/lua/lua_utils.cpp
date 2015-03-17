@@ -1,4 +1,5 @@
 #include "lua_global.h"
+#include "lua_arg.h"
 
 #include "crafter/Utils/IPResolver.h"
 
@@ -130,4 +131,17 @@ int l_dn6(lua_State *l)
 int l_dn4(lua_State *l)
 {
 	return l_dn(l, AF_INET);
+}
+
+/***
+ * Attempt to map the given IP address to a domain name
+ * @function gethostname
+ * @tparam string an IP address, does nothing on domain names
+ * @treturn string the corresponding IP address, either v4 or v6
+ */
+int l_gethostname(lua_State *l)
+{
+	const char *ip = luaL_checkstring(l, 1);
+	lua_pushstring(l, Crafter::GetHostname(std::string(ip)).c_str());
+	return 1;
 }

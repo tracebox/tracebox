@@ -26,5 +26,6 @@ extern int l_dump_stack(lua_State *l);
 
 extern int l_dn6(lua_State *l);
 extern int l_dn4(lua_State *l);
+extern int l_gethostname(lua_State *l);
 
 #endif
