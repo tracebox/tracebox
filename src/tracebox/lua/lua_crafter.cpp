@@ -1,5 +1,6 @@
 #include "lua_crafter.hpp"
 #include "lua_arg.h"
+#include "../tracebox.h"
 #include <cstring>
 
 using namespace Crafter;
@@ -112,14 +113,23 @@ static int new_packet(lua_State *l)
  */
 int l_packet_ref::send_receive(lua_State *l)
 {
-	Packet *p = l_packet_ref::get(l, 1);
 	double timeout = 1;
 	int retry = 3;
 	const char *iface = "";
 	v_arg_double_opt(l, 2, "timeout", &timeout);
 	v_arg_integer_opt(l, 2, "retry", &retry);
 	v_arg_string_opt(l, 2, "interface", &iface);
-	p->SendRecv(iface, timeout, retry);
+
+	std::string err, intf(iface);
+	Packet *p = l_packet_ref::get(l, 1);
+	if (!probe_sanity_check(p, err, intf))
+		luaL_error(l, err.c_str());
+
+	Packet *rcv = p->SendRecv(intf, timeout, retry);
+	if (!rcv)
+		lua_pushnil(l);
+	else
+		new l_packet_ref(rcv, l);
 	return 1;
 }
 
