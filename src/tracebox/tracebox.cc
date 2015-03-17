@@ -664,12 +664,16 @@ int main(int argc, char *argv[])
 	}
 
 	if (getuid() != 0) {
-		fprintf(stderr, "tracebox requires superuser permissions!\n");
+		cerr << "tracebox requires superuser permissions!" << endl;
 		return 1;
 	}
 
 	if (optind < argc)
-		destination = argv[argc-1];
+		destination = argv[optind];
+	else if (!inline_script && ! script) {
+		cerr << "You must specify a destination host" << endl;
+		return 1;
+	}
 
 	if (!probe && !script) {
 		pkt = BuildProbe(net_proto, tr_proto, dport);
@@ -677,10 +681,12 @@ int main(int argc, char *argv[])
 		string cmd = probe;
 		pkt = script_packet(cmd);
 	} else if (script && !probe) {
+		int rem_argc = argc - optind;
+		char **rem_argv = rem_argc ? &argv[optind] : NULL;
 		if (inline_script)
-			ret = script_exec(script);
+			ret = script_exec(script, rem_argc, rem_argv);
 		else
-			ret = script_execfile(script);
+			ret = script_execfile(script, rem_argc, rem_argv);
 		goto out;
 	} else {
 		cerr << "You cannot specify a script and a probe at the same time" << endl;
@@ -699,8 +705,8 @@ out:
 	return ret;
 
 usage:
-	fprintf(stderr, "Usage:\n"
-"  %s [ OPTIONS ] host\n"
+	cerr << "Usage:\n"
+"  " << argv[0] << " [ OPTIONS ] {host | [Lua argument list]}\n"
 "Options are:\n"
 "  -h                          Display this help and exit\n"
 "  -n                          Do not resolve IP adresses\n"
@@ -716,6 +722,10 @@ usage:
 "  -s script_file              Run a script file.\n"
 "  -l inline_script            Run a script.\n"
 "  -w                          Show warnings when crafting packets.\n"
-"", argv[0]);
+"\n"
+"Every argument passed after the options in conjunction with -s or -l will be passed\n"
+"to the lua interpreter and available in a global vector of strings named 'argv',\n"
+"in the order they appeared on the command-linei.\n"
+	<< endl;
 	return ret;
 }

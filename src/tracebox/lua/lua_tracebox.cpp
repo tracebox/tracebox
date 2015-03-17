@@ -5,7 +5,21 @@
 /***
  * @module Globals
  * */
-
+/***
+ * Contains all arguments that appeared on the command line, in the order they
+ * appeared. Spaces in the command line act as separator between arguments,
+ * escape them with quotes if you want to pass in a longer string.
+ * @tfield vector argv
+ * @usage tracebox -l "print(#argv)" Hello " " \" Worl "d
+ *
+ * 	Will print 4, as there are five arguments:
+ * 		1. Hello
+ * 		2. " " (without the quotes)
+ * 		3. " (an actual quote)
+ * 		4. Worl
+ * 		5. d (quote was there only to fix hilighting ...)
+ * 	Escape-rules depends on your shell.
+ */
 
 struct tracebox_info {
 	l_packet_ref *probe;

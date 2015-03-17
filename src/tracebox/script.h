@@ -23,7 +23,7 @@
 #include "crafter.h"
 
 Crafter::Packet *script_packet(std::string& cmd);
-int script_exec(const char*);
-int script_execfile(const char*);
+int script_exec(const char*, int, char**);
+int script_execfile(const char*, int, char**);
 
 #endif

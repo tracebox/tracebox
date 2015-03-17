@@ -1,0 +1,2 @@
+echo "pwd is $PWD"
+@tracebox@ -s @script@ $(cat @args@ 2> /dev/null)

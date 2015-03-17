@@ -42,11 +42,22 @@ Packet *script_packet(std::string& cmd)
 	return pkt;
 }
 
-int script_exec(const char *script)
+static void _add_argv(lua_State *l, int argc, char **argv)
+{
+	lua_newtable(l);
+	for (int i = 0; i < argc; ++i) {
+		lua_pushstring(l, argv[i]);
+		lua_rawseti(l, -2, i);
+	}
+	lua_setglobal(l, "argv");
+}
+
+int script_exec(const char *script, int argc, char **argv)
 {
 	int ret;
 
 	lua_State *l = l_init();
+	_add_argv(l, argc, argv);
 	ret = luaL_dostring(l, script);
 	if (ret)
 		std::cout << "Lua error: " << luaL_checkstring(l, -1) << std::endl;
@@ -55,11 +66,12 @@ int script_exec(const char *script)
 	return ret;
 }
 
-int script_execfile(const char *filename)
+int script_execfile(const char *filename, int argc, char **argv)
 {
 	int ret;
 
 	lua_State *l = l_init();
+	_add_argv(l, argc, argv);
 	ret = luaL_dofile(l, filename);
 	if(ret)
 		std::cout << "Lua error: " << luaL_checkstring(l, -1) << std::endl;

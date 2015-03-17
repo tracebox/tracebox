@@ -1,0 +1,6 @@
+assert(argv ~= nil)
+assert(argv[0] == 'Hello')
+assert(argv[1] == 'Wor')
+assert(argv[2] == 'ld')
+assert(#argv == 2)
+assert(argv[3] == nil)

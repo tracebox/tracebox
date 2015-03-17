@@ -4,7 +4,8 @@ SUBDIRS = tools
 lua_scripts = lua/refcounting.lua \
 			  lua/sleep.lua \
 			  lua/dns.lua \
-			  lua/packet.lua
+			  lua/packet.lua \
+			  lua/arguments.lua
 
 click_configs_in = \
 	labs/test0.in \
@@ -33,6 +34,7 @@ TESTS = $(test_scripts) $(test_lua)
 
 EXTRA_DIST = \
 	runtest.in \
+	lua.in \
 	$(click_configs_in) \
 	$(click_configs_in_args) \
 	$(lua_scripts) \
@@ -48,7 +50,7 @@ CLEANFILES = \
 
 SUFFIXES = .in .click .sh .in.args .args .lua
 
-$(test_lua): $(lua_scripts)
+$(test_lua): $(lua_scripts) lua.in
 
 $(test_scripts): $(click_configs) runtest.in
 
@@ -75,5 +77,8 @@ $(click_configs_in): $(tracebox_out) $(tracebox_args)
 	< $(srcdir)/$(subst $(srcdir)/,,$<) > $@
 
 .lua.sh:
-	echo "sudo $(abs_top_builddir)/src/tracebox/tracebox -s $<" > $@
+	$(SED) -e 's,[@]args[@],$(srcdir)/$<.in,g' \
+	       -e 's,[@]tracebox[@],sudo $(abs_top_builddir)/src/tracebox/tracebox,g' \
+	       -e 's,[@]script[@],$(srcdir)/$<,g' \
+	       < $(srcdir)/lua.in > $@
 	chmod +x $@
