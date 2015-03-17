@@ -117,7 +117,7 @@ Packet *BuildProbe(int net, int tr, int dport)
 	return pkt;
 }
 
-string GetDefaultIface(bool ipv6)
+string GetDefaultIface(bool ipv6, const string &addr)
 {
 	struct sockaddr_storage sa;
 	int fd, af = ipv6 ? AF_INET6 : AF_INET;
@@ -130,13 +130,13 @@ string GetDefaultIface(bool ipv6)
 		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&sa;
 		sin6->sin6_family = af;
 		sa_len = sizeof(*sin6);
-		inet_pton(af, "2001:6a8:3080:2:94b0:b600:965:8cf5", &sin6->sin6_addr);
+		inet_pton(af, addr.c_str(), &sin6->sin6_addr);
 		sin6->sin6_port = htons(666);
 	} else {
 		struct sockaddr_in *sin = (struct sockaddr_in *)&sa;
 		sin->sin_family = af;
 		sa_len = sizeof(*sin);
-		inet_pton(af, "130.104.230.45", &sin->sin_addr);
+		inet_pton(af, addr.c_str(), &sin->sin_addr);
 		sin->sin_port = htons(666);
 	}
 
@@ -523,14 +523,9 @@ IPLayer* probe_sanity_check(Packet *pkt, string& err)
 	}
 
 	destinationIP = ip->GetDestinationIP();
+	sourceIP = ip->GetSourceIP();
 	if ((destinationIP == "0.0.0.0" || destinationIP == "::") && destination != "")
 		destinationIP = resolve_name(ip->GetID(), destination);
-
-	iface = iface == "" ? GetDefaultIface(ip->GetID() == IPv6::PROTO) : iface;
-	if (iface == "") {
-		err = "You need to specify an interface as there is no default one";
-		return NULL;
-	}
 
 	if (destinationIP == "" || destinationIP == "0.0.0.0" || destinationIP == "::") {
 		err = "You need to specify a destination";
@@ -539,6 +534,12 @@ IPLayer* probe_sanity_check(Packet *pkt, string& err)
 
 	if (!validIPAddress(ip->GetID() == IPv6::PROTO, destinationIP)) {
 		err = "The specified destination address is not valid";
+		return NULL;
+	}
+
+	iface = iface == "" ? GetDefaultIface(ip->GetID() == IPv6::PROTO, destinationIP) : iface;
+	if (iface == "") {
+		err = "You need to specify an interface as there is no default one";
 		return NULL;
 	}
 
