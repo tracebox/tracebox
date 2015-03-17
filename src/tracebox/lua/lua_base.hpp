@@ -7,8 +7,8 @@
 #define LUA_COMPAT_ALL
 #include <lua.hpp>
 
-extern void stackDump (lua_State *L, const char* file, size_t line);
-#define L_DUMP_STACK(l) stackDump(l, __FILE__, __LINE__)
+extern void stackDump (lua_State *L, const char* file, size_t line, std::ostream& out);
+#define L_DUMP_STACK(l, s) stackDump(l, __FILE__, __LINE__, std::cerr)
 
 extern void l_do(lua_State *l, const char*);
 

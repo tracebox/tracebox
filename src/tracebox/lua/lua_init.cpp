@@ -76,6 +76,9 @@ lua_State *l_init()
 	/* Register the utility functions */
 	lua_register(l, "sleep", l_sleep);
 
+	/* Debug call */
+	lua_register(l, "__cpp_dump_stack", l_dump_stack);
+
 	return l;
 }
 

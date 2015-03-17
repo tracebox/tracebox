@@ -22,4 +22,6 @@ extern int l_Tracebox(lua_State *l);
 
 extern int l_sleep(lua_State *l);
 
+extern int l_dump_stack(lua_State *l);
+
 #endif

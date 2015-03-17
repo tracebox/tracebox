@@ -7,26 +7,26 @@
  * @module Globals
  */
 
-static void print_object(lua_State *L, int i)
+static void print_object(lua_State *L, int i, std::ostream& out)
 {
 	int t = lua_type(L, i);
-	std::cerr << lua_typename(L, t) << ": ";
+	out << lua_typename(L, t) << ": ";
 	switch (t) {
 		case LUA_TSTRING:  /* strings */
-			std::cerr << lua_tostring(L, i);
+			out << lua_tostring(L, i);
 			break;
 
 		case LUA_TBOOLEAN:  /* booleans */
-			std::cerr << (lua_toboolean(L, i) ? "true" : "false");
+			out << (lua_toboolean(L, i) ? "true" : "false");
 			break;
 
 		case LUA_TNUMBER:  /* numbers */
-			std::cerr << lua_tonumber(L, i);
+			out << lua_tonumber(L, i);
 			break;
 
 		case LUA_TUSERDATA:
 			dynamic_cast<_ref_base*>((*(_ref_base**)
-						(lua_touserdata(L, i))))->debug(std::cerr);
+						(lua_touserdata(L, i))))->debug(out);
 			break;
 
 		default:  /* other values */
@@ -34,30 +34,30 @@ static void print_object(lua_State *L, int i)
 	}
 }
 
-void stackDump (lua_State *L, const char* f, size_t l) {
-	std::cerr << "Globals:" << std::endl;
+void stackDump (lua_State *L, const char* f, size_t l, std::ostream& out) {
+	out << "Globals:" << std::endl;
 	lua_pushglobaltable(L);
 	lua_pushnil(L);
 	while (lua_next(L,-2) != 0) {
 		if (lua_isstring(L, -2))
-			std::cerr << "[" << luaL_checkstring(L, -2) << "] ";
-		print_object(L, -1);
+			out << "[" << luaL_checkstring(L, -2) << "] ";
+		print_object(L, -1, out);
 		lua_pop(L, 1);
-		std::cerr << " / ";
+		out << " / ";
 	}
 	lua_pop(L,1);
-	std::cerr << "------------" << std::endl;
+	out << "------------" << std::endl;
 
 	int i;
 	int top = lua_gettop(L);
-	std::cerr << "Stack content (at " << f << "/" << l << "):" << std::endl;
+	out << "Stack content (at " << f << "/" << l << "):" << std::endl;
 	for (i = 1; i <= top; i++) {
-		std::cerr << "[" << i << "] ";
-		print_object(L, i);
-		std::cerr << std::endl;
+		out << "[" << i << "] ";
+		print_object(L, i, out);
+		out << std::endl;
 	}
 	lua_pop(L, i);
-	std::cerr << "===========" << std::endl;
+	out << "===========" << std::endl;
 }
 
 /***
@@ -76,4 +76,20 @@ int l_sleep(lua_State *l)
 		std::perror("sleep() failed");
 
 	return 0;
+}
+
+/***
+ * Return a string containing the content of the lua C stack
+ * @function __dump_c_stack
+ * @treturn string the content of the C stack
+ */
+int l_dump_stack(lua_State *l)
+{
+	std::ostringstream s;
+	lua_Debug ar;
+	lua_getstack(l, 1, &ar);
+	lua_getinfo(l, "l", &ar);
+	stackDump(l, "Called from Lua", ar.currentline, s);
+	lua_pushstring(l, s.str().c_str());
+	return 1;
 }
