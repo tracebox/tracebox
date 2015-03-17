@@ -523,16 +523,15 @@ bool validIPAddress(bool ipv6, const string& ipAddress)
 		return validIPv4Address(ipAddress);
 }
 
-int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
+IPLayer* probe_sanity_check(Packet *pkt, string& err)
 {
 	IPLayer *ip = pkt->GetLayer<IPLayer>();
 	string sourceIP;
 	string destinationIP;
 
-	ip = pkt->GetLayer<IPLayer>();
 	if (!ip) {
 		err = "You need to specify at least an IPv4 or IPv6 header";
-		return -1;
+		return NULL;
 	}
 
 	destinationIP = ip->GetDestinationIP();
@@ -541,28 +540,41 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 
 	iface = iface == "" ? GetDefaultIface(ip->GetID() == IPv6::PROTO) : iface;
 	if (iface == "") {
-		err = "You need to specify an interface";
-		return -1;
+		err = "You need to specify an interface as there is no default one";
+		return NULL;
 	}
 
 	if (destinationIP == "" || destinationIP == "0.0.0.0" || destinationIP == "::") {
 		err = "You need to specify a destination";
-		return -1;
+		return NULL;
 	}
 
 	if (!validIPAddress(ip->GetID() == IPv6::PROTO, destinationIP)) {
-		err = "The specified address is not valid";
-		return -1;
+		err = "The specified destination address is not valid";
+		return NULL;
 	}
 
-	sourceIP = iface_address(ip->GetID(), iface);
-	if (sourceIP == "") {
-		err = "There is no source address for the specified protocol";
-		return -1;
+	if (sourceIP == "" || sourceIP == "0.0.0.0" || sourceIP == "::") {
+		sourceIP = iface_address(ip->GetID(), iface);
+		if (sourceIP == "") {
+			err = "There is no source address for the specified protocol";
+			return NULL;
+		}
+		ip->SetSourceIP(sourceIP);
+	} else if (!validIPAddress(ip->GetID() == IPv6::PROTO, sourceIP)) {
+		err = "The specified source address is not valid";
+		return NULL;
 	}
 
-	ip->SetSourceIP(sourceIP);
 	ip->SetDestinationIP(destinationIP);
+	return ip;
+}
+
+int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
+{
+	IPLayer *ip = probe_sanity_check(pkt, err);
+	if (!ip)
+		return -1;
 
 	for (int ttl = 1; ttl <= hops_max; ++ttl) {
 		Packet* rcv = NULL;
@@ -595,7 +607,7 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 			return 0;
 
 		/* Stop if we reached the server */
-		if (rcv && sIP == destinationIP)
+		if (rcv && sIP == ip->GetDestinationIP())
 			return 1;
 	}
 
