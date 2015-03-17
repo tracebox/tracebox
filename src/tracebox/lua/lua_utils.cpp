@@ -2,6 +2,9 @@
 
 #include <ctime>
 #include <cstring>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 /***
  * @module Globals
@@ -92,4 +95,49 @@ int l_dump_stack(lua_State *l)
 	stackDump(l, "Called from Lua", ar.currentline, s);
 	lua_pushstring(l, s.str().c_str());
 	return 1;
+}
+
+static int l_dn(lua_State *l, int ai_family)
+{
+	int err;
+	struct addrinfo hints, *rp;
+	const char *hostname = luaL_checkstring(l, 1);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = ai_family;
+	err = getaddrinfo(hostname, NULL, &hints, &rp);
+	if (err) {
+		std::cerr << "Could not resolve " << hostname
+			<< " : " << gai_strerror(err) << std::endl;
+		lua_pushnil(l);
+	} else {
+		char addr[NI_MAXHOST];
+		getnameinfo(rp->ai_addr, rp->ai_addrlen, addr,
+				sizeof(addr), NULL, 0, NI_NUMERICHOST);
+		freeaddrinfo(rp);
+		lua_pushstring(l, addr);
+	}
+	return 1;
+}
+
+/***
+ * Resolve a domain name to an IPv6 address
+ * @function dn6
+ * @tparam string a domain name. If it is an IP address, does nothing
+ * @treturn string the corresponding IPv6 address, or nil if the call failed
+ */
+int l_dn6(lua_State *l)
+{
+	return l_dn(l, AF_INET6);
+}
+
+/***
+ * Resolve a domain name to an IPv4 address
+ * @function dn4
+ * @tparam string a domain name. If it is an IP address, does nothing
+ * @treturn string the corresponding IPv4 address, or nil if the call failed
+ */
+int l_dn4(lua_State *l)
+{
+	return l_dn(l, AF_INET);
 }

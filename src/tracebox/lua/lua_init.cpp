@@ -75,9 +75,11 @@ lua_State *l_init()
 
 	/* Register the utility functions */
 	lua_register(l, "sleep", l_sleep);
+	lua_register(l, "dn4", l_dn4);
+	lua_register(l, "dn6", l_dn6);
 
 	/* Debug call */
-	lua_register(l, "__cpp_dump_stack", l_dump_stack);
+	lua_register(l, "__dump_c_stack", l_dump_stack);
 
 	return l;
 }
