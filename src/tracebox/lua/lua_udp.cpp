@@ -33,7 +33,7 @@ int l_udp_ref::l_UDP(lua_State *l)
 		return 0;
 
 	udp->SetSrcPort(src_set ? src : rand() % USHRT_MAX);
-	udp->SetSrcPort(dst_set ? dst : rand() % USHRT_MAX);
+	udp->SetDstPort(dst_set ? dst : rand() % USHRT_MAX);
 	return 1;
 }
 
