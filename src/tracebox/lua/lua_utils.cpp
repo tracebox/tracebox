@@ -1,10 +1,8 @@
 #include "lua_global.h"
 
+#include "crafter/Utils/IPResolver.h"
+
 #include <ctime>
-#include <cstring>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 
 /***
  * @module Globals
@@ -99,23 +97,15 @@ int l_dump_stack(lua_State *l)
 
 static int l_dn(lua_State *l, int ai_family)
 {
-	int err;
-	struct addrinfo hints, *rp;
 	const char *hostname = luaL_checkstring(l, 1);
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = ai_family;
-	err = getaddrinfo(hostname, NULL, &hints, &rp);
+	std::string r;
+	int err = Crafter::GetAddress(std::string(hostname), r, ai_family);
 	if (err) {
 		std::cerr << "Could not resolve " << hostname
 			<< " : " << gai_strerror(err) << std::endl;
 		lua_pushnil(l);
 	} else {
-		char addr[NI_MAXHOST];
-		getnameinfo(rp->ai_addr, rp->ai_addrlen, addr,
-				sizeof(addr), NULL, 0, NI_NUMERICHOST);
-		freeaddrinfo(rp);
-		lua_pushstring(l, addr);
+		lua_pushstring(l, r.c_str());
 	}
 	return 1;
 }
