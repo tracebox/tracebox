@@ -1,4 +1,5 @@
 #include "lua_crafter.hpp"
+#include "lua_arg.h"
 #include <cstring>
 
 using namespace Crafter;
@@ -95,12 +96,54 @@ static int new_packet(lua_State *l)
 	return p != NULL;
 }
 
+/***
+ * Send a packet and wait for a reply
+ * @function sendrecv
+ * @tparam[opt] table args A table containing the optional arguments, see @{sendrecv_args}
+ */
+/***
+ * sendrecv arguments
+ * @table sendrecv_args
+ * @tfield num timeout How long to wait for a response
+ * @tfield num retry How many times should we send another packet and try again
+ * 	in case of timeout
+ * @tfield string interface force the outgoing interface, instead of using the
+ * 	default interface for the destination address
+ */
+int l_packet_ref::send_receive(lua_State *l)
+{
+	Packet *p = l_packet_ref::get(l, 1);
+	double timeout = 1;
+	int retry = 3;
+	const char *iface = "";
+	v_arg_double_opt(l, 2, "timeout", &timeout);
+	v_arg_integer_opt(l, 2, "retry", &retry);
+	v_arg_string_opt(l, 2, "interface", &iface);
+	p->SendRecv(iface, timeout, retry);
+	return 1;
+}
+
+/***
+ * Send a packet over the wire
+ * @function send
+ * @tparam[opt] string interface force the outgoing interface, instead of using the
+ * 	default interface for the destination address
+ */
+int l_packet_ref::send(lua_State *l)
+{
+	Packet *p = l_packet_ref::get(l, 1);
+	p->Send();
+	return 0;
+}
+
 void l_packet_ref::register_members(lua_State *l)
 {
 	l_crafter_ref<Packet>::register_members<Packet>(l);
 	meta_bind_func(l, "new", new_packet);
 	meta_bind_func(l, "source", source);
 	meta_bind_func(l, "destination", destination);
+	meta_bind_func(l, "send", send);
+	meta_bind_func(l, "sendrecv", send_receive);
 	/* Bind all available layers */
 	/***
 	 * Get the IP Layer of this packet

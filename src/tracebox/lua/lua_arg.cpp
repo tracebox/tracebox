@@ -34,7 +34,7 @@ const char* v_arg_lstring(lua_State* L, int argt, const char* field, size_t* siz
 	return lua_tolstring(L, -1, size);
 }
 
-void v_arg_lstring_(lua_State* L, int argt, const char *field, const char **val)
+static void v_arg_lstring_(lua_State* L, int argt, const char *field, const char **val)
 {
 	if(!lua_tostring(L, -1)) {
 		const char* msg = lua_pushfstring(L, "%s is not a string", field);
@@ -57,7 +57,7 @@ bool v_arg_string_opt(lua_State* L, int argt, const char* field, const char **va
 	return true;
 }
 
-lua_Integer v_arg_integer_get_(lua_State* L, int argt, const char* field)
+static lua_Integer v_arg_integer_get_(lua_State* L, int argt, const char* field)
 {
 	if(lua_type(L, -1) != LUA_TNUMBER) {
 		const char* msg = lua_pushfstring(L, "%s is not an integer", field);
@@ -96,7 +96,7 @@ bool v_arg_integer64_opt(lua_State* L, int argt, const char* field, uint64_t *va
 	return true;
 }
 
-bool v_arg_boolean_get_(lua_State* L, int argt, const char* field)
+static bool v_arg_boolean_get_(lua_State* L, int argt, const char* field)
 {
 	if(lua_type(L, -1) != LUA_TBOOLEAN) {
 		const char* msg = lua_pushfstring(L, "%s is not an boolean", field);
@@ -113,4 +113,37 @@ bool v_arg_boolean_opt(lua_State* L, int argt, const char* field, bool *val)
 
 	*val = v_arg_boolean_get_(L, argt, field);
 	return true;
+}
+
+static double v_arg_double_get_(lua_State *L, int argt, const char *field)
+{
+	if(lua_type(L, -1) != LUA_TNUMBER) {
+		const char* msg = lua_pushfstring(L, "%s is not a number", field);
+		luaL_argerror(L, argt, msg);
+	}
+
+	return lua_tonumber(L, -1);
+
+}
+
+double v_arg_double(lua_State* L, int argt, const char* field)
+{
+	if(!v_arg(L, argt, field))
+	{
+		const char* msg = lua_pushfstring(L, "%s is missing", field);
+		luaL_argerror(L, argt, msg);
+	}
+
+	return (int)v_arg_double_get_(L, argt, field);
+}
+
+
+bool v_arg_double_opt(lua_State *L, int argt, const char *field, double *val)
+{
+	if(!v_arg(L, argt, field))
+		return false;
+
+	*val = v_arg_double_get_(L, argt, field);
+	return true;
+
 }
