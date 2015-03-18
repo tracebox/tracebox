@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -10,7 +10,7 @@
 using namespace Crafter;
 
 FWFilter::FWFilter(int src, int dst)
-	: src(src), dst(dst), id(src^dst)
+	: src(src), dst(dst), id(src^dst), closed(false)
 {
 #ifdef __APPLE__
 	std::string cmd = "ipfw add " + StrPort(id) + " deny tcp from any " \
@@ -23,6 +23,9 @@ FWFilter::FWFilter(int src, int dst)
 }
 
 void FWFilter::close() {
+	if (closed)
+		return;
+
 #ifdef __APPLE__
 	std::string cmd = "ipfw del " + StrPort(id);
 #else /* Assume Linux */
@@ -30,6 +33,7 @@ void FWFilter::close() {
 				+ StrPort(dst) + " --dport " + StrPort(src) + " -j DROP";
 #endif
 	system(cmd.c_str());
+	closed = true;
 }
 /***
  * A simple firewall rule on the host machine. Create one with @{Globals.filter}
