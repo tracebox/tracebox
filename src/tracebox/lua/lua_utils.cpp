@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -87,22 +87,6 @@ int l_sleep(lua_State *l)
 	return 0;
 }
 
-/***
- * Return a string containing the content of the lua C stack
- * @function __dump_c_stack
- * @treturn string the content of the C stack
- */
-int l_dump_stack(lua_State *l)
-{
-	std::ostringstream s;
-	lua_Debug ar;
-	lua_getstack(l, 1, &ar);
-	lua_getinfo(l, "l", &ar);
-	stackDump(l, "Called from Lua", ar.currentline, s);
-	lua_pushstring(l, s.str().c_str());
-	return 1;
-}
-
 static int l_dn(lua_State *l, int ai_family)
 {
 	const char *hostname = luaL_checkstring(l, 1);
@@ -150,5 +134,38 @@ int l_gethostname(lua_State *l)
 {
 	const char *ip = luaL_checkstring(l, 1);
 	lua_pushstring(l, Crafter::GetHostname(std::string(ip)).c_str());
+	return 1;
+}
+
+/***
+ * Set of functions to help debugging the bindings
+ * @section Debugging
+ */
+/***
+ * Return a string containing the content of the lua C stack
+ * @function __dump_c_stack
+ * @treturn string the content of the C stack
+ * @within Debugging
+ */
+int l_dump_stack(lua_State *l)
+{
+	std::ostringstream s;
+	lua_Debug ar;
+	lua_getstack(l, 1, &ar);
+	lua_getinfo(l, "l", &ar);
+	stackDump(l, "Called from Lua", ar.currentline, s);
+	lua_pushstring(l, s.str().c_str());
+	return 1;
+}
+
+/***
+ * Return the number of objects that are referenced
+ * @function __cpp_object_count
+ * @treturn num object_count
+ * @within Debugging
+ */
+int l_cpp_object_count(lua_State *l)
+{
+	lua_pushinteger(l, _ref_base::instance_count);
 	return 1;
 }

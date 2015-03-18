@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -40,7 +40,6 @@ struct l_crafter_ref : public l_ref<C> {
 	l_crafter_ref(l_crafter_ref *r) : l_ref<C>(r) {}
 	template<class T>
 	l_crafter_ref(l_ref<T> *r, C *i) : l_ref<C>(r, i) {}
-	virtual ~l_crafter_ref() {}
 
 	void debug(std::ostream& out)
 	{
@@ -69,6 +68,9 @@ struct l_crafter_ref : public l_ref<C> {
 	}
 
 	static void register_globals(lua_State *l) { l_ref<C>::register_globals(l); }
+
+	protected:
+	virtual ~l_crafter_ref() {}
 };
 
 template<class C>
@@ -77,7 +79,6 @@ struct l_layer_ref : public l_crafter_ref<C> {
 	l_layer_ref(l_layer_ref *r) : l_crafter_ref<C>(r) {}
 	template<class T>
 	l_layer_ref(l_ref<T> *r, C *i) : l_crafter_ref<C>(r, i) {}
-	virtual ~l_layer_ref() {}
 
 	/* Generic setter/getter */
 	template<typename T, void (C::*setfunc)(const T&)>
@@ -110,6 +111,9 @@ struct l_layer_ref : public l_crafter_ref<C> {
 	{
 		l_crafter_ref<C>::template register_members<Crafter::Layer>(l);
 	}
+
+	protected:
+	virtual ~l_layer_ref() {}
 };
 
 struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {

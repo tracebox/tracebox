@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -30,6 +30,7 @@ extern int l_Tracebox(lua_State *l);
 extern int l_sleep(lua_State *l);
 
 extern int l_dump_stack(lua_State *l);
+extern int l_cpp_object_count(lua_State *l);
 
 extern int l_dn6(lua_State *l);
 extern int l_dn4(lua_State *l);

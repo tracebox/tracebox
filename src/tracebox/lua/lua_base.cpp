@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -45,6 +45,7 @@
  */
 
 const char *l_classname_field = "__tbx_classname";
+size_t _ref_base::instance_count = 0;
 
 void l_do(lua_State *l, const char *m)
 {

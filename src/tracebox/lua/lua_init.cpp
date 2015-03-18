@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -86,8 +86,9 @@ lua_State *l_init()
 	lua_register(l, "dn6", l_dn6);
 	lua_register(l, "gethostname", l_gethostname);
 
-	/* Debug call */
+	/* Debug calls */
 	lua_register(l, "__dump_c_stack", l_dump_stack);
+	lua_register(l, "__cpp_object_count", l_cpp_object_count);
 
 	return l;
 }
