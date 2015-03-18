@@ -1,11 +1,16 @@
+/**
+ * Tracebox -- A middlebox detection tool
+ *
+ *  Copyright 2013-2015 by its authors. 
+ *  Some rights reserved. See LICENSE, AUTHORS.
+ */
+
 #include "lua_crafter.hpp"
 #include "lua_arg.h"
 #include "../tracebox.h"
 #include <cstring>
 
 using namespace Crafter;
-
-/* --- lua_tbx */
 
 const char* lua_tbx::base_class_field = "__tbx_baseclass";
 

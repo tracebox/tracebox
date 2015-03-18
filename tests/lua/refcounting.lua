@@ -1,3 +1,10 @@
+--
+-- Tracebox -- A middlebox detection tool
+--
+--  Copyright 2013-2015 by its authors. 
+--  Some rights reserved. See LICENSE, AUTHORS.
+--
+
 -- This test evaluate that reference counting on shared CPP objects works properly
 a = ip({})
 assert(a:__cpp_ref_count() == 1)

@@ -1,3 +1,10 @@
+/**
+ * Tracebox -- A middlebox detection tool
+ *
+ *  Copyright 2013-2015 by its authors. 
+ *  Some rights reserved. See LICENSE, AUTHORS.
+ */
+
 #ifndef __LUA_CRAFTER_HPP_
 #define __LUA_CRAFTER_HPP_
 

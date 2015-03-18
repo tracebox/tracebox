@@ -1,3 +1,10 @@
+/**
+ * Tracebox -- A middlebox detection tool
+ *
+ *  Copyright 2013-2015 by its authors. 
+ *  Some rights reserved. See LICENSE, AUTHORS.
+ */
+
 #include "lua_base.hpp"
 
 /***

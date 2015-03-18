@@ -1,5 +1,12 @@
 #!/bin/bash
 
+##
+## Tracebox -- A middlebox detection tool
+##
+##  Copyright 2013-2015 by its authors. 
+##  Some rights reserved. See LICENSE, AUTHORS.
+##
+
 function cleanup {
 	[ -n "${CLICK_PID}" ] && kill ${CLICK_PID}
 	[ -n "${TRACEBOX_OUTPUT}" ] &&  rm -f ${TRACEBOX_OUTPUT}

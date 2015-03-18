@@ -1,5 +1,12 @@
 #!/usr/bin/env tracebox -s
 
+--
+-- Tracebox -- A middlebox detection tool
+--
+--  Copyright 2013-2015 by its authors. 
+--  Some rights reserved. See LICENSE, AUTHORS.
+--
+
 function cb(ttl, rip, pkt, reply, mods)
 	if ttl == 1 then
 		print("luatracebox to " .. pkt:dest())
