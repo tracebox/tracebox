@@ -1,5 +1,5 @@
 .\" ###### Setup ############################################################
-.Dd July 18, 2013
+.Dd March 18, 2015
 .Dt tracebox 1
 .Os tracebox
 .\" ###### Name #############################################################
@@ -10,7 +10,7 @@
 .Sh SYNOPSIS
 .Nm tracebox
 .Op OPTIONS
-host
+host [Lua arguments list ...]
 .\" ###### Description ######################################################
 .Sh DESCRIPTION
 .Nm tracebox
@@ -27,6 +27,10 @@ tunnels replies and ICMP message containing the full datagram.
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS
+Every argument passed after the options in conjunction with \-s or \-l will be passed
+to the lua interpreter and available in a global vector of strings named 'argv',
+in the order they appeared on the command-line.
+
 The following options may be provided:
 .Bl -tag -width indent
 .It \-h
@@ -45,8 +49,14 @@ Specify a network interface to operate with.
 Set the max number of hops (max TTL to be reached). Default is 30.
 .It \-p probe
 Specify the probe to send.
-.It \-s script
+.It \-l inline_script
 Run a script.
+.It \-s script
+Run a script file.
+.It \-v
+Print more information.
+.It \-w
+Show warnings when crafting packets.
 .El
 .\" ###### Arguments ########################################################
 .Sh EXAMPLES

@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -714,7 +714,7 @@ usage:
 "\n"
 "Every argument passed after the options in conjunction with -s or -l will be passed\n"
 "to the lua interpreter and available in a global vector of strings named 'argv',\n"
-"in the order they appeared on the command-linei.\n"
+"in the order they appeared on the command-line.\n"
 	<< endl;
 	return ret;
 }
