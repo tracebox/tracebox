@@ -33,3 +33,4 @@ tags
 *.sh.log
 *.sh.trs
 tests/test-suite.log
+doc
