@@ -116,33 +116,8 @@ struct l_layer_ref : public l_crafter_ref<C> {
 	virtual ~l_layer_ref() {}
 };
 
-struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
-	l_packet_ref(Crafter::Packet *i, lua_State *l)
-		: l_crafter_ref<Crafter::Packet>(i, l) {}
-	l_packet_ref(l_packet_ref *r, lua_State *l)
-		: l_crafter_ref<Crafter::Packet>(r, l) {}
-	template<class T>
-	l_packet_ref(l_ref<T> *r, Crafter::Packet *i, lua_State *l)
-		: l_crafter_ref<Crafter::Packet>(r, i, l) {}
-	~l_packet_ref() {}
-
-	template<class C>
-	static int get_layer(lua_State *l)
-	{
-		l_ref<Crafter::Packet> *ref = l_ref<Crafter::Packet>::get_instance(l, 1);
-		new l_layer_ref<C>(ref, ref->val->GetLayer<C>(), l);
-		return 1;
-	};
-
-	static int source(lua_State *l);
-	static int destination(lua_State *l);
-	static int send(lua_State *l);
-	static int send_receive(lua_State *l);
-	static void register_members(lua_State *l);
-};
-
 template<class C>
-static int set_payload(lua_State *l)
+int set_payload(lua_State *l)
 {
 	C *o = l_crafter_ref<C>::get(l, 1);
 	o->SetPayload(l_data_type<const char*>::get(l, 2));
