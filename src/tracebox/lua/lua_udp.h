@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -12,9 +12,10 @@
 
 struct l_udp_ref : public l_layer_ref<Crafter::UDP> {
 	l_udp_ref (Crafter::UDP *i, lua_State *l) : l_layer_ref<Crafter::UDP>(i, l) {}
-	l_udp_ref(l_udp_ref *r) : l_layer_ref<Crafter::UDP>(r) {}
+	l_udp_ref(l_udp_ref *r, lua_State *l) : l_layer_ref<Crafter::UDP>(r, l) {}
 	template<class T>
-	l_udp_ref(l_ref<T> *r, Crafter::UDP *i) : l_layer_ref<Crafter::UDP>(r, i) {}
+	l_udp_ref(l_ref<T> *r, Crafter::UDP *i, lua_State *l)
+		: l_layer_ref<Crafter::UDP>(r, i, l) {}
 	~l_udp_ref() {}
 
 	static int l_UDP(lua_State *l);

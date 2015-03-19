@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -12,9 +12,10 @@
 
 struct l_icmp_ref : public l_layer_ref<Crafter::ICMP> {
 	l_icmp_ref (Crafter::ICMP *i, lua_State *l) : l_layer_ref<Crafter::ICMP>(i, l) {}
-	l_icmp_ref(l_icmp_ref *r) : l_layer_ref<Crafter::ICMP>(r) {}
+	l_icmp_ref(l_icmp_ref *r, lua_State *l) : l_layer_ref<Crafter::ICMP>(r, l) {}
 	template<class T>
-	l_icmp_ref(l_ref<T> *r, Crafter::ICMP *i) : l_layer_ref<Crafter::ICMP>(r, i) {}
+	l_icmp_ref(l_ref<T> *r, Crafter::ICMP *i, lua_State *l)
+		: l_layer_ref<Crafter::ICMP>(r, i, l) {}
 	~l_icmp_ref() {}
 
 	static int l_ICMP(lua_State *l);

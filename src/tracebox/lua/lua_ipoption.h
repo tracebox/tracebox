@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -13,10 +13,11 @@
 struct l_ipoption_ref : public l_layer_ref<Crafter::IPOptionLayer> {
 	l_ipoption_ref (Crafter::IPOptionLayer *i, lua_State *l)
 		: l_layer_ref<Crafter::IPOptionLayer>(i, l) {}
-	l_ipoption_ref(l_ipoption_ref *r) : l_layer_ref<Crafter::IPOptionLayer>(r) {}
+	l_ipoption_ref(l_ipoption_ref *r, lua_State *l)
+		: l_layer_ref<Crafter::IPOptionLayer>(r, l) {}
 	template<class T>
-	l_ipoption_ref(l_ref<T> *r, Crafter::IPOptionLayer *i)
-		: l_layer_ref<Crafter::IPOptionLayer>(r, i) {}
+	l_ipoption_ref(l_ref<T> *r, Crafter::IPOptionLayer *i, lua_State *l)
+		: l_layer_ref<Crafter::IPOptionLayer>(r, i, l) {}
 	~l_ipoption_ref() {}
 
 	template<class C>

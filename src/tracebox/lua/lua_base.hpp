@@ -101,20 +101,19 @@ struct _ref_base {
 template<class C>
 struct l_ref : public _ref_base {
 	C *val;
-	lua_State *l;
 	/* Original owner of the pointer, if its not ourselves */
 	_ref_base *owner_ref;
 
 	/* Empty reference */
-	l_ref() : val(NULL), l(NULL), owner_ref(NULL) {}
+	l_ref() : val(NULL), owner_ref(NULL) {}
 	/* New reference */
 	l_ref(C *instance, lua_State *l)
-		: val(instance), l(l), owner_ref(NULL)
+		: val(instance), owner_ref(NULL)
 	{
 		_push_noretain(l);
 	}
 	/* Copy reference */
-	l_ref(l_ref *r) : _ref_base(*r), val(r->val), l(r->l), owner_ref(r->owner_ref)
+	l_ref(l_ref *r, lua_State *l) : _ref_base(*r), val(r->val), owner_ref(r->owner_ref)
 	{
 		if (owner_ref)
 			owner_ref->retain();
@@ -122,7 +121,7 @@ struct l_ref : public _ref_base {
 	}
 	/* New reference, and register dependance to other one */
 	template<class T>
-	l_ref(l_ref<T> *r, C *i) : val(i), l(r->l), owner_ref(r)
+	l_ref(l_ref<T> *r, C *i, lua_State *l) : val(i), owner_ref(r)
 	{
 		owner_ref->retain();
 		_push_noretain(l);
@@ -224,7 +223,6 @@ protected:
 private: /* Use release() to get here */
 	void _push_noretain(lua_State *l)
 	{
-		this->l = l;
 		l_ref **udata = static_cast<l_ref **>(lua_newuserdata(l, sizeof(l_ref *)));
 		*udata = this;
 		luaL_getmetatable(l, TNAME(C));

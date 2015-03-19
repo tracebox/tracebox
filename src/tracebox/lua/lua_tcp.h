@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -12,9 +12,10 @@
 
 struct l_tcp_ref : public l_layer_ref<Crafter::TCP> {
 	l_tcp_ref (Crafter::TCP *i, lua_State *l) : l_layer_ref<Crafter::TCP>(i, l) {}
-	l_tcp_ref(l_tcp_ref *r) : l_layer_ref<Crafter::TCP>(r) {}
+	l_tcp_ref(l_tcp_ref *r, lua_State *l) : l_layer_ref<Crafter::TCP>(r, l) {}
 	template<class T>
-	l_tcp_ref(l_ref<T> *r, Crafter::TCP *i) : l_layer_ref<Crafter::TCP>(r, i) {}
+	l_tcp_ref(l_ref<T> *r, Crafter::TCP *i, lua_State *l)
+		: l_layer_ref<Crafter::TCP>(r, i, l) {}
 	~l_tcp_ref() {}
 
 	static int l_TCP(lua_State *l);

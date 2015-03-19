@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -13,11 +13,11 @@
 struct l_ipv6segmentroutingheader_ref : public l_layer_ref<Crafter::IPv6SegmentRoutingHeader> {
 	l_ipv6segmentroutingheader_ref (Crafter::IPv6SegmentRoutingHeader *i, lua_State *l)
 		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(i, l) {}
-	l_ipv6segmentroutingheader_ref(l_ipv6segmentroutingheader_ref *r)
-		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(r) {}
+	l_ipv6segmentroutingheader_ref(l_ipv6segmentroutingheader_ref *r, lua_State *l)
+		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(r, l) {}
 	template<class T>
-	l_ipv6segmentroutingheader_ref(l_ref<T> *r, Crafter::IPv6SegmentRoutingHeader *i)
-		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(r, i) {}
+	l_ipv6segmentroutingheader_ref(l_ref<T> *r, Crafter::IPv6SegmentRoutingHeader *i, lua_State *l)
+		: l_layer_ref<Crafter::IPv6SegmentRoutingHeader>(r, i, l) {}
 	~l_ipv6segmentroutingheader_ref() {}
 
 	static int l_IPv6SegmentRoutingHeader_SetSegments(lua_State *l);

@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -88,7 +88,7 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	if (!mod)
 		lua_pushnil(info->l);
 	else if (rcv_ref)
-		new l_packetmodifications_ref(rcv_ref, mod);
+		new l_packetmodifications_ref(rcv_ref, mod, info->l);
 	 else
 		new l_packetmodifications_ref(mod, info->l);
 

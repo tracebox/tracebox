@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -15,11 +15,11 @@
 struct l_packetmodifications_ref : public l_ref<PacketModifications> {
 	l_packetmodifications_ref (PacketModifications *i, lua_State *l)
 		: l_ref<PacketModifications>(i, l) {}
-	l_packetmodifications_ref(l_packetmodifications_ref *r)
-		: l_ref<PacketModifications>(r) {}
+	l_packetmodifications_ref(l_packetmodifications_ref *r, lua_State *l)
+		: l_ref<PacketModifications>(r, l) {}
 	template<class T>
-	l_packetmodifications_ref(l_ref<T> *r, PacketModifications *i)
-		: l_ref<PacketModifications>(r, i) {}
+	l_packetmodifications_ref(l_ref<T> *r, PacketModifications *i, lua_State *l)
+		: l_ref<PacketModifications>(r, i, l) {}
 	~l_packetmodifications_ref() {}
 
 	void debug(std::ostream&);

@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -13,10 +13,11 @@
 struct l_tcpoption_ref : public l_layer_ref<Crafter::TCPOptionLayer> {
 	l_tcpoption_ref (Crafter::TCPOptionLayer *i, lua_State *l)
 		: l_layer_ref<Crafter::TCPOptionLayer>(i, l) {}
-	l_tcpoption_ref(l_tcpoption_ref *r) : l_layer_ref<Crafter::TCPOptionLayer>(r) {}
+	l_tcpoption_ref(l_tcpoption_ref *r, lua_State *l)
+		: l_layer_ref<Crafter::TCPOptionLayer>(r, l) {}
 	template<class T>
-	l_tcpoption_ref(l_ref<T> *r, Crafter::TCPOptionLayer *i)
-		: l_layer_ref<Crafter::TCPOptionLayer>(r, i) {}
+	l_tcpoption_ref(l_ref<T> *r, Crafter::TCPOptionLayer *i, lua_State *l)
+		: l_layer_ref<Crafter::TCPOptionLayer>(r, i, l) {}
 	~l_tcpoption_ref() {}
 
 	template<class C>

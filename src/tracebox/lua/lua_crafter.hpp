@@ -37,9 +37,9 @@ int push_streamfunc(lua_State *l, void (C::*f)(std::ostream&) const)
 template<class C>
 struct l_crafter_ref : public l_ref<C> {
 	l_crafter_ref(C *i, lua_State *l) : l_ref<C>(i, l) {}
-	l_crafter_ref(l_crafter_ref *r) : l_ref<C>(r) {}
+	l_crafter_ref(l_crafter_ref *r, lua_State *l) : l_ref<C>(r, l) {}
 	template<class T>
-	l_crafter_ref(l_ref<T> *r, C *i) : l_ref<C>(r, i) {}
+	l_crafter_ref(l_ref<T> *r, C *i, lua_State *l) : l_ref<C>(r, i, l) {}
 
 	void debug(std::ostream& out)
 	{
@@ -76,9 +76,9 @@ struct l_crafter_ref : public l_ref<C> {
 template<class C>
 struct l_layer_ref : public l_crafter_ref<C> {
 	l_layer_ref(C *i, lua_State *l) : l_crafter_ref<C>(i, l) {}
-	l_layer_ref(l_layer_ref *r) : l_crafter_ref<C>(r) {}
+	l_layer_ref(l_layer_ref *r, lua_State *l) : l_crafter_ref<C>(r, l) {}
 	template<class T>
-	l_layer_ref(l_ref<T> *r, C *i) : l_crafter_ref<C>(r, i) {}
+	l_layer_ref(l_ref<T> *r, C *i, lua_State *l) : l_crafter_ref<C>(r, i, l) {}
 
 	/* Generic setter/getter */
 	template<typename T, void (C::*setfunc)(const T&)>
@@ -117,17 +117,20 @@ struct l_layer_ref : public l_crafter_ref<C> {
 };
 
 struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
-	l_packet_ref(Crafter::Packet *i, lua_State *l) : l_crafter_ref<Crafter::Packet>(i, l) {}
-	l_packet_ref(l_packet_ref *r) : l_crafter_ref<Crafter::Packet>(r) {}
+	l_packet_ref(Crafter::Packet *i, lua_State *l)
+		: l_crafter_ref<Crafter::Packet>(i, l) {}
+	l_packet_ref(l_packet_ref *r, lua_State *l)
+		: l_crafter_ref<Crafter::Packet>(r, l) {}
 	template<class T>
-	l_packet_ref(l_ref<T> *r, Crafter::Packet *i = NULL) : l_crafter_ref<Crafter::Packet>(r, i) {}
+	l_packet_ref(l_ref<T> *r, Crafter::Packet *i, lua_State *l)
+		: l_crafter_ref<Crafter::Packet>(r, i, l) {}
 	~l_packet_ref() {}
 
 	template<class C>
 	static int get_layer(lua_State *l)
 	{
 		l_ref<Crafter::Packet> *ref = l_ref<Crafter::Packet>::get_instance(l, 1);
-		new l_layer_ref<C>(ref, ref->val->GetLayer<C>());
+		new l_layer_ref<C>(ref, ref->val->GetLayer<C>(), l);
 		return 1;
 	};
 
