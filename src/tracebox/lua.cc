@@ -1,13 +1,16 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
 
-#include "lua/lua_global.h"
+#include "lua/lua_packet.hpp"
 
+extern lua_State* l_init();
+
+using namespace Crafter;
 
 Packet *script_packet(std::string& cmd)
 {

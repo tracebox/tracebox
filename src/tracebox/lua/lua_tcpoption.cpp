@@ -1,11 +1,11 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
-#include "lua_tcpoption.h"
+#include "lua_tcpoption.hpp"
 #include "lua_arg.h"
 
 using namespace Crafter;

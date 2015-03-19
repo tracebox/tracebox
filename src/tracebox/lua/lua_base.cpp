@@ -8,42 +8,29 @@
 #include "lua_base.hpp"
 
 /***
- * The basic methods supported by most objects
- * @classmod Base_Object
+ * Abstract type for all custom classes exposed from cpp,
+ * exposed to lua with reference couting.
+ * @classmod __cpp_obj
  */
 /***
- * Return the textual representation of the object.
- * @function print
- * @see tostring
- * @treturn string
+ * Garbage-collect this object -- DO NOT CALL.
+ * Will be called by the Lua interpreter in a GC run.
+ * @function __gc
  */
 /***
- * Return the Hexdacimal representation of the object.
- * @function hexdump
- * @treturn string
+ * Get this object reference count.
+ * @function __cpp_ref_count
+ * @treturn num refcount
  */
 /***
- * Concatenate two objects into a Packet
- * @function __concat
- * @usage pkt = IP / TCP / raw("Hello World!")
- * @treturn Packet
+ * Get the reference count of the owner of this object
+ * @function __cpp_ownerref_count
+ * @treturn num refcount the reference count, or nil if this object is self-owned
  */
 /***
- * Same than @{__concat}
- * @function __add
- * @see __concat
+ * The cpp classname associated held by this object. This is an opaque value.
+ * @tfield string __tbx_classname
  */
-/***
- * Same than @{__concat}
- * @function __div
- * @see __concat
- */
-/***
- * Same than @{print}
- * @function __tostring
- * @see print
- */
-
 const char *l_classname_field = "__tbx_classname";
 size_t _ref_base::instance_count = 0;
 

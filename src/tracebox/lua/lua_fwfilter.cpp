@@ -6,6 +6,7 @@
  */
 
 #include "lua_fwfilter.h"
+#include "lua_packet.hpp"
 
 using namespace Crafter;
 

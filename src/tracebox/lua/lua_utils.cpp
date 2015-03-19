@@ -5,7 +5,7 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
-#include "lua_global.h"
+#include "lua_base.hpp"
 #include "lua_arg.h"
 
 #include "crafter/Utils/IPResolver.h"

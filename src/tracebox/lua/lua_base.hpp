@@ -181,7 +181,6 @@ struct l_ref : public _ref_base {
 	{
 		metatable_bind<const char*>(l, l_classname_field, l_data_type<const char*>(TNAME(C)));
 		meta_bind_func(l, "__gc", destroy);
-		/* Undocumented, for debug purposes */
 		meta_bind_func(l, "__cpp_ref_count", _get_ref_count);
 		meta_bind_func(l, "__cpp_ownerref_count", _get_ownerref_count);
 	}

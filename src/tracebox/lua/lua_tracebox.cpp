@@ -5,6 +5,7 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
+#include "lua_packet.hpp"
 #include "lua_packetmodifications.h"
 #include "lua_arg.h"
 #include "../tracebox.h"

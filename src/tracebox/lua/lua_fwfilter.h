@@ -8,7 +8,7 @@
 #ifndef __LUA_FWFilter_H_
 #define __LUA_FWFilter_H_
 
-#include "lua_crafter.hpp"
+#include "lua_base.hpp"
 
 class FWFilter {
 	int src, dst, id;

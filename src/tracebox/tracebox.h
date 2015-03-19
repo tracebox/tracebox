@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -12,13 +12,14 @@
 #include "crafter.h"
 #include "PacketModification.h"
 
-using namespace Crafter;
+typedef int (tracebox_cb_t)(void *, int, std::string&,
+		const Crafter::Packet * const,
+		Crafter::Packet *, PacketModifications *);
 
-typedef int (tracebox_cb_t)(void *, int, std::string&, const Packet * const,
-		Packet *, PacketModifications *);
+IPLayer* probe_sanity_check(Crafter::Packet *probe,
+		std::string& err, std::string& iface);
 
-IPLayer* probe_sanity_check(Packet *probe, std::string& err, std::string& iface);
-
-int doTracebox(Packet *pkt, tracebox_cb_t *callback, std::string& err, void *ctx = NULL);
+int doTracebox(Crafter::Packet *pkt, tracebox_cb_t *callback,
+		std::string& err, void *ctx = NULL);
 
 #endif

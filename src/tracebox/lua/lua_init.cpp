@@ -5,39 +5,20 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
-#include "lua_global.h"
-
-using namespace Crafter;
-
-
-#define _INIT_TYPE_META(ref_t, t, l) \
-	do { \
-	const char *n = TNAME(t); \
-	luaL_newmetatable(l, n); \
-	ref_t::register_members(l); \
-
-#define _INIT_TYPE_GLOBALS(ref_t, t, l) \
-	lua_pushvalue(l, -1); \
-	lua_setfield(l, -1, "__index"); \
-	lua_setglobal(l,  n); \
-	ref_t::register_globals(l); } \
-	while(0)
-
-
-/* Populate the tname<x> template */
-L_EXPOSE_TYPE(Layer);
-L_EXPOSE_TYPE(Packet);
-L_EXPOSE_TYPE(IP);
-L_EXPOSE_TYPE(IPOptionLayer);
-L_EXPOSE_TYPE(IPv6);
-L_EXPOSE_TYPE(IPv6SegmentRoutingHeader);
-L_EXPOSE_TYPE(TCP);
-L_EXPOSE_TYPE(TCPOptionLayer);
-L_EXPOSE_TYPE(UDP);
-L_EXPOSE_TYPE(ICMP);
-L_EXPOSE_TYPE(RawLayer);
-L_EXPOSE_TYPE(PacketModifications);
-L_EXPOSE_TYPE(FWFilter);
+#include "lua_base.hpp"
+#include "lua_crafter.hpp"
+#include "lua_fwfilter.h"
+#include "lua_icmp.h"
+#include "lua_ip.h"
+#include "lua_ipoption.hpp"
+#include "lua_ipv6.h"
+#include "lua_ipv6segmentroutingheader.h"
+#include "lua_packet.hpp"
+#include "lua_packetmodifications.h"
+#include "lua_raw.h"
+#include "lua_tcp.h"
+#include "lua_tcpoption.hpp"
+#include "lua_udp.h"
 
 /*
  * 1. Create & fill associated metatable
@@ -54,16 +35,42 @@ L_EXPOSE_TYPE(FWFilter);
 	ref_t::register_globals(l); } \
 	while(0)
 
+/* We might want to stop using globals and instead do a global table,
+ * this hook will allow for an easier transition */
+#define REGISTER_FUNCTION(l, name, func) lua_register(l, name, func)
+
+using namespace Crafter;
+
+/* Populate the tname<x> template */
+L_EXPOSE_TYPE(Layer);
+L_EXPOSE_TYPE(Packet);
+L_EXPOSE_TYPE(IP);
+L_EXPOSE_TYPE(IPOptionLayer);
+L_EXPOSE_TYPE(IPv6);
+L_EXPOSE_TYPE(IPv6SegmentRoutingHeader);
+L_EXPOSE_TYPE(TCP);
+L_EXPOSE_TYPE(TCPOptionLayer);
+L_EXPOSE_TYPE(UDP);
+L_EXPOSE_TYPE(ICMP);
+L_EXPOSE_TYPE(RawLayer);
+L_EXPOSE_TYPE(PacketModifications);
+L_EXPOSE_TYPE(FWFilter);
+
+/* lua_tracebox.cpp */
+extern int l_Tracebox(lua_State *l);
+/* lua_utils.cpp */
+extern int l_sleep(lua_State *l);
+extern int l_dump_stack(lua_State *l);
+extern int l_cpp_object_count(lua_State *l);
+extern int l_dn6(lua_State *l);
+extern int l_dn4(lua_State *l);
+extern int l_gethostname(lua_State *l);
+
 lua_State *l_init()
 {
 	lua_State * l = luaL_newstate();
 	luaL_openlibs(l);
-
-	/* disable libcrafter warnings */
-	Crafter::ShowWarnings = 0;
-
-	/* Create metatables for every types and
-	 * add global entries (functions/objects) */
+	/* Create types metatables */
 	INIT_TYPE(l_packet_ref,                    Packet,                   l);
 	INIT_TYPE(l_ip_ref,                        IP,                       l);
 	INIT_TYPE(l_ipoption_ref,                  IPOptionLayer,            l);
@@ -77,18 +84,13 @@ lua_State *l_init()
 	INIT_TYPE(l_packetmodifications_ref,       PacketModifications,      l);
 	INIT_TYPE(l_fwfilter_ref,                  FWFilter,                 l);
 
-	/* Register the tracebox function */
-	lua_register(l, "tracebox", l_Tracebox);
-
-	/* Register the utility functions */
-	lua_register(l, "sleep", l_sleep);
-	lua_register(l, "dn4", l_dn4);
-	lua_register(l, "dn6", l_dn6);
-	lua_register(l, "gethostname", l_gethostname);
-
-	/* Debug calls */
-	lua_register(l, "__dump_c_stack", l_dump_stack);
-	lua_register(l, "__cpp_object_count", l_cpp_object_count);
+	REGISTER_FUNCTION(l, "tracebox", l_Tracebox);
+	REGISTER_FUNCTION(l, "sleep", l_sleep);
+	REGISTER_FUNCTION(l, "dn4", l_dn4);
+	REGISTER_FUNCTION(l, "dn6", l_dn6);
+	REGISTER_FUNCTION(l, "gethostname", l_gethostname);
+	REGISTER_FUNCTION(l, "__dump_c_stack", l_dump_stack);
+	REGISTER_FUNCTION(l, "__cpp_object_count", l_cpp_object_count);
 
 	return l;
 }
