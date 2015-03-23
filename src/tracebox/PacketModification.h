@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -62,29 +62,29 @@ public:
 	virtual void Print(std::ostream& out = std::cout, bool verbose = false) const;
 };
 
-class Addition : public Modification {
-public:
+struct Addition : public Modification {
 	Addition(Layer *l);
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
 };
 
-class Deletion : public Modification {
-public:
+struct Deletion : public Modification {
 	Deletion(Layer *l);
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
 };
 
-class PacketModifications : public std::vector<Modification *> {
+struct PacketModifications : public std::vector<Modification *> {
 	Packet *orig;
 	Packet *modif;
 
-public:
 	PacketModifications(Packet *orig, Packet *modif) : orig(new Packet(*orig)), modif(modif) { }
 	~PacketModifications();
 
 	void Print(std::ostream& out = std::cout, bool verbose = false) const;
+
+	static PacketModifications* ComputeModifications(Crafter::Packet *pkt, Crafter::Packet **rcv);
+
 };
 
 #endif

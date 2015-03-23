@@ -25,6 +25,9 @@ struct l_packetmodifications_ref : public l_ref<PacketModifications> {
 	void debug(std::ostream&);
 
 	static int l_PacketModifications_print(lua_State *l);
+	static int l_PacketModifications(lua_State *l);
+	static int l_get_original(lua_State *l);
+	static int l_get_received(lua_State *l);
 	static void register_members(lua_State *l);
 };
 
