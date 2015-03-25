@@ -24,7 +24,11 @@ struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
 	static int get_layer(lua_State *l)
 	{
 		l_ref<Crafter::Packet> *ref = l_ref<Crafter::Packet>::get_instance(l, 1);
-		new l_layer_ref<C>(ref, ref->val->GetLayer<C>(), l);
+		C *layer = ref->val->GetLayer<C>();
+		if (layer)
+			new l_layer_ref<C>(ref, layer, l);
+		else
+			lua_pushnil(l);
 		return 1;
 	};
 
