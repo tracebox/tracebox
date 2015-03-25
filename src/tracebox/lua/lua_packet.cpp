@@ -102,7 +102,14 @@ int l_packet_ref::send_receive(lua_State *l)
 int l_packet_ref::send(lua_State *l)
 {
 	Packet *p = l_packet_ref::get(l, 1);
-	p->Send();
+	std::string iface, err;
+	if (lua_gettop(l) > 1)
+		iface = luaL_checkstring(l, 2);
+
+	if (!probe_sanity_check(p, err, iface))
+		luaL_error(l, err.c_str());
+
+	p->Send(iface);
 	return 0;
 }
 
