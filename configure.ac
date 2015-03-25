@@ -1,4 +1,5 @@
-AC_INIT([tracebox], [0.1], [gregory.detal@uclouvain.be])
+AC_INIT([tracebox], [0.3], [olivier.tilmans@uclouvain.be],
+		[tracebox], [http://tracebox.org])
 
 AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10 -Werror -Wall no-define foreign])
@@ -56,6 +57,19 @@ AS_IF([test "x$enable_tests" = "xyes"], [
 
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
+
+AC_ARG_ENABLE([sniffer], AS_HELP_STRING([--enable-sniffer], [Build the sniffer component]))
+AM_CONDITIONAL([ENABLE_SNIFFER], [test "x$enable_sniffer" = "xyes"])
+
+AS_IF([test "x$enable_sniffer" = "xyes"], [
+	_NFQ=""
+	AC_CHECK_LIB([netfilter_queue], [nfq_open], , _NFQ="no")
+	AS_IF([test "$_NFQ" = "no"], [
+		   AC_MSG_ERROR(Cannot find libnetfilter_queue)
+	   	])
+	AC_DEFINE([HAVE_SNIFFER], [1], [The Sniffer module is enabled.])
+])
+
 
 AC_CONFIG_FILES([
 	Makefile

@@ -53,6 +53,14 @@ noinst_HEADERS = \
 	lua/lua_tcpoption.hpp \
 	lua/lua_udp.h
 
+if ENABLE_SNIFFER
+tracebox_SOURCES += \
+	sniffer.cpp \
+
+noinst_HEADERS += \
+	sniffer.h \
+
+endif
 
 tracebox_LDADD = \
 	$(abs_top_builddir)/noinst/libcrafter/libcrafter/libcrafter.la \

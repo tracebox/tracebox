@@ -1,14 +1,14 @@
 Source: tracebox
 Section: net
 Priority: extra
-Maintainer: Gregory Detal <gregory.detal@uclouvain.be>
-Build-Depends: debhelper (>= 8.0.0), autotools-dev, autoconf, libpcap-dev, liblua5.2-dev, git
-Standards-Version: 0.1
+Maintainer: Olivier Tilmans <olivier.tilmans@uclouvain.be>
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, autoconf, libpcap-dev, liblua5.2-dev, git, libnetfilter-queue-dev
+Standards-Version: 0.3
 Homepage: http://www.tracebox.org
 
 Package: tracebox
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, liblua5.2-0, libpcap0.8
+Depends: ${shlibs:Depends}, ${misc:Depends}, liblua5.2-0, libpcap0.8, libnetfilter-queue1
 Description: Tracebox
  Tracebox is a tool that allows to detect middleboxes on any paths, i.e.,
  between a source and any destination. Tracebox can be viewed as a tool similar

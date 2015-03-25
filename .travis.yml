@@ -4,11 +4,11 @@ cache: apt
 
 before_install:
 - sudo apt-get update -qq
-- sudo apt-get install -qq automake libtool lua5.2 liblua5.2-dev liblua5.2 liblua5.2-0-dbg libpcap-dev g++ autoconf gdb
+- sudo apt-get install -qq automake libtool lua5.2 liblua5.2-dev liblua5.2 liblua5.2-0-dbg libpcap-dev g++ autoconf gdb libnetfilter-queue-dev
 
 install:
 - sh bootstrap.sh
-- ./configure --enable-tests
+- ./configure --enable-tests --enable-sniffer
 - ulimit -c
 
 before_script:
