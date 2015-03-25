@@ -272,4 +272,13 @@ void l_tcpoption_ref::register_members(lua_State *l)
 	 * @tparam string data
 	 */
 	meta_bind_func(l, "data", set_payload<TCPOptionLayer>);
+	meta_bind_func(l, "new_nop", l_TCP_NOP);
+	meta_bind_func(l, "new_eol", l_TCP_EOL);
+	meta_bind_func(l, "new_sackp", l_TCP_SACKP);
+	meta_bind_func(l, "new_sack", l_TCP_SACK);
+	meta_bind_func(l, "new_mss", l_TCP_MSS);
+	meta_bind_func(l, "new_timestamp", l_TCP_Timestamp);
+	meta_bind_func(l, "new_wscale", l_TCP_WindowScale);
+	meta_bind_func(l, "new_mpjoin", l_TCP_MPTCPJoin);
+	meta_bind_func(l, "new_mpcapable", l_TCP_MPTCPCapable);
 }
