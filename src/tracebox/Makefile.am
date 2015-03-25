@@ -32,6 +32,8 @@ tracebox_SOURCES = \
 	lua/lua_tracebox.cpp \
 	lua/lua_utils.cpp
 
+
+
 noinst_HEADERS = \
 	script.h \
 	PartialHeader.h \
@@ -56,9 +58,11 @@ noinst_HEADERS = \
 if ENABLE_SNIFFER
 tracebox_SOURCES += \
 	sniffer.cpp \
+	lua/lua_sniffer.cpp
 
 noinst_HEADERS += \
 	sniffer.h \
+	lua/lua_sniffer.h
 
 endif
 

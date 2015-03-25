@@ -20,6 +20,10 @@
 #include "lua_tcpoption.hpp"
 #include "lua_udp.h"
 
+#ifdef HAVE_SNIFFER
+#include "lua_sniffer.h"
+#endif
+
 /*
  * 1. Create & fill associated metatable
  * 2 Register globals functions/values for that type
@@ -55,6 +59,9 @@ L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
 L_EXPOSE_TYPE(PacketModifications);
 L_EXPOSE_TYPE(FWFilter);
+#ifdef HAVE_SNIFFER
+L_EXPOSE_TYPE(TbxSniffer);
+#endif
 
 /* lua_tracebox.cpp */
 extern int l_Tracebox(lua_State *l);
@@ -83,6 +90,9 @@ lua_State *l_init()
 	INIT_TYPE(l_raw_ref,                       RawLayer,                 l);
 	INIT_TYPE(l_packetmodifications_ref,       PacketModifications,      l);
 	INIT_TYPE(l_fwfilter_ref,                  FWFilter,                 l);
+	#ifdef HAVE_SNIFFER
+	INIT_TYPE(l_sniffer_ref,                   TbxSniffer,               l);
+	#endif
 
 	REGISTER_FUNCTION(l, "tracebox", l_Tracebox);
 	REGISTER_FUNCTION(l, "sleep", l_sleep);
@@ -561,3 +571,22 @@ void l_udp_ref::register_globals(lua_State *l)
 	 */
 	l_do(l, "UDP=udp({dst=53})");
 }
+
+/***
+ * @section TbxSniffer
+ */
+#ifdef HAVE_SNIFFER
+void l_sniffer_ref::register_globals(lua_State *l)
+{
+	l_ref<TbxSniffer>::register_globals(l);
+	/***
+	 * Create a TbxSniffer and start sniffing immediately
+	 * @function snif
+	 * @tparam table key the Sniffing key
+	 * @tparam function cb the callback function
+	 * @see TbxSniffer:new
+	 * @within TbxSniffer
+	 */
+	l_do(l, "function snif(key, cb) _sniffer=TbxSniffer.new(key, cb)\n _sniffer:start() end");
+}
+#endif
