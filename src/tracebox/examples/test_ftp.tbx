@@ -1,7 +1,7 @@
 --
 -- Tracebox -- A middlebox detection tool
 --
---  Copyright 2013-2015 by its authors. 
+--  Copyright 2013-2015 by its authors.
 --  Some rights reserved. See LICENSE, AUTHORS.
 --
 
@@ -25,7 +25,8 @@ end
 
 -- build PORT probe
 ip_port = syn:source():gsub("%.", ",")
-data = IP / tcp{src=syn:tcp():getsource(), dst=21, seq=syn:tcp():getseq()+1, ack=synack:tcp():getseq()+1, flags=16} / raw('PORT '.. ip_port .. ',189,68\r\n')
+data = IP / tcp{src=syn:tcp():getsource(), dst=21, seq=syn:tcp():getseq()+1,
+	ack=synack:tcp():getseq()+1, flags=16} / raw('PORT '.. ip_port .. ',189,68\r\n')
 
 function cb(ttl, rip, pkt, reply, mods)
 	if mods and mods:__tostring():find("Raw") then

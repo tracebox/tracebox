@@ -61,6 +61,8 @@ static int new_packet(lua_State *l)
  * Send a packet and wait for a reply
  * @function sendrecv
  * @tparam[opt] table args A table containing the optional arguments, see @{sendrecv_args}
+ * @treturn Packet reply A received packet with the same flow key,
+ * or an ICMP, or nil
  */
 /***
  * sendrecv arguments
@@ -83,7 +85,7 @@ int l_packet_ref::send_receive(lua_State *l)
 	std::string err, intf(iface);
 	Packet *p = l_packet_ref::get(l, 1);
 	if (!probe_sanity_check(p, err, intf))
-		luaL_error(l, err.c_str());
+		luaL_argerror(l, 1, err.c_str());
 
 	Packet *rcv = p->SendRecv(intf, timeout, retry);
 	if (!rcv)
@@ -107,7 +109,7 @@ int l_packet_ref::send(lua_State *l)
 		iface = luaL_checkstring(l, 2);
 
 	if (!probe_sanity_check(p, err, iface))
-		luaL_error(l, err.c_str());
+		luaL_argerror(l, 1, err.c_str());
 
 	p->Send(iface);
 	return 0;
