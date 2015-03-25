@@ -8,7 +8,7 @@ before_install:
 
 install:
 - sh bootstrap.sh
-- ./configure --enable-tests --enable-sniffer
+- ./configure --enable-tests #--enable-sniffer
 - ulimit -c
 
 before_script:
