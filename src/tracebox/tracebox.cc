@@ -130,6 +130,7 @@ string GetDefaultIface(bool ipv6, const string &addr)
 
 	if ((fd = socket(af, SOCK_DGRAM, 0)) < 0)
 		goto out;
+
 	if (connect(fd, (struct sockaddr *)&sa, sa_len) < 0) {
 		perror("connect");
 		goto error;
@@ -151,8 +152,8 @@ string GetDefaultIface(bool ipv6, const string &addr)
 					(void *)&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
 			saddr = ipv6 ? (void *)&((struct sockaddr_in6 *)&sa)->sin6_addr :
 					(void *)&((struct sockaddr_in *)&sa)->sin_addr;
-			memcpy(name, ifa->ifa_name, IF_NAMESIZE);
 			if (!memcmp(ifa_addr, saddr, len)) {
+				strncpy(name, ifa->ifa_name, IF_NAMESIZE);
 				freeifaddrs(ifaces);
 				close(fd);
 				return name;
