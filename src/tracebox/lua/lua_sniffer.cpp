@@ -60,7 +60,7 @@ int l_sniffer_ref::l_Sniffer(lua_State *l)
  * The callback function for the sniffer
  * @function sniffer_callback
  * @tparam Packet pkt the received packet
- * @treturn num x -1 in case of error, 0 if the packet was consumed, 1 otherwise
+ * @treturn num x any value but 0 will stop the Sniffer
  */
 
 /***

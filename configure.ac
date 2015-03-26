@@ -68,6 +68,7 @@ AS_IF([test "x$enable_sniffer" = "xyes"], [
 		   AC_MSG_ERROR(Cannot find libnetfilter_queue)
 	   	])
 	AC_DEFINE([HAVE_SNIFFER], [1], [The Sniffer module is enabled.])
+	AC_CHECK_LIB([pthread], [pthread_create])
 ])
 
 
