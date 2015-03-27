@@ -218,8 +218,8 @@ static void* _start_queue(void *v)
 		_crash("The call to iptables failed!");
 
 	fd_set set;
-	struct timeval tv = { 1, 0 };
 	do {
+		struct timeval tv = { 1, 0 };
 		FD_SET(fd, &set);
 		err = select(fd+1, &set, NULL, NULL, &tv);
 		if (!err)
@@ -269,8 +269,8 @@ int TbxSniffer::start(void *ctx)
 	}
 
 	d->sniff = true;
-	struct timespec t = { 1, 0 };
 	while (d->sniff && !_killed) {
+		struct timespec t = { 1, 0 };
 		if (sem_timedwait(&d->full, &t) == -1) {
 			if (errno == ETIMEDOUT)
 				continue;
