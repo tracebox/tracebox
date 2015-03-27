@@ -1,0 +1,1 @@
+{ "addr": "1.2.3.4", "name": "1.2.3.4", "max_hops": 64, "Hops": [ { "hop": 1, "from": "1.1.1.1", "Modifications": [ "IP::TTL", "IP::Protocol" ], "Aditions": [ "RawLayer" ], "Deletions": [ "TCP" ] }, { "hop": 2, "from": "1.2.3.4", "Modifications": [ "IP::TTL", "IP::Protocol", "IP::CheckSum" ], "Aditions": [ "RawLayer" ], "Deletions": [ "TCP" ] } ] }
