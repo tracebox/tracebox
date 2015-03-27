@@ -13,8 +13,6 @@ AC_PROG_LIBTOOL
 AC_HEADER_STDC
 AC_HEADER_ASSERT
 
-PKG_CHECK_MODULES([LIBJSON], [json >= 0.9])
-
 AX_PROG_LUA
 AX_LUA_HEADERS
 AX_LUA_LIBS
@@ -59,8 +57,12 @@ AS_IF([test "x$enable_tests" = "xyes"], [
 
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
-AC_SUBST([LIBJSON_CFLAGS])
-AC_SUBST([LIBJSON_LIBS])
+
+AC_SEARCH_LIBS([json_tokener_parse_ex], [json-c json], [], [
+    AC_MSG_ERROR(json-c/libjson is not installed)
+    ])
+AC_CHECK_LIB([json-c], [json_tokener_parse_ex], [AC_DEFINE([HAVE_JSONC], [1])])
+AC_CHECK_LIB([json], [json_tokener_parse_ex], [AC_DEFINE([HAVE_LIBJSON], [1])])
 
 
 AC_ARG_ENABLE([sniffer], AS_HELP_STRING([--enable-sniffer], [Build the sniffer component]))

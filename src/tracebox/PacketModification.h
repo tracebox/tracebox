@@ -9,7 +9,12 @@
 #define __PACKETMODIFICATION_H__
 
 #include "crafter.h"
+#ifdef HAVE_LIBJSON
 #include <json/json.h>
+#endif
+#ifdef HAVE_JSONC
+#include <json-c/json.h>
+#endif
 
 using namespace Crafter;
 
@@ -61,7 +66,7 @@ public:
 	virtual ~Modification() {}
 
 	virtual void Print(std::ostream& out = std::cout, bool verbose = false) const;
-	
+
 	virtual void Print_JSON(json_object *res = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
 };
 

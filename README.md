@@ -38,8 +38,8 @@ It can be generated using [LDoc](https://github.com/stevedonovan/LDoc) from the 
     $ ldoc .
 
 The documentation should be created under doc/
-=======
-### JSON Format
+
+## JSON Format
 
 To change the output format of Tracebox to JSOn format, use the j option.
 
@@ -104,7 +104,7 @@ Output format:
                 else:
                     Array containing just the name of the extension(s)
 
-            ]    
+            ]
         }
     ]
     }

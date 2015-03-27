@@ -17,7 +17,12 @@
 #include <iostream>
 #include <vector>
 
+#ifdef HAVE_LIBJSON
 #include <json/json.h>
+#endif
+#ifdef HAVE_JSONC
+#include <json-c/json.h>
+#endif
 
 extern "C" {
 #include <pcap.h>
@@ -489,7 +494,7 @@ int main(int argc, char *argv[])
 	bool inline_script = false;
 
 	tracebox_cb_t *callback = Callback;
-	
+
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
 	while ((c = getopt(argc, argv, ":l:i:m:s:p:d:hnv6uwj")) != -1) {

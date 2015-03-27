@@ -30,7 +30,8 @@ tracebox_SOURCES = \
 	lua/lua_tcpoption.cpp \
 	lua/lua_udp.cpp \
 	lua/lua_tracebox.cpp \
-	lua/lua_utils.cpp 
+	lua/lua_utils.cpp
+
 noinst_HEADERS = \
 	script.h \
 	PartialHeader.h \
@@ -66,11 +67,9 @@ endif
 
 tracebox_LDADD = \
 	$(abs_top_builddir)/noinst/libcrafter/libcrafter/libcrafter.la \
-	$(LUA_LIB) 
+	$(LUA_LIB)
 tracebox_CPPFLAGS = \
 	-I$(top_srcdir)/noinst/libcrafter/libcrafter \
 	$(LUA_INCLUDE) \
 	-fno-omit-frame-pointer \
 	-Wall
-tracebox_LDFLAGS = \
-	-ljson
