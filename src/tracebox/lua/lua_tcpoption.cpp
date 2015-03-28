@@ -283,6 +283,22 @@ int l_tcpoption_ref::l_TCP_MPTCPCapable(lua_State *l)
 	return 1;
 }
 
+/***
+ * Create a new EDORequest Option
+ * @function new_edo_request
+ * @treturn TCPOption
+ */
+int l_tcpoption_ref::l_TCP_EDORequest(lua_State *l)
+{
+	TCPOptionExtendedDataOffsetRequest *opt;
+
+	opt = l_tcpoption_ref::new_option_ref<TCPOptionExtendedDataOffsetRequest>(l);
+	if (!opt)
+		return 0;
+
+	return 1;
+}
+
 void l_tcpoption_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCPOptionLayer>::register_members(l);

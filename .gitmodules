@@ -5,4 +5,4 @@
 	ignore = untracked
 [submodule "noinst/libcrafter"]
 	path = noinst/libcrafter
-	url = https://github.com/pellegre/libcrafter.git
+	url = https://github.com/chamalo90/libcrafter.git
