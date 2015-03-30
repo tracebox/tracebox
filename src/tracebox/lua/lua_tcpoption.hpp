@@ -11,14 +11,7 @@
 #include "lua_crafter.hpp"
 
 struct l_tcpoption_ref : public l_layer_ref<Crafter::TCPOptionLayer> {
-	l_tcpoption_ref (Crafter::TCPOptionLayer *i, lua_State *l)
-		: l_layer_ref<Crafter::TCPOptionLayer>(i, l) {}
-	l_tcpoption_ref(l_tcpoption_ref *r, lua_State *l)
-		: l_layer_ref<Crafter::TCPOptionLayer>(r, l) {}
-	template<class T>
-	l_tcpoption_ref(l_ref<T> *r, Crafter::TCPOptionLayer *i, lua_State *l)
-		: l_layer_ref<Crafter::TCPOptionLayer>(r, i, l) {}
-	~l_tcpoption_ref() {}
+using l_layer_ref<Crafter::TCPOptionLayer>::l_layer_ref;
 
 	template<class C>
 	static C* new_option_ref(lua_State *l)

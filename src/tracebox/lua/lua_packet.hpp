@@ -11,14 +11,7 @@
 #include "lua_crafter.hpp"
 
 struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
-	l_packet_ref(Crafter::Packet *i, lua_State *l)
-		: l_crafter_ref<Crafter::Packet>(i, l) {}
-	l_packet_ref(l_packet_ref *r, lua_State *l)
-		: l_crafter_ref<Crafter::Packet>(r, l) {}
-	template<class T>
-	l_packet_ref(l_ref<T> *r, Crafter::Packet *i, lua_State *l)
-		: l_crafter_ref<Crafter::Packet>(r, i, l) {}
-	~l_packet_ref() {}
+	using l_crafter_ref<Crafter::Packet>::l_crafter_ref;
 
 	template<class C>
 	static int get_layer(lua_State *l)

@@ -11,14 +11,7 @@
 #include "lua_crafter.hpp"
 
 struct l_ipoption_ref : public l_layer_ref<Crafter::IPOptionLayer> {
-	l_ipoption_ref (Crafter::IPOptionLayer *i, lua_State *l)
-		: l_layer_ref<Crafter::IPOptionLayer>(i, l) {}
-	l_ipoption_ref(l_ipoption_ref *r, lua_State *l)
-		: l_layer_ref<Crafter::IPOptionLayer>(r, l) {}
-	template<class T>
-	l_ipoption_ref(l_ref<T> *r, Crafter::IPOptionLayer *i, lua_State *l)
-		: l_layer_ref<Crafter::IPOptionLayer>(r, i, l) {}
-	~l_ipoption_ref() {}
+	using l_layer_ref<Crafter::IPOptionLayer>::l_layer_ref;
 
 	template<class C>
 	static C* new_option_ref(lua_State *l)

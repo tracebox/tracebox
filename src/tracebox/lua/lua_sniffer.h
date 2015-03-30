@@ -12,14 +12,7 @@
 #include "../sniffer.h"
 
 struct l_sniffer_ref : public l_ref<TbxSniffer> {
-	l_sniffer_ref(TbxSniffer *i, lua_State *l)
-		: l_ref<TbxSniffer>(i, l){}
-	l_sniffer_ref(l_sniffer_ref *f, lua_State *l)
-		: l_ref<TbxSniffer>(f, l){}
-	template<class T>
-	l_sniffer_ref(l_ref<T> *r, TbxSniffer *i, lua_State *l)
-		: l_ref<TbxSniffer>(r, i, l){}
-	~l_sniffer_ref() {}
+	using l_ref<TbxSniffer>::l_ref;
 
 	static int l_Sniffer(lua_State *l);
 	static int l_start(lua_State *l);

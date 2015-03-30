@@ -13,14 +13,7 @@
 
 
 struct l_packetmodifications_ref : public l_ref<PacketModifications> {
-	l_packetmodifications_ref (PacketModifications *i, lua_State *l)
-		: l_ref<PacketModifications>(i, l) {}
-	l_packetmodifications_ref(l_packetmodifications_ref *r, lua_State *l)
-		: l_ref<PacketModifications>(r, l) {}
-	template<class T>
-	l_packetmodifications_ref(l_ref<T> *r, PacketModifications *i, lua_State *l)
-		: l_ref<PacketModifications>(r, i, l) {}
-	~l_packetmodifications_ref() {}
+	using l_ref<PacketModifications>::l_ref;
 
 	void debug(std::ostream&);
 

@@ -36,10 +36,7 @@ int push_streamfunc(lua_State *l, void (C::*f)(std::ostream&) const)
 
 template<class C>
 struct l_crafter_ref : public l_ref<C> {
-	l_crafter_ref(C *i, lua_State *l) : l_ref<C>(i, l) {}
-	l_crafter_ref(l_crafter_ref *r, lua_State *l) : l_ref<C>(r, l) {}
-	template<class T>
-	l_crafter_ref(l_ref<T> *r, C *i, lua_State *l) : l_ref<C>(r, i, l) {}
+	using l_ref<C>::l_ref;
 
 	void debug(std::ostream& out)
 	{
@@ -75,10 +72,7 @@ struct l_crafter_ref : public l_ref<C> {
 
 template<class C>
 struct l_layer_ref : public l_crafter_ref<C> {
-	l_layer_ref(C *i, lua_State *l) : l_crafter_ref<C>(i, l) {}
-	l_layer_ref(l_layer_ref *r, lua_State *l) : l_crafter_ref<C>(r, l) {}
-	template<class T>
-	l_layer_ref(l_ref<T> *r, C *i, lua_State *l) : l_crafter_ref<C>(r, i, l) {}
+	using l_crafter_ref<C>::l_crafter_ref;
 
 	/* Generic setter/getter */
 	template<typename T, void (C::*setfunc)(const T&)>

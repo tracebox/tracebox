@@ -7,9 +7,7 @@
 
 #include "sniffer.h"
 
-#include <sstream>
-#include <iostream>
-#include <ostream>
+#include <string>
 #include <queue>
 #include <cstdlib>
 #include <unistd.h>
@@ -109,9 +107,7 @@ struct Sniffer_private {
 		key.push_back("-j");
 		key.push_back("NFQUEUE");
 		key.push_back("--queue-num");
-		std::stringstream s;
-		s << q;
-		key.push_back(std::string(s.str()));
+		key.push_back(std::to_string(q));
 		key.push_back("-A");
 		key.push_back("INPUT");
 		++next_q;
