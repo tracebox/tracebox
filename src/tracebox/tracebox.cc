@@ -497,7 +497,7 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, ":l:i:m:s:p:d:hnv6uwj")) != -1) {
+	while ((c = getopt(argc, argv, "l:i:m:s:p:d:hnv6uwj")) != -1) {
 		switch (c) {
 			case 'i':
 				iface = optarg;
@@ -541,8 +541,8 @@ int main(int argc, char *argv[])
 				script = optarg;
 				inline_script = true;
 				break;
-			case ':':
-				cerr << "missing option argument" << endl;
+			case '?':
+				std::cerr << "Unknown option `-" << optopt << "'." << std::endl;
 			default:
 				goto usage;
 		}
@@ -553,9 +553,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (optind < argc)
+	if (optind < argc) {
 		destination = argv[optind];
-	else if (!inline_script && ! script) {
+	} else if (!inline_script && ! script) {
 		cerr << "You must specify a destination host" << endl;
 		return 1;
 	}

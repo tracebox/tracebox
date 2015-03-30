@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -123,6 +123,7 @@ void l_tcp_ref::register_members(lua_State *l)
 	 * Set the TCP flags
 	 * @function setflags
 	 * @tparam num flags the TCP flags
+	 * @usage tcp:setflags(TCP.SYN + TCP.ACK)
 	 * */
 	/***
 	 * Get the TCP flags
@@ -130,4 +131,45 @@ void l_tcp_ref::register_members(lua_State *l)
 	 * @treturn num flags the TCP flags
 	 * */
 	META_GETTER_SETTER(l, flags,  byte,        TCP, Flags);
+	#define META_FLAG(f) metatable_bind(l, #f, l_data_type<int>(TCP::f))
+	/***
+	 * The TCP FIN flag value
+	 * @tfield num FIN
+	 */
+	META_FLAG(FIN);
+	/***
+	 * The TCP SYN flag value
+	 * @tfield num SYN
+	 */
+	META_FLAG(SYN);
+	/***
+	 * The TCP RST flag value
+	 * @tfield num RST
+	 */
+	META_FLAG(RST);
+	/***
+	 * The TCP PSH flag value
+	 * @tfield num PSH
+	 */
+	META_FLAG(PSH);
+	/***
+	 * The TCP ACK flag value
+	 * @tfield num ACK
+	 */
+	META_FLAG(ACK);
+	/***
+	 * The TCP URG flag value
+	 * @tfield num URG
+	 */
+	META_FLAG(URG);
+	/***
+	 * The TCP ECE flag value
+	 * @tfield num ECE
+	 */
+	META_FLAG(ECE);
+	/***
+	 * The TCP CWR flag value
+	 * @tfield num CWR
+	 */
+	META_FLAG(CWR);
 }
