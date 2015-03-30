@@ -483,12 +483,20 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	lua_register(l, "mpjoin", l_TCP_MPTCPJoin);
 	/***
 	 * Construct a  TCPOption EDORequest, shorthand for @{TCPOption:new_edorequest}
-	 * @function edocapable
+	 * @function edo_request
 	 * @treturn TCPOption
 	 * @see TCPOption:new_edorequest
 	 * @within TCP
 	 */
 	lua_register(l, "edorequest", l_TCP_EDORequest);
+	/***
+	 * Construct a  TCPOption EDO, shorthand for @{TCPOption:new_edo}
+	 * @function edo
+	 * @treturn TCPOption
+	 * @see TCPOption:new_edo
+	 * @within TCP
+	 */
+	lua_register(l, "edo", l_TCP_EDO);
 	/***
 	 * A default TCP NOP object
 	 * @table NOP
@@ -561,6 +569,13 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	 * @within TCP
 	 */
 	l_do(l, "EDOREQUEST=edorequest{}");
+	/***
+	 * A default TCPOption EDO object
+	 * @table EDO
+	 * @see TCPOption:new_edo
+	 * @within TCP
+	 */
+	l_do(l, "EDO=edo{}");
 }
 
 /***

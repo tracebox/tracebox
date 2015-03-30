@@ -1,0 +1,25 @@
+--
+-- Tracebox -- A middlebox detection tool
+--
+-- Script to test if the destination respond to EDO Request
+--
+--  Copyright 2013-2015 by its authors.
+--  Some rights reserved. See LICENSE, AUTHORS.
+--
+
+syn = IP / tcp{dst=80} / MSS/EDOREQUEST/ NOP/ NOP
+
+fp = filter(syn)
+
+pc = syn:sendrecv{timeout=20}
+
+if (pc ~= nil) then
+	print(pc:destination())
+	print(pc)
+	if pc:__tostring():find("SYN ACK") and pc:__tostring():find("EDO") then
+		print("found")
+	else
+		-- print("not send")
+	end
+end
+fp:close()
