@@ -17,6 +17,7 @@ click_configs_in = \
 	labs/WIN.in \
 	labs/ECN.in \
 	labs/LIMITED.in \
+	labs/JSON.in \
 	labs/MULTI1.in
 
 click_configs_in_args = \
