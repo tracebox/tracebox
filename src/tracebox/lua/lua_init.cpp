@@ -510,9 +510,9 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	 */
 	l_do(l, "MSS=mss(1460)");
 	/***
-	 * A default TCP NOP object
+	 * A default TCP Timestamp object
 	 * @table TS
-	 * @see TCPOption:new_mss
+	 * @see TCPOption:new_timestamp
 	 * @within TCP
 	 */
 	l_do(l, "TS=NOP/NOP/timestamp{}");
