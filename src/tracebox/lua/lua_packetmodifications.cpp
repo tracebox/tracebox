@@ -35,7 +35,7 @@ int l_packetmodifications_ref::l_PacketModifications(lua_State *l)
 int l_packetmodifications_ref::l_PacketModifications_print(lua_State *l)
 {
 	std::ostringstream stream;
-	PacketModifications *o = l_ref<PacketModifications>::get(l, 1);
+	PacketModifications *o = l_packetmodifications_ref::get(l, 1);
 	o->Print(stream);
 	l_data_type<std::string>(stream.str()).push(l);
 	return 1;

@@ -148,37 +148,34 @@ PacketModifications* PacketModifications::ComputeModifications(Crafter::Packet *
 {
 	ICMPLayer *icmp = (*rcv)->GetLayer<ICMPLayer>();
 	RawLayer *raw = (*rcv)->GetLayer<RawLayer>();
-	Packet *cnt;
 	bool partial = false;
-	int proto = pkt->GetLayer<IP>()->PROTO;
+	int proto = pkt->GetLayer<IPLayer>()->GetID();
 
-	if (!icmp || !raw)
-		return NULL;
+	if (icmp && raw) {
+		Packet *cnt = new Packet;
+		switch (proto) {
+		case IP::PROTO:
+			cnt->PacketFromIP(*raw);
+			/* We might receive an ICMP without the complete
+			 * echoed packet or with ICMP extensions. We thus
+			 * remove undesired parts and parse partial headers.
+			 */
+			cnt = TrimReplyIPv4(cnt, &partial);
+			break;
+		case IPv6::PROTO:
+			cnt->PacketFromIPv6(*raw);
+			cnt = TrimReplyIPv6(cnt);
+			break;
+		default:
+			delete cnt;
+			return NULL;
+		}
 
-	cnt = new Packet;
-	switch (proto) {
-	case IP::PROTO:
-		cnt->PacketFromIP(*raw);
-		/* We might receive an ICMP without the complete
-		 * echoed packet or with ICMP extensions. We thus
-		 * remove undesired parts and parse partial headers.
-		 */
-		cnt = TrimReplyIPv4(cnt, &partial);
-		break;
-	case IPv6::PROTO:
-		cnt->PacketFromIPv6(*raw);
-		cnt = TrimReplyIPv6(cnt);
-		break;
-	default:
-		delete cnt;
-		return NULL;
+		delete *rcv;
+		*rcv = cnt;
 	}
 
-	delete *rcv;
-	*rcv = cnt;
-
-	return ComputeDifferences(pkt, cnt, partial);
-
+	return ComputeDifferences(pkt, *rcv, partial);
 }
 
 Modification::Modification(int proto, std::string name, size_t offset, size_t len) :
@@ -229,7 +226,7 @@ void Modification::Print_JSON(json_object *res, json_object *add, json_object *d
 			json_object *modif_header = json_object_new_object();
 			json_object_object_add(modif_header,name.c_str(), modif);
 			json_object_array_add(res,modif_header);
-			
+
 	}
 	else
 	{
