@@ -368,8 +368,9 @@ static int Callback_JSON(void *ctx, int ttl, string& router,
 				json_object_object_add(hop,"Modifications", modif);
 				json_object_object_add(hop,"Aditions", add);
 				json_object_object_add(hop,"Deletions", del);
-
+				delete mod;
 			}
+		delete rcv;
 	}
 	else{
 		json_object_object_add(hop,"hop", json_object_new_int(ttl));
