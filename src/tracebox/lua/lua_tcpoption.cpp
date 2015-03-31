@@ -12,6 +12,32 @@ using namespace Crafter;
 using namespace std;
 
 /***
+ * Create a 'blank' TCPOption
+ * @function new
+ * @tparam[opt] table args see @{new_args}
+ * treturn TCPOption
+ */
+/***
+ * TCPOption constructor arguments
+ * @table new_args
+ * @tfield num copy
+ * @tfield num class
+ */
+int l_tcpoption_ref::l_TCPOption(lua_State *l)
+{
+	uint64_t kind, length;
+	bool ki = v_arg_integer64_opt(l, 1, "kind", &kind);
+	bool le = v_arg_integer64_opt(l, 1, "length", &length);
+	TCPOption *opt = new TCPOption();
+
+	if (ki) opt->SetKind(kind);
+	if (le) opt->SetLength(length);
+
+	new l_tcpoption_ref(opt, l);
+	return 1;
+}
+
+/***
  * Options for the TCP Layer, inherits from @{Base_Object}
  * @classmod TCPOption
  */
@@ -272,6 +298,7 @@ void l_tcpoption_ref::register_members(lua_State *l)
 	 * @tparam string data
 	 */
 	meta_bind_func(l, "data", set_payload<TCPOptionLayer>);
+	meta_bind_func(l, "new", l_TCPOption);
 	meta_bind_func(l, "new_nop", l_TCP_NOP);
 	meta_bind_func(l, "new_eol", l_TCP_EOL);
 	meta_bind_func(l, "new_sackp", l_TCP_SACKP);

@@ -20,6 +20,7 @@ struct l_ipoption_ref : public l_layer_ref<Crafter::IPOptionLayer> {
 		new l_ipoption_ref(o, l);
 		return o;
 	};
+	static int l_IPOption(lua_State *l);
 	static int l_IP_NOP(lua_State *l);
 	static int l_IP_EOL(lua_State *l);
 	static int l_IP_SSRR(lua_State *l);

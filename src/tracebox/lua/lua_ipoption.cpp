@@ -12,6 +12,38 @@ using namespace Crafter;
 using namespace std;
 
 /***
+ * Create a 'blank' IPOption
+ * @function new
+ * @tparam[opt] table args see @{new_args}
+ * treturn IPOption
+ */
+/***
+ * IPOption constructor arguments
+ * @table new_args
+ * @tfield num copy
+ * @tfield num class
+ * @tfield num option
+ * @tfield num length
+ */
+int l_ipoption_ref::l_IPOption(lua_State *l)
+{
+	uint64_t copy, class_, option, length;
+	bool co = v_arg_integer64_opt(l, 1, "copy", &copy);
+	bool cl = v_arg_integer64_opt(l, 1, "class", &class_);
+	bool op = v_arg_integer64_opt(l, 1, "option", &option);
+	bool le = v_arg_integer64_opt(l, 1, "length", &length);
+	IPOption *opt = new IPOption();
+
+	if (co) opt->SetCopyFlag(copy);
+	if (cl) opt->SetClass(class_);
+	if (op) opt->SetOption(option);
+	if (le) opt->SetLength(length);
+
+	new l_ipoption_ref(opt, l);
+	return 1;
+}
+
+/***
  * Options for the IP Layer, inherits from @{Base_Object}
  * @classmod IPOption
  */
@@ -161,6 +193,7 @@ int l_ipoption_ref::l_IP_Traceroute(lua_State *l)
 void l_ipoption_ref::register_members(lua_State *l)
 {
 	l_layer_ref<IPOptionLayer>::register_members(l);
+	meta_bind_func(l, "new", l_IPOption);
 	meta_bind_func(l, "new_nop", l_IP_NOP);
 	meta_bind_func(l, "new_eol", l_IP_EOL);
 	meta_bind_func(l, "new_ssrr", l_IP_SSRR);

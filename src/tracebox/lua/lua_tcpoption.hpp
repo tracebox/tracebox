@@ -20,6 +20,7 @@ using l_layer_ref<Crafter::TCPOptionLayer>::l_layer_ref;
 		new l_tcpoption_ref(o, l);
 		return o;
 	};
+	static int l_TCPOption(lua_State *l);
 	static int l_TCP_NOP(lua_State *l);
 	static int l_TCP_EOL(lua_State *l);
 	static int l_TCP_SACKP(lua_State *l);
