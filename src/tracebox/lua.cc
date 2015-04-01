@@ -39,7 +39,7 @@ static void _add_argv(lua_State *l, int argc, char **argv)
 	lua_newtable(l);
 	for (int i = 0; i < argc; ++i) {
 		lua_pushstring(l, argv[i]);
-		lua_rawseti(l, -2, i);
+		lua_rawseti(l, -2, i+1);
 	}
 	lua_setglobal(l, "argv");
 }
