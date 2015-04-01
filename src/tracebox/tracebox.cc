@@ -554,11 +554,13 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (optind < argc) {
-		destination = argv[optind];
-	} else if (!inline_script && ! script) {
-		cerr << "You must specify a destination host" << endl;
-		return 1;
+	if (!inline_script && !script) {
+		if (optind < argc) {
+			destination = argv[optind];
+		} else {
+			cerr << "You must specify a destination host" << endl;
+			return 1;
+		}
 	}
 
 	if (!probe && !script) {
