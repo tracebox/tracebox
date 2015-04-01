@@ -12,10 +12,7 @@ using namespace std;
 
 static Layer *GetLayer(Packet *pkt, int proto_id)
 {
-	LayerStack::const_iterator it;
-
-	for (it = pkt->begin() ; it != pkt->end() ; it++) {
-		Layer *l = *it;
+	for (Layer *l : *pkt) {
 		if (l->GetID() == proto_id)
 			return l;
 	}
@@ -25,12 +22,17 @@ static Layer *GetLayer(Packet *pkt, int proto_id)
 static set<int> GetAllProtos(Packet *p1, Packet *p2)
 {
 	set<int> ret;
-	LayerStack::const_iterator it;
 
-	for (it = p1->begin() ; it != p1->end() ; it++)
-		ret.insert((*it)->GetID());
-	for (it = p2->begin() ; it != p2->end() ; it++)
-		ret.insert((*it)->GetID());
+	for (Layer *l : *p1)
+		ret.insert(l->GetID());
+	for (Layer *l : *p2)
+		ret.insert(l->GetID());
+
+	/* Remove unwanted layers */
+	ret.erase(Crafter::Ethernet::PROTO);
+	ret.erase(Crafter::SLL::PROTO);
+	ret.erase(Crafter::NullLoopback::PROTO);
+
 	return ret;
 }
 
@@ -69,11 +71,10 @@ static PacketModifications* ComputeDifferences(Packet *orig, Packet *modified, b
 {
 	PacketModifications *modifs = new PacketModifications(orig, modified);
 	set<int> protos = GetAllProtos(orig, modified);
-	set<int>::iterator it = protos.begin();
 
-	for ( ; it != protos.end() ; it++) {
-		Layer *l1 = GetLayer(orig, *it);
-		Layer *l2 = GetLayer(modified, *it);
+	for (auto proto : protos) {
+		Layer *l1 = GetLayer(orig, proto);
+		Layer *l2 = GetLayer(modified, proto);
 
 		if (l1 && l2)
 			ComputeDifferences(modifs, l1, l2);
