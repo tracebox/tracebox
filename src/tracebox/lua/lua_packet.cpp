@@ -115,6 +115,26 @@ int l_packet_ref::send(lua_State *l)
 	return 0;
 }
 
+/***
+ * Get the list of bytes contained in this packet
+ * @function bytes
+ * @treturn table bytes a list of numbers [0-255] denoting the value of each
+ * byte in the packet
+ */
+int l_packet_ref::l_bytes(lua_State *l)
+{
+	Packet *p = l_packet_ref::get(l, 1);
+	lua_newtable(l);
+	p->PreCraft();
+	const byte *b = p->GetRawPtr();
+	for (size_t i = 0; i < p->GetSize(); ++i) {
+		l_data_type<int>(*b).push(l);
+		lua_rawseti(l, -2, i + 1);
+		++b;
+	}
+	return 1;
+}
+
 void l_packet_ref::register_members(lua_State *l)
 {
 	l_crafter_ref<Packet>::register_members<Packet>(l);
@@ -167,4 +187,5 @@ void l_packet_ref::register_members(lua_State *l)
 	 * @treturn Raw the Raw layer or nil
 	 */
 	meta_bind_func(l, "payload", get_layer<RawLayer>);
+	meta_bind_func(l, "bytes", l_bytes);
 }
