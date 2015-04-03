@@ -22,4 +22,6 @@ IPLayer* probe_sanity_check(Crafter::Packet *probe,
 int doTracebox(Crafter::Packet *pkt, tracebox_cb_t *callback,
 		std::string& err, void *ctx = NULL);
 
+void writePcap(Packet* p);
+
 #endif

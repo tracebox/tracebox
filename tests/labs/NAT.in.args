@@ -1,1 +1,1 @@
--s @example_dir@/test_ftp.tbx
+-q -s @example_dir@/test_ftp.tbx

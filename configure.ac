@@ -192,18 +192,26 @@ AC_ARG_WITH(libs,
 )
 AC_SUBST(EXTRALIBS)
 
+AC_ARG_ENABLE([curl], AS_HELP_STRING([--enable-curl], [Build the curl component]))
+AM_CONDITIONAL([ENABLE_CURL], [test "x$enable_curl" = "xyes"])
+
+AS_IF([test "x$enable_curl" = "xyes"], [
+	LIBCURL_CHECK_CONFIG(, 7.10.1, ,
+  [AC_MSG_ERROR([Missing required libcurl >= 7.10.1])])
+  AC_DEFINE([HAVE_CURL], [1], [Curl library is available.])
+])
 
 AC_ARG_ENABLE([sniffer], AS_HELP_STRING([--enable-sniffer], [Build the sniffer component]))
 AM_CONDITIONAL([ENABLE_SNIFFER], [test "x$enable_sniffer" = "xyes"])
 
 AS_IF([test "x$enable_sniffer" = "xyes"], [
-	_NFQ=""
-	AC_CHECK_LIB([netfilter_queue], [nfq_open], , _NFQ="no")
-	AS_IF([test "$_NFQ" = "no"], [
-		   AC_MSG_ERROR(Cannot find libnetfilter_queue)
-	   	])
-	AC_DEFINE([HAVE_SNIFFER], [1], [The Sniffer module is enabled.])
-	AC_CHECK_LIB([pthread], [pthread_create])
+    _NFQ=""
+    AC_CHECK_LIB([netfilter_queue], [nfq_open], , _NFQ="no")
+    AS_IF([test "$_NFQ" = "no"], [
+           AC_MSG_ERROR(Cannot find libnetfilter_queue)
+        ])
+    AC_DEFINE([HAVE_SNIFFER], [1], [The Sniffer module is enabled.])
+    AC_CHECK_LIB([pthread], [pthread_create])
 ])
 
 # Make sure libcrafter build a static library by adding the --disable-shared
