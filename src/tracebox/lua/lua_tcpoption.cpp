@@ -12,6 +12,10 @@ using namespace Crafter;
 using namespace std;
 
 /***
+ * Options for the TCP Layer, inherits from @{Base_Object}
+ * @classmod TCPOption
+ */
+/***
  * Create a 'blank' TCPOption
  * @function new
  * @tparam[opt] table args see @{new_args}
@@ -37,10 +41,6 @@ int l_tcpoption_ref::l_TCPOption(lua_State *l)
 	return 1;
 }
 
-/***
- * Options for the TCP Layer, inherits from @{Base_Object}
- * @classmod TCPOption
- */
 /***
  * Create a new NOP Option (Kind=1)
  * @function new_nop

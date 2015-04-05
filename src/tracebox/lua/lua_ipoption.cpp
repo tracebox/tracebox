@@ -12,6 +12,10 @@ using namespace Crafter;
 using namespace std;
 
 /***
+ * Options for the IP Layer, inherits from @{Base_Object}
+ * @classmod IPOption
+ */
+/***
  * Create a 'blank' IPOption
  * @function new
  * @tparam[opt] table args see @{new_args}
@@ -43,10 +47,6 @@ int l_ipoption_ref::l_IPOption(lua_State *l)
 	return 1;
 }
 
-/***
- * Options for the IP Layer, inherits from @{Base_Object}
- * @classmod IPOption
- */
 /***
  * Create a new NOP Option (Option=1)
  * @function new_nop

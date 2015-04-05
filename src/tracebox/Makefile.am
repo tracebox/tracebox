@@ -30,7 +30,8 @@ tracebox_SOURCES = \
 	lua/lua_tcpoption.cpp \
 	lua/lua_udp.cpp \
 	lua/lua_tracebox.cpp \
-	lua/lua_utils.cpp
+	lua/lua_utils.cpp \
+	lua/lua_dns.cpp
 
 noinst_HEADERS = \
 	script.h \
@@ -52,6 +53,7 @@ noinst_HEADERS = \
 	lua/lua_tcp.h \
 	lua/lua_tcpoption.hpp \
 	lua/lua_udp.h \
+	lua/lua_dns.h \
 	tracebox.h
 
 if ENABLE_SNIFFER

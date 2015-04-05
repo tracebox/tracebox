@@ -7,6 +7,7 @@
 
 #include "lua_base.hpp"
 #include "lua_crafter.hpp"
+#include "lua_dns.h"
 #include "lua_fwfilter.h"
 #include "lua_icmp.h"
 #include "lua_ip.h"
@@ -59,6 +60,9 @@ L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
 L_EXPOSE_TYPE(PacketModifications);
 L_EXPOSE_TYPE(FWFilter);
+L_EXPOSE_TYPE(DNS);
+template<> const char *tname<DNS::DNSQuery>::name = "DNSQuery";
+template<> const char *tname<DNS::DNSAnswer>::name = "DNSAnswer";
 #ifdef HAVE_SNIFFER
 L_EXPOSE_TYPE(TbxSniffer);
 #endif
@@ -90,6 +94,9 @@ lua_State *l_init()
 	INIT_TYPE(l_raw_ref,                       RawLayer,                 l);
 	INIT_TYPE(l_packetmodifications_ref,       PacketModifications,      l);
 	INIT_TYPE(l_fwfilter_ref,                  FWFilter,                 l);
+	INIT_TYPE(l_dns_ref,                       DNS,                      l);
+	INIT_TYPE(l_dnsquery_ref,                  DNS::DNSQuery,            l);
+	INIT_TYPE(l_dnsanswer_ref,                 DNS::DNSAnswer,           l);
 	#ifdef HAVE_SNIFFER
 	INIT_TYPE(l_sniffer_ref,                   TbxSniffer,               l);
 	#endif
@@ -603,6 +610,22 @@ void l_udp_ref::register_globals(lua_State *l)
 }
 
 /***
+ * @section DNS
+ */
+void l_dnsquery_ref::register_globals(lua_State *l)
+{
+	l_ref<DNS::DNSQuery>::register_globals(l);
+	/***
+	 * Create a new DNSQuery for a given hostname, type A, class IN
+	 * @function dnsquery
+	 * @tparam string name
+	 * @treturn DNSQuery
+	 */
+	l_do(l, "function dnsquery(n) return DNSQuery.new{"
+			"name=n, type=DNS.Type.A, class=DNS.Class.IN} end");
+}
+
+/***
  * @section TbxSniffer
  */
 #ifdef HAVE_SNIFFER
@@ -617,6 +640,7 @@ void l_sniffer_ref::register_globals(lua_State *l)
 	 * @see TbxSniffer:new
 	 * @within TbxSniffer
 	 */
-	l_do(l, "function snif(key, cb) _sniffer=TbxSniffer.new(key, cb)\n _sniffer:start() end");
+	l_do(l, "function snif(key, cb) _sniffer=TbxSniffer.new(key, cb)"
+			"\n _sniffer:start() end");
 }
 #endif
