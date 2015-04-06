@@ -169,3 +169,18 @@ int l_cpp_object_count(lua_State *l)
 	lua_pushinteger(l, _ref_base::instance_count);
 	return 1;
 }
+
+/***
+ * Return a random number between 0 (inclusive) and the given bound (exclusive) if any
+ * @function random
+ * @tparam[opt] num UB
+ * @treturn num n
+ */
+int l_random(lua_State *l)
+{
+	int max = UINT_MAX;
+	if (lua_gettop(l) > 0)
+		max = luaL_checkinteger(l, 1);
+	l_data_type<int>(rand() % max).push(l);
+	return 1;
+}
