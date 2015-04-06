@@ -101,6 +101,17 @@ struct l_layer_ref : public l_crafter_ref<C> {
 			meta_bind_func(l, "get" #name, L_GETTER(type, class_name, field_name)); \
 		} while (0)
 
+	template<typename T, T(C::*getfunc)() const, void (C::*setfunc)(const T&)>
+	static int accessor(lua_State *l)
+	{
+		if (lua_gettop(l) > 1)
+			return setter<T, setfunc>(l);
+		else
+			return getter<T, getfunc>(l);
+	};
+	#define L_ACCESSOR(type, class_name, field_name) \
+		accessor<type, &class_name::Get##field_name, &class_name::Set##field_name>
+
 	static void register_members(lua_State *l)
 	{
 		l_crafter_ref<C>::template register_members<Crafter::Layer>(l);
