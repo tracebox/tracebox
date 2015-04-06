@@ -108,7 +108,7 @@ struct Sniffer_private {
 		key.push_back("NFQUEUE");
 		key.push_back("--queue-num");
 		key.push_back(std::to_string(q));
-		key.push_back("-A");
+		key.push_back("-I");
 		key.push_back("INPUT");
 		++next_q;
 	}
@@ -122,7 +122,7 @@ struct Sniffer_private {
 
 	int add_rule()
 	{
-		key[key.size() - 2] = "-A";
+		key[key.size() - 2] = "-I";
 		return iptables(key);
 	}
 
