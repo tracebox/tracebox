@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -65,17 +65,19 @@ void l_ipv6_ref::register_members(lua_State *l)
 	l_layer_ref<IPv6>::register_members(l);
 	meta_bind_func(l, "new", l_IPv6);
 	/***
-	 * Set the source address
+	 * Get/Set the source address
 	 * @function source
-	 * @tparam string ip
+	 * @tparam[opt] string ip set the source ip to ip
+	 * @treturn[opt] string ip the source ip if no argument
 	 */
-	meta_bind_func(l, "source", L_SETTER(string, IPv6, SourceIP));
+	meta_bind_func(l, "source", L_ACCESSOR(string, IPv6, SourceIP));
 	/***
-	 * Set the destination address
+	 * Get/Set the destination address
 	 * @function dest
-	 * @tparam string ip
+	 * @tparam[opt] string ip set the destination address to ip
+	 * @treturn[opt] string ip return the destination address if no argument
 	 */
-	meta_bind_func(l, "dest", L_SETTER(string, IPv6, DestinationIP));
+	meta_bind_func(l, "dest", L_ACCESSOR(string, IPv6, DestinationIP));
 	/***
 	 * Set the traffic class
 	 * @function tc
