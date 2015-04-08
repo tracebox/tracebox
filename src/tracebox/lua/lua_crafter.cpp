@@ -8,7 +8,6 @@
 #include "lua_crafter.hpp"
 #include "lua_arg.h"
 #include "lua_packet.hpp"
-#include <cstring>
 
 using namespace Crafter;
 
@@ -56,27 +55,12 @@ using namespace Crafter;
  */
 const char* lua_tbx::base_class_field = "__tbx_baseclass";
 
-template<class Base>
-static Base* get_udata(lua_State *l, int n)
-{
-	luaL_checktype(l, n, LUA_TUSERDATA);
-	/* We want a custom data type */
-	if (!luaL_getmetafield(l, n, lua_tbx::base_class_field))
-		return NULL;
-	/* We want the object the have the specified base class name */
-	const char *basename = l_data_type<const char*>::get(l, -1);
-	lua_pop(l, 1);
-	if (strcmp(TNAME(Base), basename))
-		return NULL;
-	return (*static_cast<l_ref<Base>**>(lua_touserdata(l, n)))->val;
-};
-
 int lua_tbx::l_concat(lua_State *l)
 {
-	Crafter::Layer *l1 = get_udata<Crafter::Layer>(l, 1);
-	Crafter::Packet *p1 = get_udata<Crafter::Packet>(l, 1);
-	Crafter::Layer *l2 = get_udata<Crafter::Layer>(l, 2);
-	Crafter::Packet *p2 = get_udata<Crafter::Packet>(l, 2);
+	Crafter::Layer *l1 = lua_tbx::get_udata<Crafter::Layer>(l, 1);
+	Crafter::Packet *p1 = lua_tbx::get_udata<Crafter::Packet>(l, 1);
+	Crafter::Layer *l2 = lua_tbx::get_udata<Crafter::Layer>(l, 2);
+	Crafter::Packet *p2 = lua_tbx::get_udata<Crafter::Packet>(l, 2);
 
 	if (l1 && l2) {
 		Crafter::Packet *pkt = l_packet_ref::new_ref(l);

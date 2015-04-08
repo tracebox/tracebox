@@ -9,10 +9,26 @@
 #define __LUA_CRAFTER_HPP_
 
 #include "lua_base.hpp"
+#include <cstring>
 
 struct lua_tbx {
 	static const char *base_class_field;
 	static int l_concat(lua_State *l);
+
+	template<class Base>
+	static Base* get_udata(lua_State *l, int n)
+	{
+		luaL_checktype(l, n, LUA_TUSERDATA);
+		/* We want a custom data type */
+		if (!luaL_getmetafield(l, n, base_class_field))
+			return NULL;
+		/* We want the object the have the specified base class name */
+		const char *basename = l_data_type<const char*>::get(l, -1);
+		lua_pop(l, 1);
+		if (strcmp(TNAME(Base), basename))
+			return NULL;
+		return (*static_cast<l_ref<Base>**>(lua_touserdata(l, n)))->val;
+	};
 };
 
 template<class C>
