@@ -28,3 +28,8 @@ assert(#bytes == 20 + 20 + 11)
 assert(bytes[1] == 69) -- version=4<<4, IHL=5
 assert(bytes[33] == 80) -- offset =5<<4, reserved =0)
 assert(bytes[51] == 100) -- last letter, d
+
+pkt = ip{dst='1.2.3.4'}/tcp{dst=40}
+assert(pkt:get(IP):dest() == '1.2.3.4')
+assert(pkt:get(TCP):getdest() == 40)
+assert(pkt:get(MPCAPABLE) == nil)

@@ -135,6 +135,30 @@ int l_packet_ref::l_bytes(lua_State *l)
 	return 1;
 }
 
+/***
+ * Get a layer matching the given one
+ * @function get
+ * @tparam Base_Object similar
+ * @treturn Base_Object layer the corresponding layer or nil
+ * @usage local real_tcp = pkt:get(TCP)
+ */
+int l_packet_ref::l_get(lua_State *l)
+{
+	l_packet_ref *p_ref = (l_packet_ref*)l_packet_ref::get_instance(l, 1);
+	Packet *p = l_packet_ref::get(l, 1);
+	Layer *ref = lua_tbx::get_udata<Layer>(l, 2);
+	if (!ref)
+		return luaL_argerror(l, 2, "This function takes a Layer as parameter!");
+	for (Layer *layer : *p) {
+		if (layer->GetID() == ref->GetID()) {
+			new l_ref<Layer>(p_ref, layer, l, layer->GetName().c_str());
+			return 1;
+		}
+	}
+	lua_pushnil(l);
+	return 1;
+}
+
 void l_packet_ref::register_members(lua_State *l)
 {
 	l_crafter_ref<Packet>::register_members<Packet>(l);
@@ -188,4 +212,5 @@ void l_packet_ref::register_members(lua_State *l)
 	 */
 	meta_bind_func(l, "payload", get_layer<RawLayer>);
 	meta_bind_func(l, "bytes", l_bytes);
+	meta_bind_func(l, "get", l_get);
 }

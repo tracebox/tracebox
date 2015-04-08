@@ -30,6 +30,7 @@ struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
 	static int send(lua_State *l);
 	static int send_receive(lua_State *l);
 	static int l_bytes(lua_State *l);
+	static int l_get(lua_State *l);
 	static void register_members(lua_State *l);
 };
 
