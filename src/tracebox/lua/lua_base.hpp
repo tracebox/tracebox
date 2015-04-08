@@ -103,17 +103,20 @@ struct l_ref : public _ref_base {
 	C *val;
 	/* Original owner of the pointer, if its not ourselves */
 	_ref_base *owner_ref;
+	/* Lua Class name */
+	const char *c_name;
 
 	/* Empty reference */
-	l_ref() : val(NULL), owner_ref(NULL) {}
+	l_ref() : val(NULL), owner_ref(NULL), c_name(TNAME(C)) {}
 	/* New reference */
-	l_ref(C *instance, lua_State *l)
-		: val(instance), owner_ref(NULL)
+	l_ref(C *instance, lua_State *l, const char *classname = TNAME(C))
+		: val(instance), owner_ref(NULL), c_name(classname)
 	{
 		_push_noretain(l);
 	}
 	/* Copy reference */
-	l_ref(l_ref *r, lua_State *l) : _ref_base(*r), val(r->val), owner_ref(r->owner_ref)
+	l_ref(l_ref *r, lua_State *l, const char *classname = TNAME(C))
+			: _ref_base(*r), val(r->val), owner_ref(r->owner_ref), c_name(classname)
 	{
 		if (owner_ref)
 			owner_ref->retain();
@@ -121,7 +124,8 @@ struct l_ref : public _ref_base {
 	}
 	/* New reference, and register dependance to other one */
 	template<class T>
-	l_ref(l_ref<T> *r, C *i, lua_State *l) : val(i), owner_ref(r)
+	l_ref(l_ref<T> *r, C *i, lua_State *l, const char *classname = TNAME(C))
+		: val(i), owner_ref(r), c_name(classname)
 	{
 		owner_ref->retain();
 		_push_noretain(l);
@@ -224,7 +228,7 @@ private: /* Use release() to get here */
 	{
 		l_ref **udata = static_cast<l_ref **>(lua_newuserdata(l, sizeof(l_ref *)));
 		*udata = this;
-		luaL_getmetatable(l, TNAME(C));
+		luaL_getmetatable(l, c_name);
 		lua_setmetatable(l, -2);
 	}
 };
