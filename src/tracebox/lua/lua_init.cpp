@@ -492,7 +492,7 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	lua_register(l, "mpjoin", l_TCP_MPTCPJoin);
 	/***
 	 * Construct a  TCPOption EDORequest, shorthand for @{TCPOption:new_edorequest}
-	 * @function edo_request
+	 * @function edorequest
 	 * @treturn TCPOption
 	 * @see TCPOption:new_edorequest
 	 * @within TCP

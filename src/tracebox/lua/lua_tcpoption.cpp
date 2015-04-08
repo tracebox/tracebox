@@ -40,6 +40,16 @@ int l_tcpoption_ref::l_TCPOption(lua_State *l)
 	new l_tcpoption_ref(opt, l);
 	return 1;
 }
+/***
+ * Set the Option Kind
+ * @function kind
+ * @tparam num kind
+ */
+/***
+ * Set the Option data (raw access)
+ * @function data
+ * @tparam string data
+ */
 
 /***
  * Create a new NOP Option (Kind=1)
@@ -285,7 +295,7 @@ int l_tcpoption_ref::l_TCP_MPTCPCapable(lua_State *l)
 
 /***
  * Create a new EDORequest Option
- * @function new_edo_request
+ * @function new_edorequest
  * @treturn TCPOption
  */
 int l_tcpoption_ref::l_TCP_EDORequest(lua_State *l)
@@ -318,17 +328,7 @@ int l_tcpoption_ref::l_TCP_EDO(lua_State *l)
 void l_tcpoption_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCPOptionLayer>::register_members(l);
-	/***
-	 * Set the Option Kind
-	 * @function kind
-	 * @tparam num kind
-	 */
 	meta_bind_func(l, "kind", L_SETTER(byte, TCPOptionLayer, Kind));
-	/***
-	 * Set the Option data (raw access)
-	 * @function data
-	 * @tparam string data
-	 */
 	meta_bind_func(l, "data", set_payload<TCPOptionLayer>);
 	meta_bind_func(l, "new", l_TCPOption);
 	meta_bind_func(l, "new_nop", l_TCP_NOP);
@@ -340,4 +340,6 @@ void l_tcpoption_ref::register_members(lua_State *l)
 	meta_bind_func(l, "new_wscale", l_TCP_WindowScale);
 	meta_bind_func(l, "new_mpjoin", l_TCP_MPTCPJoin);
 	meta_bind_func(l, "new_mpcapable", l_TCP_MPTCPCapable);
+	meta_bind_func(l, "new_edo", l_TCP_EDO);
+	meta_bind_func(l, "new_edorequest", l_TCP_EDORequest);
 }
