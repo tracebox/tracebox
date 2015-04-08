@@ -5,10 +5,8 @@
 --  Some rights reserved. See LICENSE, AUTHORS.
 --
 
-function edo(to)
-	pkt = ip{dst = dn4(to)} / TCP / NOP / NOP / EDO / MSS / MPCAPABLE/ raw('Hello World!')
-	reply = pkt:sendrecv{}
-	-- assert(reply ~= nil)
+function edo()
+	pkt = IP / TCP / NOP / NOP / EDO / MSS / MPCAPABLE/ raw('Hello World!')
 	print(pkt)
 	bytes=pkt:bytes()
 	print(pkt:hexdump())
@@ -23,10 +21,8 @@ function edo(to)
 	for i = 1, 8 do
 	   assert(bytes[i+48] == tcpop[i])
 	end
-	
+
 end
 
-p = ip{dst = dn4('google.com')} / UDP
-assert(p:send() == nil) -- Check that we don't pollute the stack
-edo('google.com')
+edo()
 
