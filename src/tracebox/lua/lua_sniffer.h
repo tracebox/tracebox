@@ -13,6 +13,7 @@
 
 struct l_sniffer_ref : public l_ref<TbxSniffer> {
 	using l_ref<TbxSniffer>::l_ref;
+	~l_sniffer_ref();
 
 	static int l_Sniffer(lua_State *l);
 	static int l_start(lua_State *l);
@@ -22,7 +23,7 @@ struct l_sniffer_ref : public l_ref<TbxSniffer> {
 	static void register_globals(lua_State *l);
 
 	lua_State *ctx;
-	std::string cb;
+	int cb;
 };
 
 #endif

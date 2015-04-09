@@ -1,14 +1,15 @@
 #include "lua_sniffer.h"
 #include "lua_packet.hpp"
 
+l_sniffer_ref::~l_sniffer_ref()
+{
+	luaL_unref(ctx, LUA_REGISTRYINDEX, cb);
+}
+
 static int l_sniffer_cb(Crafter::Packet *p, void *ctx)
 {
 	l_sniffer_ref *s = static_cast<l_sniffer_ref*>(ctx);
-	lua_getglobal(s->ctx, s->cb.c_str());
-	if(lua_type(s->ctx, -1) != LUA_TFUNCTION) {
-		lua_pushfstring(s->ctx, "`%s' is not a function", s->cb.c_str());
-		return -1;
-	}
+	lua_rawgeti(s->ctx, LUA_REGISTRYINDEX, s->cb);
 	new l_packet_ref(p, s->ctx);
 	int err = lua_pcall(s->ctx, 1, 1, 0);
 	if (err) {
@@ -33,7 +34,7 @@ static int l_sniffer_cb(Crafter::Packet *p, void *ctx)
  * Constructs a new TbxSniffer
  * @function new
  * @tparam table key a list of arguments that will be passed to iptables
- * @tparam string cb the name of a callback function, see @{sniffer_callback}
+ * @tparam function cb a function callback, see @{sniffer_callback}
  * @usage TbxSniffer.new({'-p', 'tcp', '--dport', '80'}, callback_func)
  * @treturn TbxSniffer
  */
@@ -50,10 +51,11 @@ int l_sniffer_ref::l_Sniffer(lua_State *l)
 		const char* arg = luaL_checkstring(l, -1);
 		key.push_back(arg);
 	}
-	const char *cb = luaL_checkstring(l, 2);
+	luaL_checktype(l, 2, LUA_TFUNCTION);
 	TbxSniffer *s = new TbxSniffer(key, l_sniffer_cb);
 	l_sniffer_ref *ref = new l_sniffer_ref(s, l);
-	ref->cb = cb;
+	lua_pushvalue(l, 2);
+	ref->cb = luaL_ref(l, LUA_REGISTRYINDEX);
 	return 1;
 }
 /***
