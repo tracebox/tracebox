@@ -6,6 +6,8 @@
  */
 
 #include "lua_packet.hpp"
+#include "lua_ip.h"
+#include "lua_ipv6.h"
 #include "lua_arg.h"
 #include "../tracebox.h"
 
@@ -159,6 +161,22 @@ int l_packet_ref::l_get(lua_State *l)
 	return 1;
 }
 
+int l_packet_ref::iplayer(lua_State *l)
+{
+	l_packet_ref *ref = (l_packet_ref*)l_packet_ref::get_instance(l, 1);
+	Packet *p = ref->val;
+	IPLayer *ip = p->GetLayer<IPLayer>();
+	switch(ip->GetID()) {
+		case IP::PROTO:
+			new l_ip_ref(ref, dynamic_cast<IP*>(ip), l);
+			break;
+		case IPv6::PROTO:
+			new l_ipv6_ref(ref, dynamic_cast<IPv6*>(ip), l);
+			break;
+	}
+	return 1;
+}
+
 void l_packet_ref::register_members(lua_State *l)
 {
 	l_crafter_ref<Packet>::register_members<Packet>(l);
@@ -168,6 +186,12 @@ void l_packet_ref::register_members(lua_State *l)
 	meta_bind_func(l, "send", send);
 	meta_bind_func(l, "sendrecv", send_receive);
 	/* Bind all available layers */
+	/***
+	 * Get the IP or IPv6 Layer of this packet
+	 * @function iplayer
+	 * @treturn IPLayer ip either @{IP} or @{IPv6}
+	 */
+	meta_bind_func(l, "ipilayer", iplayer);
 	/***
 	 * Get the IP Layer of this packet
 	 * @function ip
