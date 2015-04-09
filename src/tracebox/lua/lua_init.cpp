@@ -55,6 +55,7 @@ L_EXPOSE_TYPE(IPv6);
 L_EXPOSE_TYPE(IPv6SegmentRoutingHeader);
 L_EXPOSE_TYPE(TCP);
 template<> const char *tname<TCPOptionLayer>::name = "TCPOption";
+L_EXPOSE_TYPE(TCPOptionTimestamp);
 L_EXPOSE_TYPE(UDP);
 L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
@@ -90,6 +91,7 @@ lua_State *l_init()
 	INIT_TYPE(l_ipv6segmentroutingheader_ref,  IPv6SegmentRoutingHeader, l);
 	INIT_TYPE(l_tcp_ref,                       TCP,                      l);
 	INIT_TYPE(l_tcpoption_ref,                 TCPOptionLayer,           l);
+	INIT_TYPE(l_tcptsopt_ref,                  TCPOptionTimestamp,       l);
 	INIT_TYPE(l_udp_ref,                       UDP,                      l);
 	INIT_TYPE(l_icmp_ref,                      ICMP,                     l);
 	INIT_TYPE(l_raw_ref,                       RawLayer,                 l);
@@ -455,15 +457,6 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	 */
 	lua_register(l, "mss", l_TCP_MSS);
 	/***
-	 * Construct a  TCPOption Timestamp, shorthand for @{TCPOption:new_timestamp}
-	 * @function timestamp
-	 * @tparam[opt] table arg
-	 * @treturn TCPOption
-	 * @see TCPOption:new_timestamp
-	 * @within TCP
-	 */
-	lua_register(l, "timestamp", l_TCP_Timestamp);
-	/***
 	 * Construct a  TCPOption WScale, shorthand for @{TCPOption:new_wscale}
 	 * @function wscale
 	 * @tparam num the wscale shift value
@@ -535,13 +528,6 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	 */
 	l_do(l, "MSS=mss(1460)");
 	/***
-	 * A default TCP Timestamp object
-	 * @table TS
-	 * @see TCPOption:new_timestamp
-	 * @within TCP
-	 */
-	l_do(l, "TS=NOP/NOP/timestamp{}");
-	/***
 	 * Construct a SACK Option block, with proper padding
 	 * @function SACK
 	 * @tparam table list of pairs
@@ -585,6 +571,27 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	 * @within TCP
 	 */
 	l_do(l, "EDO=edo{}");
+}
+
+void l_tcptsopt_ref::register_globals(lua_State *l)
+{
+	l_layer_ref<TCPOptionTimestamp>::register_globals(l);
+	/***
+	 * Construct a  TCPOption Timestamp, shorthand for @{TCPTimestamp:new}
+	 * @function timestamp
+	 * @tparam[opt] table arg
+	 * @treturn TCPTimestamp
+	 * @see TCPTimestamp:new
+	 * @within TCP
+	 */
+	lua_register(l, "timestamp", l_TCP_Timestamp);
+	/***
+	 * A default TCP Timestamp object
+	 * @table TS
+	 * @seeTCPTimestamp:new
+	 * @within TCP
+	 */
+	l_do(l, "TS=NOP/NOP/timestamp{}");
 }
 
 /***

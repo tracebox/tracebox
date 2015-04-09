@@ -11,7 +11,7 @@
 #include "lua_crafter.hpp"
 
 struct l_tcpoption_ref : public l_layer_ref<Crafter::TCPOptionLayer> {
-using l_layer_ref<Crafter::TCPOptionLayer>::l_layer_ref;
+	using l_layer_ref<Crafter::TCPOptionLayer>::l_layer_ref;
 
 	template<class C>
 	static C* new_option_ref(lua_State *l)
@@ -26,12 +26,18 @@ using l_layer_ref<Crafter::TCPOptionLayer>::l_layer_ref;
 	static int l_TCP_SACKP(lua_State *l);
 	static int l_TCP_SACK(lua_State *l);
 	static int l_TCP_MSS(lua_State *l);
-	static int l_TCP_Timestamp(lua_State *l);
 	static int l_TCP_WindowScale(lua_State *l);
 	static int l_TCP_MPTCPJoin(lua_State *l);
 	static int l_TCP_MPTCPCapable(lua_State *l);
 	static int l_TCP_EDORequest(lua_State *l);
 	static int l_TCP_EDO(lua_State *l);
+	static void register_members(lua_State *l);
+	static void register_globals(lua_State *l);
+};
+
+struct l_tcptsopt_ref : public l_layer_ref<Crafter::TCPOptionTimestamp> {
+	using l_layer_ref<Crafter::TCPOptionTimestamp>::l_layer_ref;
+	static int l_TCP_Timestamp(lua_State *l);
 	static void register_members(lua_State *l);
 	static void register_globals(lua_State *l);
 };

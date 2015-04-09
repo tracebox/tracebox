@@ -169,36 +169,6 @@ int l_tcpoption_ref::l_TCP_MSS(lua_State *l)
 }
 
 /***
- * Create a new Timestamp Option
- * @function new_timestamp
- * @tparam[opt] table args the timestamp options, see @{Timestamp_args}
- * @treturn TCPOption
- */
-/***
- * The Timestamp Option arguments
- * @see new_timestamp
- * @table Timestamp_args
- * @tfield num val the timestamp value
- * @tfield num ecr the timestamp echo value
- */
-int l_tcpoption_ref::l_TCP_Timestamp(lua_State *l)
-{
-	TCPOptionTimestamp *opt;
-	int val, ecr;
-	bool val_set = v_arg_integer_opt(l, 1, "val", &val);
-	bool ecr_set = v_arg_integer_opt(l, 1, "ecr", &ecr);
-
-	opt = l_tcpoption_ref::new_option_ref<TCPOptionTimestamp>(l);
-	if (!opt)
-		return 0;
-
-	opt->SetValue(val_set ? val : rand() % UINT_MAX);
-	opt->SetEchoReply(ecr_set ? ecr : 0);
-
-	return 1;
-}
-
-/***
  * Create a new WindowScale Option
  * @function new_wscale
  * @tparam num wscale the window scaling factor
@@ -336,10 +306,61 @@ void l_tcpoption_ref::register_members(lua_State *l)
 	meta_bind_func(l, "new_sackp", l_TCP_SACKP);
 	meta_bind_func(l, "new_sack", l_TCP_SACK);
 	meta_bind_func(l, "new_mss", l_TCP_MSS);
-	meta_bind_func(l, "new_timestamp", l_TCP_Timestamp);
 	meta_bind_func(l, "new_wscale", l_TCP_WindowScale);
 	meta_bind_func(l, "new_mpjoin", l_TCP_MPTCPJoin);
 	meta_bind_func(l, "new_mpcapable", l_TCP_MPTCPCapable);
 	meta_bind_func(l, "new_edo", l_TCP_EDO);
 	meta_bind_func(l, "new_edorequest", l_TCP_EDORequest);
+}
+
+/***
+ * Create a new Timestamp Option
+ * @function new
+ * @tparam[opt] table args the timestamp options, see @{new_args}
+ * @treturn TCPTimestamp
+ */
+/***
+ * The Timestamp Option arguments
+ * @table new_args
+ * @tfield num val the timestamp value
+ * @tfield num ecr the timestamp echo value
+ */
+int l_tcptsopt_ref::l_TCP_Timestamp(lua_State *l)
+{
+	TCPOptionTimestamp *opt;
+	int val, ecr;
+	bool val_set = v_arg_integer_opt(l, 1, "val", &val);
+	bool ecr_set = v_arg_integer_opt(l, 1, "ecr", &ecr);
+
+	opt = l_tcptsopt_ref::new_ref(l);
+	if (!opt)
+		return 0;
+
+	opt->SetValue(val_set ? val : rand() % UINT_MAX);
+	opt->SetEchoReply(ecr_set ? ecr : 0);
+
+	return 1;
+}
+
+/***
+ * The TCP Timestamp Option
+ * @type TCPTimestamp
+ */
+void l_tcptsopt_ref::register_members(lua_State *l)
+{
+	l_layer_ref<TCPOptionTimestamp>::register_members(l);
+	/***
+	 * Get/Set the Echo Reply field in the timestamp
+	 * @function ecr
+	 * @tparam[opt] num ecr Set the ecr value
+	 * @treturn num ecr
+	 */
+	meta_bind_func(l, "ecr", L_ACCESSOR(word, TCPOptionTimestamp, EchoReply));
+	/***
+	 * Get/Set the Value field in the timestamp
+	 * @function val
+	 * @tparam[opt] num val Set the timestamp value
+	 * @treturn num val
+	 */
+	meta_bind_func(l, "val", L_ACCESSOR(word, TCPOptionTimestamp, Value));
 }
