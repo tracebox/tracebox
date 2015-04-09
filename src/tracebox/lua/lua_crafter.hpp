@@ -121,9 +121,10 @@ struct l_layer_ref : public l_crafter_ref<C> {
 	static int accessor(lua_State *l)
 	{
 		if (lua_gettop(l) > 1)
-			return setter<T, setfunc>(l);
+			setter<T, setfunc>(l);
 		else
-			return getter<T, getfunc>(l);
+			getter<T, getfunc>(l);
+		return 1; /* Either we keep the parameter or we pushed the value */
 	};
 	#define L_ACCESSOR(type, class_name, field_name) \
 		accessor<type, &class_name::Get##field_name, &class_name::Set##field_name>

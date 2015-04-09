@@ -68,14 +68,14 @@ void l_ipv6_ref::register_members(lua_State *l)
 	 * Get/Set the source address
 	 * @function source
 	 * @tparam[opt] string ip set the source ip to ip
-	 * @treturn[opt] string ip the source ip if no argument
+	 * @treturn string ip
 	 */
 	meta_bind_func(l, "source", L_ACCESSOR(string, IPv6, SourceIP));
 	/***
 	 * Get/Set the destination address
 	 * @function dest
 	 * @tparam[opt] string ip set the destination address to ip
-	 * @treturn[opt] string ip return the destination address if no argument
+	 * @treturn string ip
 	 */
 	meta_bind_func(l, "dest", L_ACCESSOR(string, IPv6, DestinationIP));
 	/***

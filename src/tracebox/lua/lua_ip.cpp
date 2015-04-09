@@ -87,14 +87,14 @@ void l_ip_ref::register_members(lua_State *l)
 	 * Get/Set the IP source address
 	 * @function source
 	 * @tparam[opt] string source set the IP source address to source
-	 * @treturn[opt] string source the IP source address if no argument
+	 * @treturn string source
 	 * */
 	meta_bind_func(l, "source", L_ACCESSOR(string, IP, SourceIP));
 	/***
 	 * Get/Set the IP destination address
 	 * @function dest
 	 * @tparam[opt] string dest set the IP destination address to dest
-	 * @treturn[opt] string dest the IP destination address if no argument
+	 * @treturn string dest
 	 * */
 	meta_bind_func(l, "dest", L_ACCESSOR(string, IP, DestinationIP));
 	/***
