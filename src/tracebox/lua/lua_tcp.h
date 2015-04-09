@@ -14,6 +14,7 @@ struct l_tcp_ref : public l_layer_ref<Crafter::TCP> {
 	using l_layer_ref<Crafter::TCP>::l_layer_ref;
 
 	static int l_TCP(lua_State *l);
+	static int l_hasflags(lua_State *l);
 	static void register_members(lua_State *l);
 	static void register_globals(lua_State *l);
 };

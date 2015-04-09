@@ -60,10 +60,26 @@ int l_tcp_ref::l_TCP(lua_State *l)
 	return 1;
 }
 
+/***
+ * Check if the TCP Layer has the given flag combination
+ * @function hasflags
+ * @tparam num flags a flag mask
+ * @treturn num r 0 if the layer doesn't have the flags
+ * @usage tcp:hasflags(TCP.SYN + TCP.ACK)
+ */
+int l_tcp_ref::l_hasflags(lua_State *l)
+{
+	TCP *tcp = l_tcp_ref::get(l, 1);
+	int flags = l_data_type<int>::get(l, 2);
+	l_data_type<int>(tcp->GetFlags() & flags).push(l);
+	return 1;
+}
+
 void l_tcp_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCP>::register_members(l);
 	meta_bind_func(l, "new", l_TCP);
+	meta_bind_func(l, "hasflags", l_hasflags);
 	/***
 	 * Set the TCP source port
 	 * @function setsource
