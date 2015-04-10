@@ -96,4 +96,10 @@ void l_ipv6_ref::register_members(lua_State *l)
 	 * @tparam num hops
 	 */
 	meta_bind_func(l, "hoplimit", L_SETTER(byte, IPv6, HopLimit));
+	/***
+	 * Return the number of bytes after the IP header
+	 * @function payloadlen
+	 * @treturn num bytes
+	 */
+	meta_bind_func(l, "payloadlen", L_GETTER(short_word, IPv6, PayloadLength));
 }

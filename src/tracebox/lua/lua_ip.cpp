@@ -79,10 +79,23 @@ int l_ip_ref::l_IP(lua_State *l)
 	return 1;
 }
 
+int l_ip_ref::l_payloadlen(lua_State *l)
+{
+	IP *ip = l_ip_ref::get(l, 1);
+	l_data_type<short_word>(ip->GetTotalLength() - ip->GetHeaderLength() * 4).push(l);
+	return 1;
+}
+
 void l_ip_ref::register_members(lua_State *l)
 {
 	l_layer_ref<IP>::register_members(l);
 	meta_bind_func(l, "new", l_IP);
+	/***
+	 * Return the number of bytes after the IP header
+	 * @function payloadlen
+	 * @treturn num bytes
+	 */
+	meta_bind_func(l, "payloadlen", l_payloadlen);
 	/***
 	 * Get/Set the IP source address
 	 * @function source
