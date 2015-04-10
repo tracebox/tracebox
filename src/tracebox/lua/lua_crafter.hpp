@@ -118,6 +118,7 @@ struct l_crafter_ref : public l_ref<C> {
 		meta_bind_func(l, "__tostring", print);
 		meta_bind_func(l, "print", print);
 		meta_bind_func(l, "hexdump", hexdump);
+		meta_bind_func(l, "size", getter<size_t, Base, &Base::GetSize>);
 	}
 
 	static void register_globals(lua_State *l) { l_ref<C>::register_globals(l); }

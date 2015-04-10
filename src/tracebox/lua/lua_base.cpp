@@ -60,6 +60,11 @@ template<>
 int l_data_type<int>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
 
 template<>
+void l_data_type<size_t>::push(lua_State *l) { lua_pushinteger(l, val); }
+template<>
+size_t l_data_type<size_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+
+template<>
 void l_data_type<Crafter::word>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
 Crafter::word l_data_type<Crafter::word>::get(lua_State *l, int n) { return luaL_checkint(l, n); }

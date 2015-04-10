@@ -17,6 +17,11 @@ using namespace Crafter;
  * @classmod Base_Object
  */
 /***
+ * Get the number of bytes in this layer
+ * @function size
+ * @treturn num byte_count
+*/
+/***
  * Return the textual representation of the object.
  * @function print
  * @see tostring
