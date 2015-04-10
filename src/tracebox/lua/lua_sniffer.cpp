@@ -9,20 +9,22 @@ l_sniffer_ref::~l_sniffer_ref()
 static int l_sniffer_cb(Crafter::Packet *p, void *ctx)
 {
 	l_sniffer_ref *s = static_cast<l_sniffer_ref*>(ctx);
+	lua_pushcfunction(s->ctx, lua_traceback);
+	int err_handler = lua_gettop(s->ctx);
 	lua_rawgeti(s->ctx, LUA_REGISTRYINDEX, s->cb);
 	new l_packet_ref(p, s->ctx);
-	int err = lua_pcall(s->ctx, 1, 1, 0);
+	int err = lua_pcall(s->ctx, 1, 1, err_handler);
 	if (err) {
 		std::cerr << "Error in the callback: " << luaL_checkstring(s->ctx, -1) << std::endl;
-		lua_pop(s->ctx, 1);
+		lua_pop(s->ctx, 2);
 		return -1;
 	}
 	if (!lua_isnumber(s->ctx, -1)) {
-		lua_pop(s->ctx, 1);
+		lua_pop(s->ctx, 2);
 		return 0;
 	}
 	int ret = lua_tonumber(s->ctx, -1);
-	lua_pop(s->ctx, 1);
+	lua_pop(s->ctx, 2);
 	return ret;
 }
 

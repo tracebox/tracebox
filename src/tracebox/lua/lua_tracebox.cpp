@@ -63,6 +63,9 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	if (!info->cb)
 		return 0;
 
+	lua_pushcfunction(info->l, lua_traceback);
+	int err_handler = lua_gettop(info->l);
+
 	lua_getglobal(info->l, info->cb);
 	if(lua_type(info->l, -1) != LUA_TFUNCTION) {
 		const char* msg = lua_pushfstring(info->l, "`%s' is not a function", info->cb);
@@ -93,19 +96,19 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	 else
 		new l_packetmodifications_ref(mod, info->l);
 
-	int err = lua_pcall(info->l, 5, 1, 0);
+	int err = lua_pcall(info->l, 5, 1, err_handler);
 
 	if (err) {
 		std::cerr << "Error in the callback: " << luaL_checkstring(info->l, -1) << std::endl;
-		lua_pop(info->l, 1);
+		lua_pop(info->l, 2);
 		return -1;
 	}
 	if (!lua_isnumber(info->l, -1)) {
-		lua_pop(info->l, 1);
+		lua_pop(info->l, 2);
 		return 0;
 	}
 	ret = lua_tonumber(info->l, -1);
-	lua_pop(info->l, 1);
+	lua_pop(info->l, 2);
 	return ret;
 }
 

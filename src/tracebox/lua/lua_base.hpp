@@ -14,6 +14,7 @@
 #define LUA_COMPAT_ALL
 #include <lua.hpp>
 
+extern int lua_traceback(lua_State *l);
 extern void stackDump (lua_State *L, const char* file, size_t line, std::ostream& out);
 #define L_DUMP_STACK(l) stackDump(l, __FILE__, __LINE__, std::cerr)
 

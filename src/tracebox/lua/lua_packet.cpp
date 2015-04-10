@@ -191,7 +191,7 @@ void l_packet_ref::register_members(lua_State *l)
 	 * @function iplayer
 	 * @treturn IPLayer ip either @{IP} or @{IPv6}
 	 */
-	meta_bind_func(l, "ipilayer", iplayer);
+	meta_bind_func(l, "iplayer", iplayer);
 	/***
 	 * Get the IP Layer of this packet
 	 * @function ip
