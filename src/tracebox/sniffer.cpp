@@ -85,12 +85,12 @@ struct Sniffer_private {
 	pthread_mutex_t mutex;
 	std::queue<Crafter::Packet*> packets;
 
-	rcv_handler handler;
 	void *ctx;
 	bool sniff;
+	struct sigaction old_sa;
 
-	Sniffer_private(const std::vector<const char*> &k, rcv_handler h)
-		: q(next_q), handler(h), sniff(false)
+	Sniffer_private(const std::vector<const char*> &k)
+		: q(next_q), sniff(false)
 	{
 		int err;
 		if (sem_init(&full, 0, 0) == -1)
@@ -173,14 +173,24 @@ int Sniffer_private::nfq_cb(struct nfq_q_handle *qh,
 	return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
 }
 
-TbxSniffer::TbxSniffer(const std::vector<const char*> &k, rcv_handler h)
-	: d(new Sniffer_private(k, h)) {}
+TbxSniffer::TbxSniffer(const std::vector<const char*> &k)
+	: d(new Sniffer_private(k)) {}
 
-TbxSniffer::~TbxSniffer() { delete d; }
+TbxSniffer::~TbxSniffer()
+{
+	if (d->sniff) {
+		d->sniff = false;
+		pthread_join(d->thread, NULL);
+		sigaction(SIGINT, &d->old_sa, NULL);
+	}
+	delete d;
+}
 
 void TbxSniffer::stop()
 {
 	d->sniff = false;
+	pthread_join(d->thread, NULL);
+	sigaction(SIGINT, &d->old_sa, NULL);
 }
 
 static void* _start_queue(void *v)
@@ -243,21 +253,38 @@ static void* _start_queue(void *v)
 	pthread_exit(0);
 }
 
-int TbxSniffer::start(void *ctx)
+int TbxSniffer::start(rcv_handler h, void *ctx)
+{
+	start();
+
+	d->ctx = ctx;
+	while (d->sniff && !_killed) {
+		struct timespec t = { 1, 0 };
+		Crafter::Packet *p = recv(&t);
+		if (!p)
+			continue;
+		if (h(p, d->ctx)) {
+			d->sniff = false;
+		}
+	}
+
+	return 0;
+}
+
+int TbxSniffer::start()
 {
 	int err;
 
 	if (d->sniff)
 		_crash("The Sniffer is already started!");
 
-	d->ctx = ctx;
 
-	struct sigaction sa, old_sa;
+	struct sigaction sa;
 	sa.sa_handler = _sig_handler;
 	sa.sa_flags = SA_RESTART;
 	sigemptyset(&sa.sa_mask);
-	if (sigaction(SIGINT, &sa, &old_sa) == -1)
-	   _crash("Cannot register a SIGINT handler");
+	if (sigaction(SIGINT, &sa, &d->old_sa) == -1)
+		_crash("Cannot register a SIGINT handler");
 
 	if ((err = pthread_create(&d->thread, NULL, _start_queue, d))) {
 		errno = err;
@@ -265,35 +292,36 @@ int TbxSniffer::start(void *ctx)
 	}
 
 	d->sniff = true;
-	while (d->sniff && !_killed) {
-		struct timespec t = { 1, 0 };
-		if (sem_timedwait(&d->full, &t) == -1) {
+	return 0;
+}
+
+Crafter::Packet* TbxSniffer::recv(struct timespec *t)
+{
+	int err;
+	if (t) {
+		if (sem_timedwait(&d->full, t) == -1) {
 			if (errno == ETIMEDOUT)
-				continue;
+				return NULL;
 			else
-				_crash("Sniffer::start::sem_wait");
+				_crash("Sniffer::recv::sem_trywait");
 		}
-
-		if (!d->sniff)
-			break;
-
-		if ((err = pthread_mutex_lock(&d->mutex))) {
-			errno = err;
-			_crash("Sniffer::start::mutex_lock");
-		}
-		Crafter::Packet *p = d->packets.front();
-		d->packets.pop();
-		if ((err = pthread_mutex_unlock(&d->mutex))) {
-			errno = err;
-			_crash("Sniffer::start::mutex_unlock");
-		}
-		if (d->handler(p, d->ctx)) {
-			d->sniff = false;
-		}
+	} else {
+		if (sem_wait(&d->full) == -1)
+			_crash("Sniffer::recv::sem_wait");
 	}
 
-	pthread_join(d->thread, NULL);
-	sigaction(SIGINT, &old_sa, NULL);
+	if (!d->sniff)
+		return NULL;
 
-	return 0;
+	if ((err = pthread_mutex_lock(&d->mutex))) {
+		errno = err;
+		_crash("Sniffer::start::mutex_lock");
+	}
+	Crafter::Packet *p = d->packets.front();
+	d->packets.pop();
+	if ((err = pthread_mutex_unlock(&d->mutex))) {
+		errno = err;
+		_crash("Sniffer::start::mutex_unlock");
+	}
+	return p;
 }

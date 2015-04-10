@@ -22,12 +22,17 @@ class TbxSniffer {
 	public:
 	/* Create a Sniffer object,
 	 * with the given key as iptable filter and callback fucntion*/
-	TbxSniffer(const std::vector<const char*>&, rcv_handler);
+	TbxSniffer(const std::vector<const char*>&);
 	~TbxSniffer();
 
 	/* Start sniffing the network. Will call the rcv_handler for each new packet,
 	 * with the given argument as last parameter */
-	int start(void*);
+	int start(rcv_handler, void*);
+	/* Start sniffing the network. */
+	int start();
+	/* Retrieve a received packet, blocking if t is NULL */
+	Crafter::Packet* recv(struct timespec *t);
+
 	void stop();
 };
 

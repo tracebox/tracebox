@@ -649,7 +649,7 @@ void l_sniffer_ref::register_globals(lua_State *l)
 	 * @see TbxSniffer:new
 	 * @within TbxSniffer
 	 */
-	l_do(l, "function snif(key, cb) _sniffer=TbxSniffer.new(key, cb)"
-			"\n _sniffer:start() end");
+	l_do(l, "function snif(key, cb) _sniffer=TbxSniffer.new(key)"
+			"\n _sniffer:start(cb) end");
 }
 #endif

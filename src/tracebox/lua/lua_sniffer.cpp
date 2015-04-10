@@ -1,11 +1,6 @@
 #include "lua_sniffer.h"
 #include "lua_packet.hpp"
 
-l_sniffer_ref::~l_sniffer_ref()
-{
-	luaL_unref(ctx, LUA_REGISTRYINDEX, cb);
-}
-
 static int l_sniffer_cb(Crafter::Packet *p, void *ctx)
 {
 	l_sniffer_ref *s = static_cast<l_sniffer_ref*>(ctx);
@@ -36,7 +31,6 @@ static int l_sniffer_cb(Crafter::Packet *p, void *ctx)
  * Constructs a new TbxSniffer
  * @function new
  * @tparam table key a list of arguments that will be passed to iptables
- * @tparam function cb a function callback, see @{sniffer_callback}
  * @usage TbxSniffer.new({'-p', 'tcp', '--dport', '80'}, callback_func)
  * @treturn TbxSniffer
  */
@@ -53,11 +47,8 @@ int l_sniffer_ref::l_Sniffer(lua_State *l)
 		const char* arg = luaL_checkstring(l, -1);
 		key.push_back(arg);
 	}
-	luaL_checktype(l, 2, LUA_TFUNCTION);
-	TbxSniffer *s = new TbxSniffer(key, l_sniffer_cb);
-	l_sniffer_ref *ref = new l_sniffer_ref(s, l);
-	lua_pushvalue(l, 2);
-	ref->cb = luaL_ref(l, LUA_REGISTRYINDEX);
+	TbxSniffer *s = new TbxSniffer(key);
+	new l_sniffer_ref(s, l);
 	return 1;
 }
 /***
@@ -69,14 +60,24 @@ int l_sniffer_ref::l_Sniffer(lua_State *l)
 
 /***
  * Start sniffing and calls the callback function for each new packet.
- * Will never return unless @{stop} is called from another thread
+ * Will never return unless @{stop} is called from another thread or if
+ * it was started in non-blocking mode.
  * @function start
+ * @tparam[opt] function cb a function callback, see @{sniffer_callback},
+ * to operate in blokcing mode. Omit to be non-blocking.
  */
 int l_sniffer_ref::l_start(lua_State *l)
 {
 	l_sniffer_ref *s = dynamic_cast<l_sniffer_ref *>(l_sniffer_ref::get_instance(l, 1));
 	s->ctx = l;
-	s->val->start(s);
+	if (lua_gettop(l) == 1) {
+		s->val->start();
+	} else {
+		luaL_checktype(l, 2, LUA_TFUNCTION);
+		s->cb = luaL_ref(l, LUA_REGISTRYINDEX);
+		s->val->start(l_sniffer_cb, s);
+		luaL_unref(s->ctx, LUA_REGISTRYINDEX, s->cb);
+	}
 	return 0;
 }
 
@@ -91,10 +92,35 @@ int l_sniffer_ref::l_stop(lua_State *l)
 	return 0;
 }
 
+/***
+ * Receive a packet
+ * @function recv
+ * @tparam[opt] num timeout number of second to wait, can be decimal, or omit to block
+ * @treturn Packet p the received packet, or nil if timed out
+ */
+int l_sniffer_ref::l_recv(lua_State *l)
+{
+	TbxSniffer *s = l_sniffer_ref::get(l, 1);
+	Crafter::Packet *p;
+	if (lua_gettop(l) > 1) {
+		double tmout = l_data_type<double>::get(l, 2);
+		struct timespec ts = {(long)tmout, (long)(tmout * 10e9)};
+		p = s->recv(&ts);
+	} else {
+		p = s->recv(NULL);
+	}
+	if (p)
+		new l_packet_ref(p, l);
+	else
+		lua_pushnil(l);
+	return 1;
+}
+
 void l_sniffer_ref::register_members(lua_State *l)
 {
 	l_ref<TbxSniffer>::register_members(l);
 	meta_bind_func(l, "new", l_Sniffer);
 	meta_bind_func(l, "start", l_start);
 	meta_bind_func(l, "stop", l_stop);
+	meta_bind_func(l, "recv", l_recv);
 }
