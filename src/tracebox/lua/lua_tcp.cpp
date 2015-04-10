@@ -81,6 +81,12 @@ void l_tcp_ref::register_members(lua_State *l)
 	meta_bind_func(l, "new", l_TCP);
 	meta_bind_func(l, "hasflags", l_hasflags);
 	/***
+	 * Get the TCP data offset value
+	 * @function offset
+	 * @treturn num offset
+	 */
+	meta_bind_func(l, "offset", L_GETTER(word, TCP, DataOffset));
+	/***
 	 * Set the TCP source port
 	 * @function setsource
 	 * @tparam num source the TCP source port
