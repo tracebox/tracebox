@@ -19,6 +19,7 @@
 #include "lua_raw.h"
 #include "lua_tcp.h"
 #include "lua_tcpoption.hpp"
+#include "lua_tcptimestamp.h"
 #include "lua_udp.h"
 
 #ifdef HAVE_SNIFFER
@@ -588,7 +589,7 @@ void l_tcptsopt_ref::register_globals(lua_State *l)
 	/***
 	 * A default TCP Timestamp object
 	 * @table TS
-	 * @seeTCPTimestamp:new
+	 * @see TCPTimestamp:new
 	 * @within TCP
 	 */
 	l_do(l, "TS=NOP/NOP/timestamp{}");

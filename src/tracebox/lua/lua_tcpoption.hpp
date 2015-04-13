@@ -35,11 +35,4 @@ struct l_tcpoption_ref : public l_layer_ref<Crafter::TCPOptionLayer> {
 	static void register_globals(lua_State *l);
 };
 
-struct l_tcptsopt_ref : public l_layer_ref<Crafter::TCPOptionTimestamp> {
-	using l_layer_ref<Crafter::TCPOptionTimestamp>::l_layer_ref;
-	static int l_TCP_Timestamp(lua_State *l);
-	static void register_members(lua_State *l);
-	static void register_globals(lua_State *l);
-};
-
 #endif
