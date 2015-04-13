@@ -64,10 +64,16 @@ int script_execfile(const char *filename, int argc, char **argv)
 
 	lua_State *l = l_init();
 	_add_argv(l, argc, argv);
-	ret = luaL_dofile(l, filename);
-	if(ret)
-		std::cout << "Lua error: " << luaL_checkstring(l, -1) << std::endl;
-
+	lua_pushcfunction(l, lua_traceback);
+	int err_handler = lua_gettop(l);
+	if ((ret = luaL_loadfile(l, filename)))
+		perror("script_execfile");
+	else
+		if ((ret = lua_pcall(l, 0, LUA_MULTRET, err_handler))) {
+			std::cerr << "Lua error: " << luaL_checkstring(l, -1) << std::endl;
+		} else {
+			ret = lua_tointeger(l, -1);
+		}
 	lua_close(l);
 	return ret;
 }
