@@ -345,8 +345,8 @@ void l_dns_ref::register_members(lua_State *l)
 	 * @usage DNS.Class.IN
 	 */
 	lua_newtable(l);
-#define _C(x) CST(Class, x)
-	_C(IN);
+#define _CL(x) CST(Class, x)
+	_CL(IN);
 	lua_setfield(l, -2, "Class");
 }
 

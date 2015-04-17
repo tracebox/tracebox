@@ -70,10 +70,15 @@ noinst_HEADERS += \
 endif
 
 tracebox_LDADD = \
+	$(EXTRALIBS) \
 	$(abs_top_builddir)/noinst/libcrafter/libcrafter/libcrafter.la \
-	$(LUA_LIB)
+	$(LUA_LIB) \
+	$(PCAPLIB) \
+	$(JSON_LIB)
 tracebox_CPPFLAGS = \
 	-I$(top_srcdir)/noinst/libcrafter/libcrafter \
 	$(LUA_INCLUDE) \
+	$(PCAPINC) \
+	$(JSON_INCLUDE) \
 	-fno-omit-frame-pointer \
 	-Wall
