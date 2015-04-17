@@ -55,29 +55,29 @@ template<>
 lua_Number l_data_type<lua_Number>::get(lua_State *l, int n) { return luaL_checknumber(l, n); }
 
 template<>
-void l_data_type<int>::push(lua_State *l) { lua_pushinteger(l, val); }
+void l_data_type<int32_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-int l_data_type<int>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+int32_t l_data_type<int32_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
 
 template<>
-void l_data_type<size_t>::push(lua_State *l) { lua_pushinteger(l, val); }
+void l_data_type<unsigned long>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-size_t l_data_type<size_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+unsigned long l_data_type<unsigned long>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
 
 template<>
-void l_data_type<Crafter::word>::push(lua_State *l) { lua_pushinteger(l, val); }
+void l_data_type<uint32_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-Crafter::word l_data_type<Crafter::word>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+uint32_t l_data_type<uint32_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
 
 template<>
-void l_data_type<Crafter::short_word>::push(lua_State *l) { lua_pushinteger(l, val); }
+void l_data_type<uint16_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-Crafter::short_word l_data_type<Crafter::short_word>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+uint16_t l_data_type<uint16_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
 
 template<>
-void l_data_type<Crafter::byte>::push(lua_State *l) { lua_pushinteger(l, val); }
+void l_data_type<uint8_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-Crafter::byte l_data_type<Crafter::byte>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+uint8_t l_data_type<uint8_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
 
 template<>
 void l_data_type<const char*>::push(lua_State *l) { lua_pushstring(l, val); }
