@@ -5,6 +5,7 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
+#include "config.h"
 #include "PacketModification.h"
 #include "PartialHeader.h"
 
