@@ -5,6 +5,7 @@ AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10 -Werror -Wall no-define foreign])
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
+AC_CONFIG_HEADERS([config.h])
 LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -50,6 +51,22 @@ AC_ARG_WITH(lua,
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
 
+AC_MSG_CHECKING(lua_pushglobaltable)
+save_flags="$CFLAGS"
+save_xxflags="$CXXFLAGS"
+save_lib="$LIBS"
+LIBS="$LUA_LIB $LIBS"
+CFLAGS="$LUA_INCLUDE $FLAGS"
+CXXFLAGS="$LUA_INCLUDE $CXXFLAGS"
+AC_TRY_LINK([#include <lua.h>],
+            [lua_pushglobaltable(NULL);],
+            [AC_MSG_RESULT(yes)
+            AC_DEFINE([HAVE_LUA_PUSHGLOBALTABLE], [1],
+                       [Lua version supports lua_pushglobaltable])
+            ], [AC_MSG_RESULT(no)])
+LIBS="$save_lib"
+CFLAGS="$save_flags"
+CXXFLAGS="$save_xxflags"
 
 AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Enable tests]))
 AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" == "xyes"])
@@ -88,15 +105,15 @@ AC_ARG_WITH(json,
      fi
      AC_SUBST(JSON_INCLUDE)
      AC_SUBST(JSON_LIB)
-     AC_DEFINE([HAVE_JSONC], [1])
+     AC_DEFINE([HAVE_JSONC], [1], [Using json-c])
      ;;
   esac ],
     [
         AC_SEARCH_LIBS([json_tokener_parse_ex], [json-c json], [], [
             AC_MSG_ERROR(json-c/libjson is not found. RE-run with --with-json=DIR)
             ])
-        AC_CHECK_LIB([json-c], [json_tokener_parse_ex], [AC_DEFINE([HAVE_JSONC], [1])])
-        AC_CHECK_LIB([json], [json_tokener_parse_ex], [AC_DEFINE([HAVE_LIBJSON], [1])])
+        AC_CHECK_LIB([json-c], [json_tokener_parse_ex], [AC_DEFINE([HAVE_JSONC], [1], [Using json-c])])
+        AC_CHECK_LIB([json], [json_tokener_parse_ex], [AC_DEFINE([HAVE_LIBJSON], [1], [Using libjson])])
     ]
 )
 
@@ -137,6 +154,7 @@ AC_ARG_WITH(libpcap,
 )
 AC_SUBST(PCAPINC)
 AC_SUBST(PCAPLIB)
+
 
 
 AC_MSG_CHECKING(for the inclusion of extra libs)

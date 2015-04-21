@@ -1,3 +1,5 @@
+config.h*
+stamp-*
 Makefile.in
 aclocal.m4
 ar-lib

@@ -5,6 +5,8 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
+#include "config.h"
+
 #include "lua_base.hpp"
 #include "lua_crafter.hpp"
 #include "lua_dns.h"

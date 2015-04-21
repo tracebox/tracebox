@@ -7,6 +7,7 @@
 
 
 #include "lua/lua_packet.hpp"
+#include "config.h"
 
 extern lua_State* l_init();
 

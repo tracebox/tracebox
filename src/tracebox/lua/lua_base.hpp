@@ -13,6 +13,13 @@
 
 #define LUA_COMPAT_ALL
 #include <lua.hpp>
+#include <lua.h>
+
+#include "config.h"
+
+#ifndef HAVE_LUA_PUSHGLOBALTABLE
+#define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX)
+#endif
 
 extern int lua_traceback(lua_State *l);
 extern void stackDump (lua_State *L, const char* file, size_t line, std::ostream& out);

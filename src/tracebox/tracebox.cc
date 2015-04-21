@@ -5,7 +5,7 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
-
+#include "config.h"
 #include "tracebox.h"
 #include "crafter/Utils/IPResolver.h"
 #include "script.h"
