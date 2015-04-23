@@ -1,6 +1,6 @@
 AC_INIT([tracebox], [0.3], [olivier.tilmans@uclouvain.be],
 		[tracebox], [http://tracebox.org])
-
+AC_CONFIG_SRCDIR([src/tracebox/tracebox.cc])
 AC_PREREQ([2.59])
 AM_INIT_AUTOMAKE([1.10 -Werror -Wall no-define foreign])
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
@@ -15,6 +15,23 @@ AC_HEADER_STDC
 AC_HEADER_ASSERT
 
 AX_CXX_COMPILE_STDCXX_11
+
+# Checks for header files.
+AC_CHECK_HEADERS([netinet/in.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_TYPE_INT32_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+
+# Checks for library functions.
+AC_FUNC_FORK
+AC_CHECK_FUNCS([gettimeofday memset select socket strtol])
 
 AC_ARG_WITH(lua,
 [  --with-lua=DIR      use lua in DIR],
