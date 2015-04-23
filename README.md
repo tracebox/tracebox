@@ -41,70 +41,60 @@ The documentation should be created under doc/
 
 ## JSON Format
 
-To change the output format of Tracebox to JSOn format, use the j option.
+More detailled information about the successive hops can be obtained using the -j option,
+this will as well change the output mode to JSON
 
-Output format:
-
-    {
-    "addr": IP of the destination,
-    "name": Name of the destination [Optionnal],
-    "max_hops": Number of maximum hops,
-    "Hops": [
-        Array containing each hop information
+```javascript
+{
+    "addr"     : "IP of the destination",
+    "name"     : "Name of the destination [Optional]",
+    "max_hops" : "Number of maximum hops",
+    "Hops"     : [ /* Array containing each hop information */
         {
-            "hop": Number of the hop,
-            "from": IP of the hop,
-            "name": Name of the hop [Optionnal],
-            "Modifications": [
-                Two possibilities depending on the verbose mode
-                if verbose:
-                    Array containing each modification
-                    {
-                        Name of the modification: {
-                            "Expected": Value injected,
-                            "Received": Value receveid
-                        }
-                    }
-                else:
-                    Array containing just the name of the modification
+            "hop"           : "Corresponding TTL/hop limit",
+            "from"          : "IP address of that hop",
+            "name"          : "Name of the hop [Optional]",
+            "Modifications" : [
+                // if tracebox was called with -v :
+                    "Name of the modification" : {
+                        "Expected" : "Value injected",
+                        "Received" : "Value receveid"
+                    },
+                // else:
+                    "Name of the modification"
             ],
-            "Aditions": [
-                Two possibilities depending on the verbose mode
-                if verbose:
-                    Array containing each modification
+            "Additions"    : [
+                // if tracebox was called with -v :
                     {
-                        Name of the modification: {
-                            "Info": Information added
-                        }
+                        "Name of the modification" : {
+                            "Info": "Information added"
+                        },
                     }
-                else:
-                    Array containing just the name of the field(s) added
+                // else:
+                    "Name of the field(s) added"
             ],
-            "Deletions": [
-                Two possibilities depending on the verbose mode
-                if verbose:
-                    Array containing each modification
+            "Deletions"     : [
+                // if tracebox was called with -v :
                     {
-                        Name of the modification: {
-                            "Info": Information deleted
-                        }
+                        "Name of the modification" : {
+                            "Info": "Information deleted"
+                        },
                     }
-                else:
-                    Array containing just the name of the field(s) deleted
+                // else:
+                    "Name of the field(s) deleted"
             ],
-            "ICMPExtension": [Optionnal] [
-                Two possibilities depending on the verbose mode
-                if verbose:
-                    Array containing each modification
+            "ICMPExtension" : /*[Optional]*/ [
+                //if tracebox was called with -v :
                     {
-                        Name of the extension: {
-                            "Info": Information of the extension
+                        "Name of the extension" : {
+                            "Info": "Information of the extension"
                         }
-                    }
-                else:
-                    Array containing just the name of the extension(s)
+                    },
+                // else:
+                    "Name of the extension(s)"
 
             ]
         }
     ]
-    }
+}
+```

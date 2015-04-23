@@ -20,7 +20,6 @@ AX_CXX_COMPILE_STDCXX_11
 AC_CHECK_HEADERS([netinet/in.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
 AC_TYPE_INT32_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
