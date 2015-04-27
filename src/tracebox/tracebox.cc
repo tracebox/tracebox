@@ -484,7 +484,7 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 
 int main(int argc, char *argv[])
 {
-	char c;
+	int c;
 	int ret = EXIT_SUCCESS;
 	int dport = 80;
 	int net_proto = IP::PROTO, tr_proto = TCP::PROTO;
