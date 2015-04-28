@@ -55,6 +55,8 @@ static bool verbose = false;
 static json_object * jobj = NULL;
 static json_object *j_results = NULL;
 
+double tbx_default_timeout = 1;
+
 template<int n> void BuildNetworkLayer(Packet *) { }
 template<int n> void BuildTransportLayer(Packet *, int) { }
 
@@ -339,6 +341,7 @@ static int Callback(void *ctx, int ttl, string& router,
 static int Callback_JSON(void *ctx, int ttl, string& router,
 		const Packet * const probe, Packet *rcv, PacketModifications *mod)
 {
+	(void)ctx;
 	IPLayer *ip = probe->GetLayer<IPLayer>();
 
 	if (ttl == 1){
@@ -462,7 +465,7 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 		if (isPcap(iface))
 			rcv = PcapSendRecv(pkt, iface);
 		else
-			rcv = pkt->SendRecv(iface, 1, 3);
+			rcv = pkt->SendRecv(iface, tbx_default_timeout, 3);
 
 		/* If we have a reply then compute the differences */
 		if (rcv) {
@@ -498,7 +501,7 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, "l:i:m:s:p:d:hnv6uwj")) != -1) {
+	while ((c = getopt(argc, argv, "l:i:m:s:p:d:hnv6uwjt:")) != -1) {
 		switch (c) {
 			case 'i':
 				iface = optarg;
@@ -541,6 +544,9 @@ int main(int argc, char *argv[])
 			case 'l':
 				script = optarg;
 				inline_script = true;
+				break;
+			case 't':
+				tbx_default_timeout = strtod(optarg, NULL);
 				break;
 			case '?':
 				std::cerr << "Unknown option `-" << optopt << "'." << std::endl;
@@ -611,6 +617,8 @@ usage:
 "                              reached). Default is 30.\n"
 "  -v                          Print more information.\n"
 "  -j                          Change the format of the output to JSON.\n"
+"  -t                          Timeout to wait for a reply after sending a packet.\n"
+"                              Default is 1 sec, accepts decimals.\n"
 "  -p probe                    Specify the probe to send.\n"
 "  -s script_file              Run a script file.\n"
 "  -l inline_script            Run a script.\n"

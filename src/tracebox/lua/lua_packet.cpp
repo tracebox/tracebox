@@ -77,7 +77,7 @@ static int new_packet(lua_State *l)
  */
 int l_packet_ref::send_receive(lua_State *l)
 {
-	double timeout = 1;
+	double timeout = tbx_default_timeout;
 	int retry = 3;
 	const char *iface = "";
 	v_arg_double_opt(l, 2, "timeout", &timeout);

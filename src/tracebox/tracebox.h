@@ -12,6 +12,8 @@
 #include "crafter.h"
 #include "PacketModification.h"
 
+extern double tbx_default_timeout;
+
 typedef int (tracebox_cb_t)(void *, int, std::string&,
 		const Crafter::Packet * const,
 		Crafter::Packet *, PacketModifications *);
