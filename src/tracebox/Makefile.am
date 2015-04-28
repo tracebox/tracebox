@@ -75,6 +75,7 @@ tracebox_LDADD = \
 	$(LUA_LIB) \
 	$(PCAPLIB) \
 	$(JSON_LIB)
+	
 tracebox_CPPFLAGS = \
 	-I$(top_srcdir)/noinst/libcrafter/libcrafter \
 	$(LUA_INCLUDE) \
@@ -82,3 +83,12 @@ tracebox_CPPFLAGS = \
 	$(JSON_INCLUDE) \
 	-fno-omit-frame-pointer \
 	-Wall
+
+if ENABLE_CURL
+tracebox_LDADD += \
+	$(LIBCURL)
+
+tracebox_CPPFLAGS += \
+	$(LIBCURL_CPPFLAGS)
+
+endif

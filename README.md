@@ -12,12 +12,12 @@
 
 ### Linux
 
-Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev, libjson0, libjson0-dev
+Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev, libjson0, libjson0-dev, libcurl4-gnutls-dev
 
 To build:
 
     $ ./bootstrap.sh
-    $ ./configure [--prefix=install_prefix [--enable-tests]]
+    $ ./configure [--prefix=install_prefix [--enable-tests][--enable-curl]]
     $ make
     # make install
 

@@ -88,12 +88,18 @@ int l_packet_ref::send_receive(lua_State *l)
 	Packet *p = l_packet_ref::get(l, 1);
 	if (!probe_sanity_check(p, err, intf))
 		luaL_argerror(l, 1, err.c_str());
-
+	writePcap(p);
 	Packet *rcv = p->SendRecv(intf, timeout, retry);
 	if (!rcv)
 		lua_pushnil(l);
-	else
+	else{
+		Packet p;
+		/* Removing Ethernet Layer for storage */
+		p = rcv->SubPacket(1,rcv->GetLayerCount());
+		writePcap(&p);
 		new l_packet_ref(rcv, l);
+	}
+
 	return 1;
 }
 
@@ -112,7 +118,7 @@ int l_packet_ref::send(lua_State *l)
 
 	if (!probe_sanity_check(p, err, iface))
 		luaL_argerror(l, 1, err.c_str());
-
+	writePcap(p);
 	p->Send(iface);
 	return 0;
 }
