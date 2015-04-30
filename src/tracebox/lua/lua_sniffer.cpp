@@ -1,5 +1,6 @@
 #include "lua_sniffer.h"
 #include "lua_packet.hpp"
+#include "../tracebox.h"
 
 static int l_sniffer_cb(Crafter::Packet *p, void *ctx)
 {
@@ -109,9 +110,10 @@ int l_sniffer_ref::l_recv(lua_State *l)
 	} else {
 		p = s->recv(NULL);
 	}
-	if (p)
+	if (p){
 		new l_packet_ref(p, l);
-	else
+		writePcap(p);
+	}else
 		lua_pushnil(l);
 	return 1;
 }
