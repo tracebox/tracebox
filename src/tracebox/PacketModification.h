@@ -89,8 +89,9 @@ struct Deletion : public Modification {
 struct PacketModifications : public std::vector<Modification *> {
 	Packet *orig;
 	Packet *modif;
+	bool partial;
 
-	PacketModifications(Packet *orig, Packet *modif) : orig(new Packet(*orig)), modif(modif) { }
+	PacketModifications(Packet *orig, Packet *modif, bool partial=false) : orig(new Packet(*orig)), modif(modif), partial(partial) { }
 	~PacketModifications();
 
 	void Print(std::ostream& out = std::cout, bool verbose = false) const;

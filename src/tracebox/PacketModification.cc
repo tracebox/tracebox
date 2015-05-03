@@ -70,7 +70,7 @@ static void ComputeDifferences(PacketModifications *modifs,
 
 static PacketModifications* ComputeDifferences(Packet *orig, Packet *modified, bool partial)
 {
-	PacketModifications *modifs = new PacketModifications(orig, modified);
+	PacketModifications *modifs = new PacketModifications(orig, modified, partial);
 	set<int> protos = GetAllProtos(orig, modified);
 
 	for (auto proto : protos) {
@@ -315,6 +315,8 @@ void Deletion::Print_JSON(json_object *res, json_object *add, json_object *del, 
 
 void PacketModifications::Print(std::ostream& out, bool verbose) const
 {
+	if (partial)
+		out << " [PARTIAL] ";
 	for(const_iterator it = begin() ; it != end() ; it++) {
 		(*it)->Print(out, verbose);
 		out << " ";

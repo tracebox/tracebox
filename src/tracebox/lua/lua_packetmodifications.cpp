@@ -55,6 +55,13 @@ int l_packetmodifications_ref::l_get_received(lua_State *l)
 	return 1;
 }
 
+static int l_partial(lua_State *l)
+{
+	PacketModifications *p = l_packetmodifications_ref::get(l, 1);
+	l_data_type<int>(p->partial).push(l);
+	return 1;
+}
+
 void l_packetmodifications_ref::register_members(lua_State *l)
 {
 	l_ref<PacketModifications>::register_members(l);
@@ -84,6 +91,13 @@ void l_packetmodifications_ref::register_members(lua_State *l)
 	 * @treturn Packet received
 	 */
 	meta_bind_func(l, "received", l_get_received);
+	/***
+	 * Check if the modifications have been computed based on a partial
+	 * header or not
+	 * @function partial
+	 * @treturn num partial 0 if not from a partial header
+	 */
+	meta_bind_func(l, "partial", l_partial);
 }
 
 void l_packetmodifications_ref::debug(std::ostream& out)
