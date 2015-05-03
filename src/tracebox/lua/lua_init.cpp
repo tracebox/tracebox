@@ -22,6 +22,7 @@
 #include "lua_tcp.h"
 #include "lua_tcpoption.hpp"
 #include "lua_tcptimestamp.h"
+#include "lua_tcptfo.h"
 #include "lua_udp.h"
 
 #ifdef HAVE_SNIFFER
@@ -58,7 +59,8 @@ L_EXPOSE_TYPE(IPv6);
 L_EXPOSE_TYPE(IPv6SegmentRoutingHeader);
 L_EXPOSE_TYPE(TCP);
 template<> const char *tname<TCPOptionLayer>::name = "TCPOption";
-L_EXPOSE_TYPE(TCPOptionTimestamp);
+template<> const char *tname<TCPOptionTimestamp>::name = "TCPTimestamp";
+template<> const char *tname<TCPOptionFastOpen>::name = "TCPTFO";
 L_EXPOSE_TYPE(UDP);
 L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
@@ -95,6 +97,7 @@ lua_State *l_init()
 	INIT_TYPE(l_tcp_ref,                       TCP,                      l);
 	INIT_TYPE(l_tcpoption_ref,                 TCPOptionLayer,           l);
 	INIT_TYPE(l_tcptsopt_ref,                  TCPOptionTimestamp,       l);
+	INIT_TYPE(l_tcptfo_ref,                    TCPOptionFastOpen,        l);
 	INIT_TYPE(l_udp_ref,                       UDP,                      l);
 	INIT_TYPE(l_icmp_ref,                      ICMP,                     l);
 	INIT_TYPE(l_raw_ref,                       RawLayer,                 l);
@@ -595,6 +598,27 @@ void l_tcptsopt_ref::register_globals(lua_State *l)
 	 * @within TCP
 	 */
 	l_do(l, "TS=NOP/NOP/timestamp{}");
+}
+
+void l_tcptfo_ref::register_globals(lua_State *l)
+{
+	l_layer_ref<TCPOptionFastOpen>::register_globals(l);
+	/***
+	 * Construct a  TCPOption TFO, shorthand for @{TCPTFO:new}
+	 * @function tfo
+	 * @tparam[opt] table cookie
+	 * @treturn TCPTFO
+	 * @see TCPTFO:new
+	 * @within TCP
+	 */
+	lua_register(l, "tfo", l_TCP_TFO);
+	/***
+	 * A default TCP TFO object
+	 * @table TFO
+	 * @see TCPTFO:new
+	 * @within TCP
+	 */
+	l_do(l, "TFO=NOP/NOP/tfo{}");
 }
 
 /***

@@ -32,7 +32,8 @@ tracebox_SOURCES = \
 	lua/lua_tracebox.cpp \
 	lua/lua_utils.cpp \
 	lua/lua_dns.cpp \
-	lua/lua_tcptimestamp.cpp
+	lua/lua_tcptimestamp.cpp \
+	lua/lua_tcptfo.cpp
 
 noinst_HEADERS = \
 	script.h \
@@ -56,6 +57,7 @@ noinst_HEADERS = \
 	lua/lua_udp.h \
 	lua/lua_dns.h \
 	lua/lua_tcptimestamp.h \
+	lua/lua_tcptfo.h \
 	tracebox.h
 
 if ENABLE_SNIFFER
@@ -75,7 +77,7 @@ tracebox_LDADD = \
 	$(LUA_LIB) \
 	$(PCAPLIB) \
 	$(JSON_LIB)
-	
+
 tracebox_CPPFLAGS = \
 	-I$(top_srcdir)/noinst/libcrafter/libcrafter \
 	$(LUA_INCLUDE) \
