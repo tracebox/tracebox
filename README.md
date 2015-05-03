@@ -32,6 +32,9 @@ Inside the OpenWRT SDK:
     $ make package/tracebox/compile # should generate a package in bin/<target>/packages/tracebox_*.ipk
 
 ## Documentation
+
+Upon installation, see `man tracebox`
+
 The Lua API is (should) be documented and is available at http://tracebox.org/lua_doc.
 It can be generated using [LDoc](https://github.com/stevedonovan/LDoc) from the root directory (see config.ld):
 

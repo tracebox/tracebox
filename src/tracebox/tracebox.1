@@ -24,6 +24,9 @@ described in the standard. This is caused by operating systems configured to
 reply with full ICMP (e.g., Linux, Cisco IOS-XR, etc.) as well as the ICMP
 Multi-Part Messages extension that standardize the fact that routers using MPLS
 tunnels replies and ICMP message containing the full datagram.
+If however it receives an ICMP with only a partial probe in the payload, it will
+indicate it by appending a [PARTIAL] flag on the modification list.
+
 .Pp
 .\" ###### Arguments ########################################################
 .Sh ARGUMENTS

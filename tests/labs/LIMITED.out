@@ -1,4 +1,4 @@
 tracebox to 1.2.3.4 (1.2.3.4): 64 hops max
-1: 1.1.1.1 TCP::WindowsSize TCP::CheckSum 
+1: 1.1.1.1  [PARTIAL] TCP::WindowsSize TCP::CheckSum 
 2: 2.2.2.2 TCP::WindowsSize TCP::CheckSum IP::TTL IP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
 3: 1.2.3.4 TCP::WindowsSize TCP::CheckSum IP::TTL IP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
