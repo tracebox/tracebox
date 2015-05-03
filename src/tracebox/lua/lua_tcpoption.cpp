@@ -26,6 +26,7 @@ using namespace std;
  * @table new_args
  * @tfield num copy
  * @tfield num class
+ * @tfield table data opaque list of bytes
  */
 int l_tcpoption_ref::l_TCPOption(lua_State *l)
 {
@@ -36,6 +37,21 @@ int l_tcpoption_ref::l_TCPOption(lua_State *l)
 
 	if (ki) opt->SetKind(kind);
 	if (le) opt->SetLength(length);
+	if (v_arg(l, 1, "data")) {
+		std::vector<byte> data;
+		luaL_checktype(l, -1, LUA_TTABLE);
+		for (int i = 1;; ++i, lua_pop(l, 1)) {
+			lua_rawgeti(l, -1, i);
+			if (lua_isnil(l, -1)) {
+				lua_pop(l, 1);
+				break;
+			}
+			data.push_back(lua_tointeger(l, -1));
+			std::cerr << "read: " << (int)data[i-1];
+		}
+		std::cerr << "data size: " << data.size();
+		opt->SetPayload(&data[0], data.size());
+	}
 
 	new l_tcpoption_ref(opt, l);
 	return 1;
