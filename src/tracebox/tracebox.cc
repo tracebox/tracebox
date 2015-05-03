@@ -656,8 +656,6 @@ int main(int argc, char *argv[])
 		goto usage;
 	}
 
-	closePcap();
-
 	delete pkt;
 
 	if (jobj != NULL) {
@@ -665,6 +663,7 @@ int main(int argc, char *argv[])
 		printf ("%s\n",json_object_to_json_string(jobj));
 	}
 out:
+	closePcap();
 	return ret;
 
 usage:

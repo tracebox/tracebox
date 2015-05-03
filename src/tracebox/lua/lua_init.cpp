@@ -22,6 +22,7 @@
 #include "lua_tcp.h"
 #include "lua_tcpoption.hpp"
 #include "lua_tcptimestamp.h"
+#include "lua_tcpedo.h"
 #include "lua_tcptfo.h"
 #include "lua_udp.h"
 
@@ -61,6 +62,8 @@ L_EXPOSE_TYPE(TCP);
 template<> const char *tname<TCPOptionLayer>::name = "TCPOption";
 template<> const char *tname<TCPOptionTimestamp>::name = "TCPTimestamp";
 template<> const char *tname<TCPOptionFastOpen>::name = "TCPTFO";
+template<> const char *tname<TCPEDO>::name = "TCPEDO";
+template<> const char *tname<TCPEDORequest>::name = "TCPEDORequest";
 L_EXPOSE_TYPE(UDP);
 L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
@@ -98,6 +101,8 @@ lua_State *l_init()
 	INIT_TYPE(l_tcpoption_ref,                 TCPOptionLayer,           l);
 	INIT_TYPE(l_tcptsopt_ref,                  TCPOptionTimestamp,       l);
 	INIT_TYPE(l_tcptfo_ref,                    TCPOptionFastOpen,        l);
+	INIT_TYPE(l_tcpedoopt_ref,                 TCPEDO,       l);
+	INIT_TYPE(l_tcpedoropt_ref,				   TCPEDORequest,       l);
 	INIT_TYPE(l_udp_ref,                       UDP,                      l);
 	INIT_TYPE(l_icmp_ref,                      ICMP,                     l);
 	INIT_TYPE(l_raw_ref,                       RawLayer,                 l);
@@ -490,22 +495,6 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	 */
 	lua_register(l, "mpjoin", l_TCP_MPTCPJoin);
 	/***
-	 * Construct a  TCPOption EDORequest, shorthand for @{TCPOption:new_edorequest}
-	 * @function edorequest
-	 * @treturn TCPOption
-	 * @see TCPOption:new_edorequest
-	 * @within TCP
-	 */
-	lua_register(l, "edorequest", l_TCP_EDORequest);
-	/***
-	 * Construct a  TCPOption EDO, shorthand for @{TCPOption:new_edo}
-	 * @function edo
-	 * @treturn TCPOption
-	 * @see TCPOption:new_edo
-	 * @within TCP
-	 */
-	lua_register(l, "edo", l_TCP_EDO);
-	/***
 	 * A default TCP NOP object
 	 * @table NOP
 	 * @see TCPOption
@@ -563,20 +552,47 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 	 * @within TCP
 	 */
 	l_do(l, "MPJOIN=mpjoin{}");
+
+}
+
+void l_tcpedoopt_ref::register_globals(lua_State *l)
+{
+	l_layer_ref<TCPEDO>::register_globals(l);
 	/***
-	 * A default TCPOption EDORequest object
-	 * @table EDOREQUEST
-	 * @see TCPOption:new_edorequest
-	 * @within TCP
+	 * Construct a  TCPOption EDO, shorthand for @{TCPExtendedDataOption.TCPEDO:new}
+	 * @function edo
+	 * @treturn TCPEDO
+	 * @see TCPExtendedDataOption.TCPEDO:new
+	 * @within TCPExtendedDataOption
 	 */
-	l_do(l, "EDOREQUEST=edorequest{}");
+	lua_register(l, "edo", l_TCP_EDO);
 	/***
 	 * A default TCPOption EDO object
 	 * @table EDO
-	 * @see TCPOption:new_edo
-	 * @within TCP
+	 * @see TCPExtendedDataOption.TCPEDO:new
+	 * @within TCPExtendedDataOption
 	 */
-	l_do(l, "EDO=edo{}");
+	l_do(l, "EDO=NOP/NOP/edo{}");
+}
+
+void l_tcpedoropt_ref::register_globals(lua_State *l)
+{
+	l_layer_ref<TCPEDORequest>::register_globals(l);
+		/***
+	 * Construct a  TCPOption EDORequest, shorthand for @{TCPExtendedDataOption.TCPEDORequest:new}
+	 * @function edorequest
+	 * @treturn TCPEDORequest
+	 * @see TCPExtendedDataOption.TCPEDORequest:new
+	 * @within TCPExtendedDataOption
+	 */
+	lua_register(l, "edorequest", l_TCP_EDOR);
+	/***
+	 * A default TCPOption EDORequest object
+	 * @table EDOREQUEST
+	 * @see TCPExtendedDataOption.TCPEDORequest:new
+	 * @within TCPExtendedDataOption
+	 */
+	l_do(l, "EDOREQUEST=NOP/NOP/edorequest{}");
 }
 
 void l_tcptsopt_ref::register_globals(lua_State *l)

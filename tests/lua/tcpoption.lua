@@ -6,7 +6,7 @@
 --
 
 function edo()
-	pkt = IP / TCP / NOP / NOP / EDO / MSS / MPCAPABLE/ raw('Hello World!')
+	pkt = IP / TCP / EDO / MSS / MPCAPABLE/ raw('Hello World!')
 	print(pkt)
 	bytes=pkt:bytes()
 	print(pkt:hexdump())
@@ -14,7 +14,6 @@ function edo()
 	-- EDO TCP Option
 	assert(bytes[44] == 6)-- (length)
 	assert(bytes[48] == 11)-- (header length)
-
 	-- TCP option after EDO
 	tcpop={2,4,5,180,   -- MSS option
 	30,12,0,129} --  MP Capable option

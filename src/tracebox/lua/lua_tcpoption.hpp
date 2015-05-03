@@ -29,8 +29,6 @@ struct l_tcpoption_ref : public l_layer_ref<Crafter::TCPOptionLayer> {
 	static int l_TCP_WindowScale(lua_State *l);
 	static int l_TCP_MPTCPJoin(lua_State *l);
 	static int l_TCP_MPTCPCapable(lua_State *l);
-	static int l_TCP_EDORequest(lua_State *l);
-	static int l_TCP_EDO(lua_State *l);
 	static void register_members(lua_State *l);
 	static void register_globals(lua_State *l);
 };
