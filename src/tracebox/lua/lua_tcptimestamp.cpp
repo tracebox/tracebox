@@ -36,10 +36,6 @@ int l_tcptsopt_ref::l_TCP_Timestamp(lua_State *l)
 	return 1;
 }
 
-/***
- * The TCP Timestamp Option
- * @type TCPTimestamp
- */
 void l_tcptsopt_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCPOptionTimestamp>::register_members(l);

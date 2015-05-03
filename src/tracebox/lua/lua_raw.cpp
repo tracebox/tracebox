@@ -72,8 +72,8 @@ int l_raw_ref::l_bytes(lua_State *l)
 		luaL_checktype(l, 2, LUA_TTABLE);
 		std::vector<byte> bytes(128);
 		for (int i = 1;; ++i, lua_pop(l, 1)) {
-			lua_rawgeti(l, 2, i);
-			if (lua_isnil(l, 2)) {
+			lua_rawgeti(l, -1, i);
+			if (lua_isnil(l, -1)) {
 				lua_pop(l, 1);
 				break;
 			}
