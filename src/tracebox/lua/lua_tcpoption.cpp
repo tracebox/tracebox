@@ -47,9 +47,7 @@ int l_tcpoption_ref::l_TCPOption(lua_State *l)
 				break;
 			}
 			data.push_back(lua_tointeger(l, -1));
-			std::cerr << "read: " << (int)data[i-1];
 		}
-		std::cerr << "data size: " << data.size();
 		opt->SetPayload(&data[0], data.size());
 	}
 
