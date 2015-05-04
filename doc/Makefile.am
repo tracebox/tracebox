@@ -10,7 +10,7 @@ DISTCLEANFILES = Makefile
 
 generated_files_include:
 	@echo -n "DOCFILES = "> $(srcdir)/generated_files.mk2
-	@find . -maxdepth 5 -type f -name "*.html" | sort | $(AWK) '{printf(" \\\n\t%s", $$0)}' \
+	@find $(srcdir) -maxdepth 5 -type f -name "*.html" | sort | $(AWK) '{printf(" \\\n\t%s", $$0)}' \
 		>> $(srcdir)/generated_files.mk2
 	@if diff $(srcdir)/generated_files.mk $(srcdir)/generated_files.mk2 >/dev/null 2>&1 ; then \
 		echo "generated_files.mk is unchanged" ; \
@@ -25,7 +25,7 @@ force-update-doc: doc-clean $(ldoc_files)
 
 $(ldoc_files): config.ld
 	$(MAKE) doc-clean
-	ldoc .
+	ldoc $(srcdir)
 	$(MAKE) generated_files_include
 
 doc-clean:
