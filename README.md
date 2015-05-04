@@ -12,7 +12,7 @@
 
 ### Linux
 
-Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev, libjson0, libjson0-dev, libcurl4-gnutls-dev
+Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev, libjson0, libjson0-dev, libcurl4-gnutls-dev, lua-ldoc, libnetfilter-queue-dev
 
 To build:
 
@@ -33,14 +33,14 @@ Inside the OpenWRT SDK:
 
 ## Documentation
 
-Upon installation, see `man tracebox`
+Upon installation, see `man tracebox` and in `/usr/local/share/doc/tracebox`
 
 The Lua API is (should) be documented and is available at http://tracebox.org/lua_doc.
-It can be generated using [LDoc](https://github.com/stevedonovan/LDoc) from the root directory (see config.ld):
+It can be generated using [LDoc](https://github.com/stevedonovan/LDoc) from the doc directory (see config.ld):
 
     $ ldoc .
 
-The documentation should be created under doc/
+The documentation should be created under doc/html
 
 ## JSON Format
 

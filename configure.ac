@@ -239,6 +239,12 @@ AS_IF([test "x$enable_tests" = "xyes"], [
     ac_configure_args="$ac_configure_args_pre"
 ])
 
+AC_CHECK_PROGS([LDOC], [ldoc])
+if test -z "$LDOC";
+    then AC_MSG_WARN([ldoc not found - not building the Lua bindings documentation])
+fi
+AM_CONDITIONAL([HAVE_LDOC],[test -n "$LDOC"])
+
 AC_CONFIG_FILES([
 	Makefile
 	noinst/Makefile
@@ -247,5 +253,6 @@ AC_CONFIG_FILES([
 	tests/Makefile
 	tests/tools/Makefile
 	src/tracebox/examples/Makefile
+    doc/Makefile
 ])
 AC_OUTPUT
