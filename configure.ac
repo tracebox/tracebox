@@ -244,6 +244,7 @@ if test -z "$LDOC";
     then AC_MSG_WARN([ldoc not found - not building the Lua bindings documentation])
 fi
 AM_CONDITIONAL([HAVE_LDOC],[test -n "$LDOC"])
+AC_CHECK_FILE([doc/generated_files.mk],,[touch doc/generated_files.mk])
 
 AC_CONFIG_FILES([
 	Makefile

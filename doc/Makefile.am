@@ -4,7 +4,7 @@
 ldoc_files = html/ldoc.css $(DOCFILES)
 nobase_dist_doc_DATA = $(ldoc_files)
 
-EXTRA_DIST = config.ld generated_files.mk $(ldoc_files)
+EXTRA_DIST = config.ld $(ldoc_files)
 
 DISTCLEANFILES = Makefile
 
