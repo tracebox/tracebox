@@ -1,32 +1,36 @@
+ldoc_files =html/ldoc.css \
+			html/index.html \
+			html/modules/Globals.html \
+			html/classes/Raw.html \
+			html/classes/DNS.html \
+			html/classes/TCP.html \
+			html/classes/Base_Object.html \
+			html/classes/Packet.html \
+			html/classes/IPOption.html \
+			html/classes/IP.html \
+			html/classes/TCPTFO.html \
+			html/classes/TCPOption.html \
+			html/classes/PacketModifications.html \
+			html/classes/IPv6.html \
+			html/classes/IPv6SegmentRoutingHeader.html \
+			html/classes/__cpp_obj.html \
+			html/classes/TCPTimestamp.html \
+			html/classes/UDP.html \
+			html/classes/FWFilter.html \
+			html/classes/TbxSniffer.html \
+			html/classes/ICMP.html
 
-@AMDEP_TRUE@@am__include@ @am__quote@$(srcdir)/generated_files.mk@am__quote@
-
-ldoc_files = html/ldoc.css $(DOCFILES)
 nobase_dist_doc_DATA = $(ldoc_files)
 
-EXTRA_DIST = config.ld $(ldoc_files) generated_files.mk
-
+EXTRA_DIST = config.ld $(ldoc_files)
 DISTCLEANFILES = Makefile
-
-generated_files_include:
-	@echo -n "DOCFILES = "> $(srcdir)/generated_files.mk2
-	@find $(srcdir) -maxdepth 5 -type f -name "*.html" | sort | $(AWK) '{printf(" \\\n\t%s", $$0)}' \
-		>> $(srcdir)/generated_files.mk2
-	@if diff $(srcdir)/generated_files.mk $(srcdir)/generated_files.mk2 >/dev/null 2>&1 ; then \
-		echo "generated_files.mk is unchanged" ; \
-		rm -f $(srcdir)/generated_files.mk2 ; \
-	else \
-		mv $(srcdir)/generated_files.mk2 $(srcdir)/generated_files.mk ; \
-	fi
 
 all: $(ldoc_files)
 
 force-update-doc: doc-clean $(ldoc_files)
 
 $(ldoc_files): config.ld
-	$(MAKE) doc-clean
-	ldoc $(srcdir)
-	$(MAKE) generated_files_include
+	cd $(abs_builddir) && ldoc .
 
 doc-clean:
 	rm -rf html
