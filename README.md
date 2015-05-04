@@ -21,6 +21,11 @@ To build:
     $ make
     # make install
 
+You can grab the latest build here (source package or *.deb):
+https://drone.io/github.com/tracebox/tracebox/files
+
+Tracebox has been tested and works both with Lua 5.1 and 5.2
+
 ### OpenWRT
 
 The package is available at http://github.com/tracebox/openwrt.
@@ -30,6 +35,13 @@ Inside the OpenWRT SDK:
     $ ./scripts/feeds install -a tracebox
     $ make menuconfig # select tracebox in "Network"
     $ make package/tracebox/compile # should generate a package in bin/<target>/packages/tracebox_*.ipk
+
+This is currently unmaintained.
+
+### Android
+
+An Android build script is available at https://github.com/tracebox/android
+Your phone will need to be rooted.
 
 ## Documentation
 
@@ -42,7 +54,7 @@ It can be generated using [LDoc](https://github.com/stevedonovan/LDoc) from the 
 
 The documentation should be created under doc/html
 
-## JSON Format
+## JSON Output Format
 
 More detailled information about the successive hops can be obtained using the -j option,
 this will as well change the output mode to JSON
