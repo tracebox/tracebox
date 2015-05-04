@@ -5,8 +5,11 @@ before_install:
     - sudo apt-get update -qq
 
 install:
-    - sudo apt-get install -qq automake libtool lua5.2 liblua5.2-dev liblua5.2 liblua5.2-0-dbg libpcap-dev g++ autoconf gdb libnetfilter-queue-dev libjson0-dev gcc-4.8 g++-4.8 libcurl4-gnutls-dev lua-ldoc
+    - sudo apt-get install -qq automake libtool lua5.1 liblua5.1-dev liblua5.1 liblua5.1-0-dbg libpcap-dev g++ autoconf gdb libnetfilter-queue-dev libjson0-dev gcc-4.8 g++-4.8 libcurl4-gnutls-dev luarocks
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+    - sudo luarocks install penlight
+    - git clone https://github.com/stevedonovan/LDoc.git
+    - sudo make -C LDoc install
 
 before_script:
     - sh bootstrap.sh

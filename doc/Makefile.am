@@ -1,10 +1,10 @@
 
-@AMDEP_TRUE@@am__include@ @am__quote@generated_files.mk@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(srcdir)/generated_files.mk@am__quote@
 
 ldoc_files = html/ldoc.css $(DOCFILES)
 nobase_dist_doc_DATA = $(ldoc_files)
 
-EXTRA_DIST = config.ld $(ldoc_files)
+EXTRA_DIST = config.ld $(ldoc_files) generated_files.mk
 
 DISTCLEANFILES = Makefile
 
