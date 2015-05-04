@@ -1,3 +1,13 @@
+tracebox (0.3) experimental; urgency=low
+
+  * Improved lua API
+  * More flexible ICMP filtering
+  * Lua API documentation
+  * Save all exchanged packet in pcap files
+  * Experimental hooks on  netfilterqueue
+
+ -- Olivier Tilmans <olivier.tilmans@uclouvain.be>  Mon, 5 Apr 2015 18:15:14 +0200
+
 tracebox (0.1) experimental; urgency=low
 
   * Initial release.
