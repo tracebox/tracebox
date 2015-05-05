@@ -45,11 +45,13 @@ AC_ARG_WITH(lua,
         if cd $withval; then withval=`pwd`; cd $owd; fi
         LUA_INCLUDE="-I$withval"
         LUA_LIB="-L$withval -llua"
+        LIBS="$LIBS -lm"
      elif test -f $withval/include/lua.h -a -f $withval/lib/liblua.a; then
         owd=`pwd`
         if cd $withval; then withval=`pwd`; cd $owd; fi
         LUA_INCLUDE="-I$withval/include"
         LUA_LIB="-L$withval/lib -llua"
+        LIBS="$LIBS -lm"
      else
         AC_ERROR("lua.h or liblua.a not found in $withval")
      fi
