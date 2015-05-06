@@ -1,24 +1,28 @@
 language: cpp
 
-before_install:
-    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    - sudo apt-get update -qq
-
 install:
-    - sudo apt-get install -qq automake libtool lua5.1 liblua5.1-dev liblua5.1 liblua5.1-0-dbg libpcap-dev g++ autoconf gdb libnetfilter-queue-dev libjson0-dev gcc-4.8 g++-4.8 libcurl4-gnutls-dev luarocks
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-    - sudo luarocks install penlight
-    - git clone https://github.com/stevedonovan/LDoc.git
-    - sudo make -C LDoc install
+    - sh CI/travis_prepare.sh --enable-tests --enable-curl
 
-before_script:
-    - sh bootstrap.sh
-    - ./configure --enable-tests --enable-curl #--enable-sniffer
-    - ulimit -c
+env:
+    global:
+        # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+        #   via the "travis encrypt" command using the project repo's public key
+        - secure: O8E61G5wtJZuGBXIPOi8Ik96bLBpGFsTNSS4nU6OeB9CKxHzliiLNwiZSSObh8oj8YQX3qQG/2Pt6nB+iPf+Kxb+j2b8ySfMAP5qQe7QjlW8W2myk00RMzmLscXNm8l2QUkkP8yfBveJGU4Xoxp5RZImdZX8R6c0Imun1htnm/s=
+
+addons:
+    coverity_scan:
+        project:
+            name: tracebox/tracebox
+            #version: 0.3
+            #description: Build submitted via Travis CI
+        notification_email: olivier.tilmans@uclouvain.be
+        build_command_prepend: sh CI/coverity_prepare.sh --enable-curl
+        build_command:   make
+        branch_pattern: coverity_scan
 
 script:
-    - make distcheck
-    - make check
+    - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make distcheck ; fi
+    - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make check ; fi
 
 after_failure:
     - cat tests/test-suite.log
