@@ -167,6 +167,31 @@ int l_packet_ref::l_get(lua_State *l)
 	return 1;
 }
 
+/***
+ * Get all layers matching the given one
+ * @function get
+ * @tparam Base_Object similar
+ * @treturn table layers the corresponding list of layers or an empty table
+ */
+int l_packet_ref::l_getall(lua_State *l)
+{
+	l_packet_ref *p_ref = (l_packet_ref*)l_packet_ref::get_instance(l, 1);
+	Packet *p = l_packet_ref::get(l, 1);
+	Layer *ref = lua_tbx::get_udata<Layer>(l, 2);
+	if (!ref)
+		return luaL_argerror(l, 2, "This function takes a Layer as parameter!");
+	lua_newtable(l);
+	int count = 1;
+	for (Layer *layer : *p) {
+		if (layer->GetID() == ref->GetID()) {
+			new l_ref<Layer>(p_ref, layer, l, layer->GetName().c_str());
+			lua_rawseti(l, -2, count);
+			++count;
+		}
+	}
+	return 1;
+}
+
 int l_packet_ref::iplayer(lua_State *l)
 {
 	l_packet_ref *ref = (l_packet_ref*)l_packet_ref::get_instance(l, 1);
@@ -243,4 +268,5 @@ void l_packet_ref::register_members(lua_State *l)
 	meta_bind_func(l, "payload", get_layer<RawLayer>);
 	meta_bind_func(l, "bytes", l_bytes);
 	meta_bind_func(l, "get", l_get);
+	meta_bind_func(l, "getall", l_getall);
 }

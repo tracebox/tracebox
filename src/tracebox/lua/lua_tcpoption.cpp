@@ -25,7 +25,7 @@ using namespace std;
  * TCPOption constructor arguments
  * @table new_args
  * @tfield num copy
- * @tfield num class
+ * @tfield num length
  * @tfield table data opaque list of bytes
  */
 int l_tcpoption_ref::l_TCPOption(lua_State *l)
