@@ -176,7 +176,7 @@ string GetDefaultIface(bool ipv6, const string &addr)
 			saddr = ipv6 ? (void *)&((struct sockaddr_in6 *)&sa)->sin6_addr :
 					(void *)&((struct sockaddr_in *)&sa)->sin_addr;
 			if (!memcmp(ifa_addr, saddr, len)) {
-				strncpy(name, ifa->ifa_name, IF_NAMESIZE);
+				memcpy(name, ifa->ifa_name, IF_NAMESIZE);
 				freeifaddrs(ifaces);
 				close(fd);
 				return name;
