@@ -224,6 +224,7 @@ static void* _start_queue(void *v)
 		_crash("The call to iptables failed!");
 
 	fd_set set;
+	FD_ZERO(&set);
 	do {
 		struct timeval tv = { 1, 0 };
 		FD_SET(fd, &set);
