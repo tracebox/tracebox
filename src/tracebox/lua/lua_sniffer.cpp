@@ -70,6 +70,8 @@ int l_sniffer_ref::l_Sniffer(lua_State *l)
 int l_sniffer_ref::l_start(lua_State *l)
 {
 	l_sniffer_ref *s = dynamic_cast<l_sniffer_ref *>(l_sniffer_ref::get_instance(l, 1));
+	if (!s)
+		return luaL_argerror(l, 1, "The parameter is not a real sniffer instance!");
 	s->ctx = l;
 	if (lua_gettop(l) == 1) {
 		s->val->start();
