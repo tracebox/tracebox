@@ -337,18 +337,20 @@ string resolve_name(int proto, string& name)
 
 string iface_address(int proto, string& iface)
 {
-	switch (proto) {
-	case IP::PROTO:
-		if (isPcap(iface))
-			return PCAP_IPv4;
-		return GetMyIP(iface);
-	case IPv6::PROTO:
-		if (isPcap(iface))
-			return PCAP_IPv6;
-		return GetMyIPv6(iface, false);
-	default:
-		return "";
-	}
+	try {
+		switch (proto) {
+		case IP::PROTO:
+			if (isPcap(iface))
+				return PCAP_IPv4;
+			return GetMyIP(iface);
+		case IPv6::PROTO:
+			if (isPcap(iface))
+				return PCAP_IPv6;
+			return GetMyIPv6(iface, false);
+		default:
+			return "";
+		}
+	} catch (std::runtime_error &ex) { return ""; }
 }
 
 

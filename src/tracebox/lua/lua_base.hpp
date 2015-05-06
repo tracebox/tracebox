@@ -99,10 +99,10 @@ struct _ref_base {
 	}
 
 	protected:
-	virtual void cleanup() { delete ref; };
+	virtual void cleanup() { delete ref; ref = NULL; };
 
 	protected: /* use release()/cleanup() instead */
-	virtual ~_ref_base() { --instance_count; }
+	virtual ~_ref_base() { --instance_count; if (ref) delete ref; }
 };
 
 /* Base wrapper class to expose cpp object pointers to lua */
