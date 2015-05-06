@@ -312,7 +312,7 @@ int l_tcpoption_ref::l_TCP_EDO(lua_State *l)
 void l_tcpoption_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCPOptionLayer>::register_members(l);
-	meta_bind_func(l, "kind", L_SETTER(byte, TCPOptionLayer, Kind));
+	meta_bind_func(l, "kind", L_ACCESSOR(byte, TCPOptionLayer, Kind));
 	meta_bind_func(l, "data", set_payload<TCPOptionLayer>);
 	meta_bind_func(l, "new", l_TCPOption);
 	meta_bind_func(l, "new_nop", l_TCP_NOP);
