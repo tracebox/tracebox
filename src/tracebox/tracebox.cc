@@ -315,6 +315,7 @@ Packet* PcapSendRecv(Packet *probe, const string& iface)
 		reply->PacketFromIPv6(packet, hdr1.len);
 		break;
 	default:
+		delete reply;
 		return NULL;
 	}
 
