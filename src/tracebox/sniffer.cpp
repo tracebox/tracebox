@@ -70,7 +70,7 @@ static int iptables(std::vector<std::string> &args)
 	}
 	argv[0] = "ip6tables";
 	err = _exec((char* const*)argv);
-	delete argv;
+	delete[] argv;
 	return err;
 }
 
