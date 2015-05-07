@@ -70,7 +70,7 @@ static int iptables(std::vector<std::string> &args)
 	}
 	argv[0] = "ip6tables";
 	err = _exec((char* const*)argv);
-	delete argv;
+	delete[] argv;
 	return err;
 }
 
@@ -80,12 +80,12 @@ struct Sniffer_private {
 
 	int q;
 	std::vector<std::string> key;
-	pthread_t thread;
+	pthread_t thread = 0;
 	sem_t full;
 	pthread_mutex_t mutex;
 	std::queue<Crafter::Packet*> packets;
 
-	void *ctx;
+	void *ctx = NULL;
 	bool sniff;
 	struct sigaction old_sa;
 
@@ -93,6 +93,8 @@ struct Sniffer_private {
 		: q(next_q), sniff(false)
 	{
 		int err;
+
+		memset(&old_sa, 0, sizeof(old_sa));
 		if (sem_init(&full, 0, 0) == -1)
 			_crash("Failed to init semaphore for the Sniffer");
 		if ((err = pthread_mutex_init(&mutex, NULL))) {
@@ -224,6 +226,7 @@ static void* _start_queue(void *v)
 		_crash("The call to iptables failed!");
 
 	fd_set set;
+	FD_ZERO(&set);
 	do {
 		struct timeval tv = { 1, 0 };
 		FD_SET(fd, &set);

@@ -1,31 +1,28 @@
 language: cpp
 
+addons:
+  coverity_scan:
+    project:
+      name: tracebox/tracebox
+      description: Build submitted via Travis CI
+    notification_email: olivier.tilmans@uclouvain.be
+    build_command_prepend: ./configure --enable-curl
+    build_command: make
+    branch_pattern: coverity_scan
+
 install:
     - sh CI/travis_prepare.sh --enable-tests --enable-curl
 
-env:
-    global:
-        # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-        #   via the "travis encrypt" command using the project repo's public key
-        - secure: O8E61G5wtJZuGBXIPOi8Ik96bLBpGFsTNSS4nU6OeB9CKxHzliiLNwiZSSObh8oj8YQX3qQG/2Pt6nB+iPf+Kxb+j2b8ySfMAP5qQe7QjlW8W2myk00RMzmLscXNm8l2QUkkP8yfBveJGU4Xoxp5RZImdZX8R6c0Imun1htnm/s=
-
-addons:
-    coverity_scan:
-        project:
-            name: tracebox/tracebox
-            #version: 0.3
-            #description: Build submitted via Travis CI
-        notification_email: olivier.tilmans@uclouvain.be
-        build_command_prepend: sh CI/coverity_prepare.sh --enable-curl
-        build_command:   make
-        branch_pattern: coverity_scan
-
 script:
-    - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make distcheck ; fi
-    - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make check ; fi
+- if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make distcheck ; fi
+- if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make check ; fi
+
 
 after_failure:
-    - cat tests/test-suite.log
-    - COREFILE=$(find . -maxdepth 5 -name "core*" | head -n 1)
-    - if [[ -f "$COREFILE" ]]; then sudo  gdb -c "$COREFILE" ./src/tracebox/tracebox -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
+- cat tests/test-suite.log
+- COREFILE=$(find . -maxdepth 5 -name "core*" | head -n 1)
+- if [[ -f "$COREFILE" ]]; then sudo  gdb -c "$COREFILE" ./src/tracebox/tracebox -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
 
+env:
+  global:
+    secure: g++Zdx4FO/WgsYh7i2F8r4yQDt35BAZez+1N4D0Sn4kcvR2yH1s9gdJS54mTVN39IQ40bpY3tC/A5LEsvazwpVFz8f97PyrqCmxZ2l74gXAUZnYWWqcjYg5wc4YrKKLzMaT0Xw00Nz64DIiOwjQs62WFFsGgSViPHjLOgG/pjLE=

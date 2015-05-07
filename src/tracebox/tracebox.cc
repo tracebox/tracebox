@@ -176,7 +176,7 @@ string GetDefaultIface(bool ipv6, const string &addr)
 			saddr = ipv6 ? (void *)&((struct sockaddr_in6 *)&sa)->sin6_addr :
 					(void *)&((struct sockaddr_in *)&sa)->sin_addr;
 			if (!memcmp(ifa_addr, saddr, len)) {
-				strncpy(name, ifa->ifa_name, IF_NAMESIZE);
+				memcpy(name, ifa->ifa_name, IF_NAMESIZE);
 				freeifaddrs(ifaces);
 				close(fd);
 				return name;
@@ -315,6 +315,7 @@ Packet* PcapSendRecv(Packet *probe, const string& iface)
 		reply->PacketFromIPv6(packet, hdr1.len);
 		break;
 	default:
+		delete reply;
 		return NULL;
 	}
 
@@ -336,18 +337,20 @@ string resolve_name(int proto, string& name)
 
 string iface_address(int proto, string& iface)
 {
-	switch (proto) {
-	case IP::PROTO:
-		if (isPcap(iface))
-			return PCAP_IPv4;
-		return GetMyIP(iface);
-	case IPv6::PROTO:
-		if (isPcap(iface))
-			return PCAP_IPv6;
-		return GetMyIPv6(iface, false);
-	default:
-		return "";
-	}
+	try {
+		switch (proto) {
+		case IP::PROTO:
+			if (isPcap(iface))
+				return PCAP_IPv4;
+			return GetMyIP(iface);
+		case IPv6::PROTO:
+			if (isPcap(iface))
+				return PCAP_IPv6;
+			return GetMyIPv6(iface, false);
+		default:
+			return "";
+		}
+	} catch (std::runtime_error &ex) { return ""; }
 }
 
 
