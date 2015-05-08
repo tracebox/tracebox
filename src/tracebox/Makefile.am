@@ -93,4 +93,5 @@ tracebox_LDADD += \
 tracebox_CPPFLAGS += \
 	$(LIBCURL_CPPFLAGS)
 
+tracebox_SOURCES += curl.cc
 endif

@@ -10,6 +10,7 @@
 #define __TRACEBOX_H__
 
 #include "crafter.h"
+#include "config.h"
 #include "PacketModification.h"
 
 extern double tbx_default_timeout;
@@ -25,5 +26,9 @@ int doTracebox(Crafter::Packet *pkt, tracebox_cb_t *callback,
 		std::string& err, void *ctx = NULL);
 
 void writePcap(Packet* p);
+
+#ifdef HAVE_CURL
+void curlPost(const char *pcap_filename, const char *url);
+#endif
 
 #endif

@@ -69,6 +69,24 @@ AC_ARG_WITH(lua,
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
 
+AC_ARG_WITH(pcap-filename,
+            [  --with-pcap-filename="/default/capture/path"],
+            [ default_pcap_filename="$withval" ],
+            [ default_pcap_filename="/tmp/capture.pcap" ]
+)
+AC_DEFINE([DEFAULT_PCAP_FILENAME], "$default_pcap_filename",
+          [Default filename for the pcap capture file.])
+
+AC_ARG_WITH(upload-url,
+            [  --with-upload-url="/default/capture/path"],
+            [ default_url="$withval" ],
+            [ default_url="http://ns328523.ip-37-187-114.eu:3000/curl" ]
+)
+AC_DEFINE([DEFAULT_URL], "$default_url",
+          [Default URL used when curl upload is enabled and no other URL is
+           specified as argument.])
+
+
 AC_MSG_CHECKING(lua_pushglobaltable)
 save_flags="$CFLAGS"
 save_xxflags="$CXXFLAGS"

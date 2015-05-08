@@ -5,7 +5,6 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
-#include "config.h"
 #include "tracebox.h"
 #include "crafter/Utils/IPResolver.h"
 #include "script.h"
@@ -32,15 +31,8 @@ extern "C" {
 #include <netinet/in.h>
 };
 
-#ifdef HAVE_CURL
-#include "curl.cc"
-#endif
-
 #define PCAP_IPv4 "1.1.1.1"
 #define PCAP_IPv6 "dead::beef"
-
-#define DEFAULT_URL "http://ns328523.ip-37-187-114.eu:3000/curl"
-#define DEFAULT_PCAP_FILENAME "/tmp/capture.pcap"
 
 #ifndef IN_LOOPBACK
 #define	IN_LOOPBACK(a)		((ntohl((long int) (a)) & 0xff000000) == 0x7f000000)
@@ -60,8 +52,6 @@ static string destination;
 static string iface;
 static bool resolve = true;
 static bool verbose = false;
-static bool capture = true;
-static string url = DEFAULT_URL;
 static json_object * jobj = NULL;
 static json_object *j_results = NULL;
 
@@ -223,7 +213,11 @@ static pcap_t *pd = NULL;
 static int rfd;
 static pcap_t *rd = NULL;
 static pcap_dumper_t *pdumper;
-static char const *pcap_filename=DEFAULT_PCAP_FILENAME;
+static const char *pcap_filename = DEFAULT_PCAP_FILENAME;
+#ifdef HAVE_CURL
+static const char * upload_url = DEFAULT_URL;
+static bool upload = true;
+#endif
 
 int openPcap(){
 	OpenPcapDumper(DLT_RAW, pcap_filename, pd, pdumper);
@@ -235,13 +229,11 @@ int openPcap(){
 }
 
 void writePcap(Packet* p){
-	if(capture){
-		struct pcap_pkthdr *hdr= (pcap_pkthdr *) malloc(sizeof(*hdr));
-		hdr->len = p->GetSize();
-		hdr->caplen = p->GetSize();
-		gettimeofday(&hdr->ts, NULL);
-		pcap_dump(reinterpret_cast<u_char*>(pdumper),hdr, p->GetRawPtr());
-	}
+	struct pcap_pkthdr *hdr= (pcap_pkthdr *) malloc(sizeof(*hdr));
+	hdr->len = p->GetSize();
+	hdr->caplen = p->GetSize();
+	gettimeofday(&hdr->ts, NULL);
+	pcap_dump(reinterpret_cast<u_char*>(pdumper),hdr, p->GetRawPtr());
 }
 
 void closePcap(){
@@ -249,7 +241,8 @@ void closePcap(){
 	pcap_close(pd);
 	pcap_dump_close(pdumper);
 #ifdef HAVE_CURL
-	curlPost(pcap_filename, url);
+	if (upload)
+		curlPost(pcap_filename, upload_url);
 #endif
 }
 
@@ -509,13 +502,13 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 			rcv = PcapSendRecv(pkt, iface);
 		else{ // Write both pkt & rcv to pcap file
 			rcv = pkt->SendRecv(iface, tbx_default_timeout, 3);
-			if(capture && !isPcap(iface))
+			if(!isPcap(iface))
 				writePcap(pkt);
 		}
 
 		/* If we have a reply then compute the differences */
 		if (rcv) {
-			if(capture && !isPcap(iface)){
+			if(!isPcap(iface)){
 				Packet p;
 				/* Removing Ethernet Layer for storage */
 				p = rcv->SubPacket(1,rcv->GetLayerCount());
@@ -552,7 +545,11 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, "l:i:m:s:p:d:c:f:hnv6uwjqt:")) != -1) {
+	while ((c = getopt(argc, argv, "l:i:m:s:p:d:f:hnv6uwjt:"
+#ifdef HAVE_CURL
+					"qc:"
+#endif
+					)) != -1) {
 		switch (c) {
 			case 'i':
 				iface = optarg;
@@ -586,12 +583,14 @@ int main(int argc, char *argv[])
 				jobj = json_object_new_object();
 				j_results = json_object_new_array();
 				break;
+#ifdef HAVE_CURL
 			case 'q' :
-				capture = false;
+				upload = false;
 				break;
 			case 'c':
-				url = optarg;
+				upload_url = optarg;
 				break;
+#endif
 			case 'f' :
 				pcap_filename = optarg;
 				break;
@@ -627,10 +626,9 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if(capture)
-		if(openPcap()){
-			return EXIT_FAILURE;
-		}
+	if(openPcap()){
+		return EXIT_FAILURE;
+	}
 
 	if (!probe && !script) {
 		pkt = BuildProbe(net_proto, tr_proto, dport);
@@ -658,8 +656,7 @@ int main(int argc, char *argv[])
 		goto usage;
 	}
 
-	if(capture)
-		closePcap();
+	closePcap();
 
 	delete pkt;
 
@@ -691,9 +688,13 @@ usage:
 "  -s script_file              Run a script file.\n"
 "  -l inline_script            Run a script.\n"
 "  -w                          Show warnings when crafting packets.\n"
-"  -q                          Cancel automatic capture and sync with a server\n"
+#ifdef HAVE_LIBCURL
+"  -q                          Cancel automatic upload of the capture file.\n"
 "  -c server_url               Specify a server where captured packets will be sent.\n"
-"  -f filename                 Specify the name of the pcap file (default is /tmp/capture.pcap)\n"
+"                              Default is " DEFAULT_URL ".\n"
+#endif
+"  -f filename                 Specify the name of the pcap file.\n"
+"                              Default is " DEFAULT_PCAP_FILENAME ".\n"
 "\n"
 "Every argument passed after the options in conjunction with -s or -l will be passed\n"
 "to the lua interpreter and available in a global vector of strings named 'argv',\n"
