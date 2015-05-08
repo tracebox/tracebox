@@ -74,7 +74,7 @@ AC_ARG_WITH(pcap-filename,
             [ default_pcap_filename="$withval" ],
             [ default_pcap_filename="/tmp/capture.pcap" ]
 )
-AC_DEFINE([DEFAULT_PCAP_FILENAME], "$default_pcap_filename",
+AC_DEFINE_UNQUOTED([DEFAULT_PCAP_FILENAME], "$default_pcap_filename",
           [Default filename for the pcap capture file.])
 
 AC_ARG_WITH(upload-url,
@@ -82,7 +82,7 @@ AC_ARG_WITH(upload-url,
             [ default_url="$withval" ],
             [ default_url="http://ns328523.ip-37-187-114.eu:3000/curl" ]
 )
-AC_DEFINE([DEFAULT_URL], "$default_url",
+AC_DEFINE_UNQUOTED([DEFAULT_URL], "$default_url",
           [Default URL used when curl upload is enabled and no other URL is
            specified as argument.])
 
