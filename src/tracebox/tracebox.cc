@@ -209,10 +209,10 @@ bool pcapParse(const string& name, string& output, string& input)
 	return true;
 }
 
-static pcap_t *pd = NULL;
+static pcap_t *pd = NULL, *save_d = NULL;
 static int rfd;
 static pcap_t *rd = NULL;
-static pcap_dumper_t *pdumper;
+static pcap_dumper_t *pdumper, *save_dumper = NULL;
 static const char *pcap_filename = DEFAULT_PCAP_FILENAME;
 #ifdef HAVE_CURL
 static const char * upload_url = DEFAULT_URL;
@@ -220,9 +220,9 @@ static bool upload = true;
 #endif
 
 int openPcap(){
-	OpenPcapDumper(DLT_RAW, pcap_filename, pd, pdumper);
-	if(pdumper == NULL){
-		cerr << "Error while opening pcap file : " << pcap_geterr(pd) << endl;
+	OpenPcapDumper(DLT_RAW, pcap_filename, save_d, save_dumper);
+	if(save_dumper == NULL){
+		cerr << "Error while opening pcap file : " << pcap_geterr(save_d) << endl;
 		return -1;
 	}
 	return 0;
@@ -233,13 +233,13 @@ void writePcap(Packet* p){
 	hdr->len = p->GetSize();
 	hdr->caplen = p->GetSize();
 	gettimeofday(&hdr->ts, NULL);
-	pcap_dump(reinterpret_cast<u_char*>(pdumper),hdr, p->GetRawPtr());
+	pcap_dump(reinterpret_cast<u_char*>(save_dumper), hdr, p->GetRawPtr());
 }
 
 void closePcap(){
-	pcap_dump_flush(pdumper);
-	pcap_close(pd);
-	pcap_dump_close(pdumper);
+	pcap_dump_flush(save_dumper);
+	pcap_close(save_d);
+	pcap_dump_close(save_dumper);
 #ifdef HAVE_CURL
 	if (upload)
 		curlPost(pcap_filename, upload_url);
