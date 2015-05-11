@@ -277,38 +277,6 @@ int l_tcpoption_ref::l_TCP_MPTCPCapable(lua_State *l)
 	return 1;
 }
 
-/***
- * Create a new EDORequest Option
- * @function new_edorequest
- * @treturn TCPOption
- */
-int l_tcpoption_ref::l_TCP_EDORequest(lua_State *l)
-{
-	TCPOptionExtendedDataOffsetRequest *opt;
-
-	opt = l_tcpoption_ref::new_option_ref<TCPOptionExtendedDataOffsetRequest>(l);
-	if (!opt)
-		return 0;
-
-	return 1;
-}
-
-/***
- * Create a new EDO Option
- * @function new_edo
- * @treturn TCPOption
- */
-int l_tcpoption_ref::l_TCP_EDO(lua_State *l)
-{
-	TCPOptionExtendedDataOffset *opt;
-
-	opt = l_tcpoption_ref::new_option_ref<TCPOptionExtendedDataOffset>(l);
-	if (!opt)
-		return 0;
-
-	return 1;
-}
-
 void l_tcpoption_ref::register_members(lua_State *l)
 {
 	l_layer_ref<TCPOptionLayer>::register_members(l);
@@ -323,6 +291,4 @@ void l_tcpoption_ref::register_members(lua_State *l)
 	meta_bind_func(l, "new_wscale", l_TCP_WindowScale);
 	meta_bind_func(l, "new_mpjoin", l_TCP_MPTCPJoin);
 	meta_bind_func(l, "new_mpcapable", l_TCP_MPTCPCapable);
-	meta_bind_func(l, "new_edo", l_TCP_EDO);
-	meta_bind_func(l, "new_edorequest", l_TCP_EDORequest);
 }

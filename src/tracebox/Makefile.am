@@ -33,6 +33,7 @@ tracebox_SOURCES = \
 	lua/lua_utils.cpp \
 	lua/lua_dns.cpp \
 	lua/lua_tcptimestamp.cpp \
+	lua/lua_tcpedo.cpp \
 	lua/lua_tcptfo.cpp
 
 noinst_HEADERS = \
@@ -57,6 +58,7 @@ noinst_HEADERS = \
 	lua/lua_udp.h \
 	lua/lua_dns.h \
 	lua/lua_tcptimestamp.h \
+	lua/lua_tcpedo.h \
 	lua/lua_tcptfo.h \
 	tracebox.h
 
