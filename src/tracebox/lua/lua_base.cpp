@@ -57,27 +57,27 @@ lua_Number l_data_type<lua_Number>::get(lua_State *l, int n) { return luaL_check
 template<>
 void l_data_type<int32_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-int32_t l_data_type<int32_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+int32_t l_data_type<int32_t>::get(lua_State *l, int n) { return luaL_checkinteger(l, n); }
 
 template<>
 void l_data_type<unsigned long>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-unsigned long l_data_type<unsigned long>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+unsigned long l_data_type<unsigned long>::get(lua_State *l, int n) { return luaL_checkinteger(l, n); }
 
 template<>
 void l_data_type<uint32_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-uint32_t l_data_type<uint32_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+uint32_t l_data_type<uint32_t>::get(lua_State *l, int n) { return luaL_checkinteger(l, n); }
 
 template<>
 void l_data_type<uint16_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-uint16_t l_data_type<uint16_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+uint16_t l_data_type<uint16_t>::get(lua_State *l, int n) { return luaL_checkinteger(l, n); }
 
 template<>
 void l_data_type<uint8_t>::push(lua_State *l) { lua_pushinteger(l, val); }
 template<>
-uint8_t l_data_type<uint8_t>::get(lua_State *l, int n) { return luaL_checkint(l, n); }
+uint8_t l_data_type<uint8_t>::get(lua_State *l, int n) { return luaL_checkinteger(l, n); }
 
 template<>
 void l_data_type<const char*>::push(lua_State *l) { lua_pushstring(l, val); }
