@@ -681,7 +681,7 @@ usage:
 "                              Default is 30.\n"
 "  -v                          Print more information.\n"
 "  -j                          Change the format of the output to JSON.\n"
-"  -t                          Timeout to wait for a reply after sending a packet.\n"
+"  -t timeout                  Timeout to wait for a reply after sending a packet.\n"
 "                              Default is 1 sec, accepts decimals.\n"
 "  -p probe                    Specify the probe to send.\n"
 "  -s script_file              Run a script file.\n"

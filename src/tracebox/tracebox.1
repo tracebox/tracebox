@@ -60,7 +60,22 @@ Run a script file.
 Print more information.
 .It \-w
 Show warnings when crafting packets.
+.It \-f filename
+Specify the name of the pcap file.
+.It \-j
+Change the output format to JSON.
+.It \-t timeout
+Timeout to wait for a reply after sending a packet. Accepts decimals, default is 1s.
 .El
+
+If Tracebox was compiled with curl support:
+.Bl -tag -width indent
+.It \-q
+Cancel automatic upload of the packet capture file.
+.It \-c server_url
+Specify a server where capture files of each session will be uploaded.
+.El
+
 .\" ###### Arguments ########################################################
 .Sh EXAMPLES
 .Bl -tag -width indent
