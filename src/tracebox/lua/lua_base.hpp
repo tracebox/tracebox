@@ -224,11 +224,12 @@ protected:
 	void cleanup()
 	{
 		/* Check if we own our val pointer, thus can delete it */
-		if (!owner_ref)
+		if (!owner_ref) {
 			delete this->val;
-		else /* Release our reference towards the true owner otherwise*/
+			_ref_base::cleanup();
+		} else { /* Release our reference towards the true owner otherwise*/
 			owner_ref->release();
-		_ref_base::cleanup();
+		}
 	}
 
 private: /* Use release() to get here */
