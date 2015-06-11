@@ -127,10 +127,11 @@ Packet* TrimReplyIPv4(Packet *rcv, bool *partial)
 	return rcv;
 }
 
-Packet* TrimReplyIPv6(Packet *rcv)
+Packet* TrimReplyIPv6(Packet *rcv, bool *partial)
 {
 	IPv6 *ip = GetIPv6(*rcv);
 
+	*partial = false;
 	/* Remove any extension. */
 	if ((size_t)ip->GetPayloadLength() + 40 < rcv->GetSize()) {
 		RawLayer *raw = GetRawLayer(*rcv);
@@ -140,6 +141,26 @@ Packet* TrimReplyIPv6(Packet *rcv)
 		rcv->PopLayer();
 		if (len)
 			rcv->PushLayer(new_raw);
+	} else if (rcv->GetSize() < (size_t)ip->GetPayloadLength() + 40) {
+		/* We have received a partial header */
+		RawLayer *raw = GetRawLayer(*rcv);
+		Layer *new_layer = NULL;
+
+		if (!raw)
+			return rcv;
+
+		switch(ip->GetNextHeader()) {
+		case TCP::PROTO:
+			new_layer = new PartialTCP(*raw);
+			*partial = true;
+			break;
+		default:
+			return rcv;
+		}
+		if (new_layer) {
+			rcv->PopLayer();
+			rcv->PushLayer(new_layer);
+		}
 	}
 
 	return rcv;
@@ -166,7 +187,7 @@ PacketModifications* PacketModifications::ComputeModifications(Crafter::Packet *
 			break;
 		case IPv6::PROTO:
 			cnt->PacketFromIPv6(*raw);
-			cnt = TrimReplyIPv6(cnt);
+			cnt = TrimReplyIPv6(cnt, &partial);
 			break;
 		default:
 			delete cnt;
