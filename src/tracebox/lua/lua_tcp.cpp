@@ -194,4 +194,5 @@ void l_tcp_ref::register_members(lua_State *l)
 	 * @tfield num CWR
 	 */
 	META_FLAG(CWR);
+#undef META_FLAG
 }
