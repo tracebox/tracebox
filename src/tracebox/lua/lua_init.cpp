@@ -310,14 +310,14 @@ void l_ipoption_ref::register_globals(lua_State *l)
 	lua_register(l, "traceroute", l_IP_Traceroute);
 	/***
 	 * A default IP NOP object
-	 * @table NOP
+	 * @table IP_NOP
 	 * @see IPOption
 	 * @within IP
 	 */
 	l_do(l, "IP_NOP=ip_nop()");
 	/***
 	 * A default IP EOL object
-	 * @table EOL
+	 * @table IP_EOL
 	 * @see IPOption
 	 * @within IP
 	 */
