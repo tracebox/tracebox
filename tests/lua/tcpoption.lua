@@ -7,18 +7,18 @@
 
 function edo()
 	pkt = IP / TCP / EDO / MSS / MPCAPABLE/ raw('Hello World!')
-	print(pkt)
 	bytes=pkt:bytes()
 	print(pkt:hexdump())
-	assert(bytes[33] == 112)-- (offset =7 (5 + 2)<<4, reserved =0)
+	print(pkt)
+	assert(bytes[33] == 0x60)-- (offset = 6 (5 + 1)<<4, reserved =0)
 	-- EDO TCP Option
-	assert(bytes[44] == 6)-- (length)
-	assert(bytes[48] == 11)-- (header length)
+	assert(bytes[42] == 4)-- (length)
+	assert(bytes[44] == 10)-- (header length)
 	-- TCP option after EDO
 	tcpop={2,4,5,180,   -- MSS option
 	30,12,0,129} --  MP Capable option
 	for i = 1, 8 do
-	   assert(bytes[i+48] == tcpop[i])
+	   assert(bytes[i+44] == tcpop[i])
 	end
 
 end

@@ -62,8 +62,7 @@ L_EXPOSE_TYPE(TCP);
 template<> const char *tname<TCPOptionLayer>::name = "TCPOption";
 template<> const char *tname<TCPOptionTimestamp>::name = "TCPTimestamp";
 template<> const char *tname<TCPOptionFastOpen>::name = "TCPTFO";
-template<> const char *tname<TCPEDO>::name = "TCPEDO";
-template<> const char *tname<TCPEDORequest>::name = "TCPEDORequest";
+template<> const char *tname<TCPOptionEDO>::name = "TCPEDO";
 L_EXPOSE_TYPE(UDP);
 L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
@@ -101,8 +100,7 @@ lua_State *l_init()
 	INIT_TYPE(l_tcpoption_ref,                 TCPOptionLayer,           l);
 	INIT_TYPE(l_tcptsopt_ref,                  TCPOptionTimestamp,       l);
 	INIT_TYPE(l_tcptfo_ref,                    TCPOptionFastOpen,        l);
-	INIT_TYPE(l_tcpedoopt_ref,                 TCPEDO,       l);
-	INIT_TYPE(l_tcpedoropt_ref,				   TCPEDORequest,       l);
+	INIT_TYPE(l_tcpedoopt_ref,                 TCPOptionEDO,             l);
 	INIT_TYPE(l_udp_ref,                       UDP,                      l);
 	INIT_TYPE(l_icmp_ref,                      ICMP,                     l);
 	INIT_TYPE(l_raw_ref,                       RawLayer,                 l);
@@ -557,42 +555,38 @@ void l_tcpoption_ref::register_globals(lua_State *l)
 
 void l_tcpedoopt_ref::register_globals(lua_State *l)
 {
-	l_layer_ref<TCPEDO>::register_globals(l);
+	l_layer_ref<TCPOptionEDO>::register_globals(l);
 	/***
-	 * Construct a  TCPOption EDO, shorthand for @{TCPExtendedDataOption.TCPEDO:new}
+	 * Construct a  TCPOption EDO, shorthand for @{TCPEDO:new}
 	 * @function edo
 	 * @treturn TCPEDO
-	 * @see TCPExtendedDataOption.TCPEDO:new
-	 * @within TCPExtendedDataOption
+	 * @see TCPEDO:new
+	 * @within TCP
 	 */
 	lua_register(l, "edo", l_TCP_EDO);
 	/***
-	 * A default TCPOption EDO object
+	 * A TCPEDO option that will contain the header length field
 	 * @table EDO
-	 * @see TCPExtendedDataOption.TCPEDO:new
-	 * @within TCPExtendedDataOption
+	 * @see TCPEDO:new
+	 * @within TCP
 	 */
-	l_do(l, "EDO=NOP/NOP/edo{}");
-}
-
-void l_tcpedoropt_ref::register_globals(lua_State *l)
-{
-	l_layer_ref<TCPEDORequest>::register_globals(l);
-		/***
-	 * Construct a  TCPOption EDORequest, shorthand for @{TCPExtendedDataOption.TCPEDORequest:new}
-	 * @function edorequest
-	 * @treturn TCPEDORequest
-	 * @see TCPExtendedDataOption.TCPEDORequest:new
-	 * @within TCPExtendedDataOption
-	 */
-	lua_register(l, "edorequest", l_TCP_EDOR);
+	l_do(l, "EDO=edo(TCPEDO.EDO)");
 	/***
-	 * A default TCPOption EDORequest object
+	 * A TCPEDO option to be used during the handshake negociation,
+	 * requires padding (length is 2 bytes)
 	 * @table EDOREQUEST
-	 * @see TCPExtendedDataOption.TCPEDORequest:new
-	 * @within TCPExtendedDataOption
+	 * @see TCPEDO:new
+	 * @within TCP
 	 */
-	l_do(l, "EDOREQUEST=NOP/NOP/edorequest{}");
+	l_do(l, "EDOREQUEST=edo(TCPEDO.EDOREQUEST)");
+	/***
+	 * A TCPEDO option containing the header length and the segment length,
+	 * requires padding (length is 6 bytes)
+	 * @table EDOEXT
+	 * @see TCPEDO:new
+	 * @within TCP
+	 */
+	l_do(l, "EDOEXT=edo(TCPEDO.EDOEXT)");
 }
 
 void l_tcptsopt_ref::register_globals(lua_State *l)

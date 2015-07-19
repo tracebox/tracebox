@@ -10,16 +10,9 @@
 
 #include "lua_crafter.hpp"
 
-struct l_tcpedoopt_ref : public l_layer_ref<Crafter::TCPEDO> {
-	using l_layer_ref<Crafter::TCPEDO>::l_layer_ref;
+struct l_tcpedoopt_ref : public l_layer_ref<Crafter::TCPOptionEDO> {
+	using l_layer_ref<Crafter::TCPOptionEDO>::l_layer_ref;
 	static int l_TCP_EDO(lua_State *l);
-	static void register_members(lua_State *l);
-	static void register_globals(lua_State *l);
-};
-
-struct l_tcpedoropt_ref : public l_layer_ref<Crafter::TCPEDORequest> {
-	using l_layer_ref<Crafter::TCPEDORequest>::l_layer_ref;
-	static int l_TCP_EDOR(lua_State *l);
 	static void register_members(lua_State *l);
 	static void register_globals(lua_State *l);
 };
