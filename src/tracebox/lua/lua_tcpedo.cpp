@@ -20,7 +20,8 @@ void l_tcpedoopt_ref::register_members(lua_State *l)
 	 * @tparam[opt] num length
 	 * @treturn num length
 	 */
-	meta_bind_func(l, "length", L_ACCESSOR(byte, TCPOptionLayer, Length));
+	meta_bind_func(l, "length",
+			L_ACCESSOR_BASE(byte, TCPOptionEDO, TCPOption, Length));
 
 	/***
 	 * Get the Header Length field in the edo option
