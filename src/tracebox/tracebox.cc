@@ -47,6 +47,8 @@ extern "C" {
 using namespace Crafter;
 using namespace std;
 
+static bool skip_suid_check = false;
+
 static int hops_max = 64;
 static string destination;
 static string iface;
@@ -545,12 +547,15 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, "l:i:m:s:p:d:f:hnv6uwjt:"
+	while ((c = getopt(argc, argv, "Sl:i:m:s:p:d:f:hnv6uwjt:"
 #ifdef HAVE_CURL
 					"qc:"
 #endif
 					)) != -1) {
 		switch (c) {
+			case 'S':
+				skip_suid_check = true;
+				break;
 			case 'i':
 				iface = optarg;
 				break;
@@ -614,16 +619,16 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (getuid() != 0) {
+	if (!skip_suid_check && getuid() != 0) {
 		cerr << "tracebox requires superuser permissions!" << endl;
-		return 1;
+		goto usage;
 	}
 
 	if (optind < argc) {
 		destination = argv[optind];
 	} else if (!inline_script && ! script) {
 		cerr << "You must specify a destination host" << endl;
-		return 1;
+		goto usage;
 	}
 
 	if(openPcap()){
@@ -694,6 +699,10 @@ usage:
 #endif
 "  -f filename                 Specify the name of the pcap file.\n"
 "                              Default is " DEFAULT_PCAP_FILENAME ".\n"
+"  -S                          Skip the privilege check at the start.\n"
+"                              To be used mainly for testing purposes,\n"
+"	                           as it will cause tracebox to crash for some\n"
+"							   of its features!.\n"
 "\n"
 "Every argument passed after the options in conjunction with -s or -l will be passed\n"
 "to the lua interpreter and available in a global vector of strings named 'argv',\n"

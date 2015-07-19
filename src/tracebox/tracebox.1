@@ -66,6 +66,10 @@ Specify the name of the pcap file.
 Change the output format to JSON.
 .It \-t timeout
 Timeout to wait for a reply after sending a packet. Accepts decimals, default is 1s.
+.It \-S
+Skip the privilege check at the start.
+To be used mainly for testing purposes, as it will cause tracebox to crash
+for some of its features!.
 .El
 
 If Tracebox was compiled with curl support:
