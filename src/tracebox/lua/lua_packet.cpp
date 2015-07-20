@@ -159,7 +159,8 @@ int l_packet_ref::l_get(lua_State *l)
 		return luaL_argerror(l, 2, "This function takes a Layer as parameter!");
 	for (Layer *layer : *p) {
 		if (layer->GetID() == ref->GetID()) {
-			new l_ref<Layer>(p_ref, layer, l, layer->GetName().c_str());
+			new l_ref<Layer>(p_ref, layer, l,
+					lua_tbx::l_layer_ref_mapping->at(layer->GetID()));
 			return 1;
 		}
 	}
@@ -184,7 +185,8 @@ int l_packet_ref::l_getall(lua_State *l)
 	int count = 1;
 	for (Layer *layer : *p) {
 		if (layer->GetID() == ref->GetID()) {
-			new l_ref<Layer>(p_ref, layer, l, layer->GetName().c_str());
+			new l_ref<Layer>(p_ref, layer, l,
+					lua_tbx::l_layer_ref_mapping->at(layer->GetID()));
 			lua_rawseti(l, -2, count);
 			++count;
 		}

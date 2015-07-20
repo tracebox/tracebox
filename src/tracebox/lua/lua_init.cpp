@@ -34,7 +34,7 @@
  * 1. Create & fill associated metatable
  * 2 Register globals functions/values for that type
  */
-#define INIT_TYPE(ref_t, t, l) \
+#define _INIT_TYPE_START(ref_t, t, l) \
 	do { \
 	const char *n = TNAME(t); \
 	luaL_newmetatable(l, n); \
@@ -42,8 +42,19 @@
 	lua_pushvalue(l, -1); \
 	lua_setfield(l, -1, "__index"); \
 	lua_setglobal(l,  n); \
-	ref_t::register_globals(l); } \
-	while(0)
+	ref_t::register_globals(l);
+
+#define _INIT_TYPE_END } while(0)
+
+#define INIT_TYPE(ref_t, t, l) \
+	_INIT_TYPE_START(ref_t, t, l) \
+	_INIT_TYPE_END
+
+#define INIT_LAYER(ref_t, t, l) \
+	_INIT_TYPE_START(ref_t, t, l) \
+	lua_tbx::l_layer_ref_mapping->insert({t::PROTO, TNAME(t)}); \
+	_INIT_TYPE_END
+
 
 /* We might want to stop using globals and instead do a global table,
  * this hook will allow for an easier transition */
@@ -52,25 +63,26 @@
 using namespace Crafter;
 
 /* Populate the tname<x> template */
-L_EXPOSE_TYPE(Layer);
-L_EXPOSE_TYPE(Packet);
 L_EXPOSE_TYPE(IP);
-template<> const char *tname<IPOptionLayer>::name = "IPOption";
 L_EXPOSE_TYPE(IPv6);
 L_EXPOSE_TYPE(IPv6SegmentRoutingHeader);
 L_EXPOSE_TYPE(TCP);
-template<> const char *tname<TCPOptionLayer>::name = "TCPOption";
-template<> const char *tname<TCPOptionTimestamp>::name = "TCPTimestamp";
-template<> const char *tname<TCPOptionFastOpen>::name = "TCPTFO";
-template<> const char *tname<TCPOptionEDO>::name = "TCPEDO";
+L_EXPOSE_TYPE_AS(TCPOptionTimestamp, TCPTimestamp);
+L_EXPOSE_TYPE_AS(TCPOptionFastOpen, TCPTFO);
+L_EXPOSE_TYPE_AS(TCPOptionEDO, TCPEDO);
 L_EXPOSE_TYPE(UDP);
 L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
-L_EXPOSE_TYPE(PacketModifications);
-L_EXPOSE_TYPE(FWFilter);
 L_EXPOSE_TYPE(DNS);
-template<> const char *tname<DNS::DNSQuery>::name = "DNSQuery";
-template<> const char *tname<DNS::DNSAnswer>::name = "DNSAnswer";
+
+L_EXPOSE_TYPE(Layer);
+L_EXPOSE_TYPE(Packet);
+L_EXPOSE_TYPE_AS(TCPOptionLayer, TCPOption);
+L_EXPOSE_TYPE(FWFilter);
+L_EXPOSE_TYPE(PacketModifications);
+L_EXPOSE_TYPE_AS(DNS::DNSQuery, DNSQuery);
+L_EXPOSE_TYPE_AS(DNS::DNSAnswer, DNSAnswer);
+L_EXPOSE_TYPE_AS(IPOptionLayer, IPOption);
 #ifdef HAVE_SNIFFER
 L_EXPOSE_TYPE(TbxSniffer);
 #endif
@@ -92,21 +104,21 @@ lua_State *l_init()
 	luaL_openlibs(l);
 	/* Create types metatables */
 	INIT_TYPE(l_packet_ref,                    Packet,                   l);
-	INIT_TYPE(l_ip_ref,                        IP,                       l);
+	INIT_LAYER(l_ip_ref,                        IP,                       l);
 	INIT_TYPE(l_ipoption_ref,                  IPOptionLayer,            l);
-	INIT_TYPE(l_ipv6_ref,                      IPv6,                     l);
-	INIT_TYPE(l_ipv6segmentroutingheader_ref,  IPv6SegmentRoutingHeader, l);
-	INIT_TYPE(l_tcp_ref,                       TCP,                      l);
+	INIT_LAYER(l_ipv6_ref,                      IPv6,                     l);
+	INIT_LAYER(l_ipv6segmentroutingheader_ref,  IPv6SegmentRoutingHeader, l);
+	INIT_LAYER(l_tcp_ref,                       TCP,                      l);
 	INIT_TYPE(l_tcpoption_ref,                 TCPOptionLayer,           l);
-	INIT_TYPE(l_tcptsopt_ref,                  TCPOptionTimestamp,       l);
-	INIT_TYPE(l_tcptfo_ref,                    TCPOptionFastOpen,        l);
-	INIT_TYPE(l_tcpedoopt_ref,                 TCPOptionEDO,             l);
-	INIT_TYPE(l_udp_ref,                       UDP,                      l);
-	INIT_TYPE(l_icmp_ref,                      ICMP,                     l);
-	INIT_TYPE(l_raw_ref,                       RawLayer,                 l);
+	INIT_LAYER(l_tcptsopt_ref,                  TCPOptionTimestamp,       l);
+	INIT_LAYER(l_tcptfo_ref,                    TCPOptionFastOpen,        l);
+	INIT_LAYER(l_tcpedoopt_ref,                 TCPOptionEDO,             l);
+	INIT_LAYER(l_udp_ref,                       UDP,                      l);
+	INIT_LAYER(l_icmp_ref,                      ICMP,                     l);
+	INIT_LAYER(l_raw_ref,                       RawLayer,                 l);
+	INIT_LAYER(l_dns_ref,                       DNS,                      l);
 	INIT_TYPE(l_packetmodifications_ref,       PacketModifications,      l);
 	INIT_TYPE(l_fwfilter_ref,                  FWFilter,                 l);
-	INIT_TYPE(l_dns_ref,                       DNS,                      l);
 	INIT_TYPE(l_dnsquery_ref,                  DNS::DNSQuery,            l);
 	INIT_TYPE(l_dnsanswer_ref,                 DNS::DNSAnswer,           l);
 	#ifdef HAVE_SNIFFER

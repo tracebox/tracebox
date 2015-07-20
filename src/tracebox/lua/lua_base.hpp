@@ -57,8 +57,10 @@ template<class C>
 struct tname {
 	static const char *name;
 };
+
 #define TNAME(C) tname<C>::name
-#define L_EXPOSE_TYPE(x) template<> const char *tname<x>::name = #x
+#define L_EXPOSE_TYPE_AS(x,y) template<> const char *tname<x>::name = #y
+#define L_EXPOSE_TYPE(x) L_EXPOSE_TYPE_AS(x,x)
 
 struct _ref_count {
 	size_t c;

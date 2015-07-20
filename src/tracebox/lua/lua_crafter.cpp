@@ -59,6 +59,8 @@ using namespace Crafter;
  * @tfield string __tbx_baseclass
  */
 const char* lua_tbx::base_class_field = "__tbx_baseclass";
+std::unordered_map<int, const char*> *lua_tbx::l_layer_ref_mapping
+	= new std::unordered_map<int, const char*>;
 
 int lua_tbx::l_concat(lua_State *l)
 {

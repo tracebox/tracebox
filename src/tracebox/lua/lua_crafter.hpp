@@ -10,10 +10,13 @@
 
 #include "lua_base.hpp"
 #include <cstring>
+#include <unordered_map>
 
 struct lua_tbx {
 	static const char *base_class_field;
 	static int l_concat(lua_State *l);
+	static std::unordered_map<int, const char*> *l_layer_ref_mapping;
+
 
 	template<class Base>
 	static Base* get_udata(lua_State *l, int n)
