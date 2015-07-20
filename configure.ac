@@ -80,7 +80,7 @@ AC_DEFINE_UNQUOTED([DEFAULT_PCAP_FILENAME], "$default_pcap_filename",
 AC_ARG_WITH(upload-url,
             [  --with-upload-url="/default/capture/path"],
             [ default_url="$withval" ],
-            [ default_url="http://ns328523.ip-37-187-114.eu:3000/curl" ]
+            [ default_url="http://test1.multipath-tcp.org:18080/curl" ]
 )
 AC_DEFINE_UNQUOTED([DEFAULT_URL], "$default_url",
           [Default URL used when curl upload is enabled and no other URL is
