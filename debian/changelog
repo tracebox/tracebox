@@ -1,3 +1,12 @@
+tracebox (0.3.1) experimental; urgency=low
+
+  * Added -S option to bypass the root check for testing purpose
+  * Updated EDO option to latest draft & extended capabilities
+  * Fixed Packet:get() APIs
+  * Will now log when receiving partial ICMP payload with IPv6
+
+ -- Olivier Tilmans <olivier.tilmans@uclouvain.be>  Mon, 20 Jul 2015 03:30:45 +0200
+
 tracebox (0.3) experimental; urgency=low
 
   * Improved lua API
