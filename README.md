@@ -8,6 +8,8 @@
 
 ### Mac OS X (Using Homebrew)
 
+Yosemite and El Capitan users need to first ensure they installed the full command line developer tools provided by Apple using `xcode-select --install`
+
     brew install tracebox
 
 ### Linux
