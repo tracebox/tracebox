@@ -75,7 +75,7 @@ void BuildNetworkLayer<IPv6::PROTO>(Packet *pkt)
 {
 	IPv6 ip = IPv6();
 	ip.SetFlowLabel(rand());
-	pkt->PushLayer(IPv6());
+	pkt->PushLayer(ip);
 }
 
 template<>
