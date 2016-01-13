@@ -66,15 +66,15 @@ template<>
 void BuildNetworkLayer<IP::PROTO>(Packet *pkt)
 {
 	IP ip = IP();
-#ifdef __APPLE__
 	ip.SetIdentification(rand());
-#endif
 	pkt->PushLayer(ip);
 }
 
 template<>
 void BuildNetworkLayer<IPv6::PROTO>(Packet *pkt)
 {
+	IPv6 ip = IPv6();
+	ip.SetFlowLabel(rand());
 	pkt->PushLayer(IPv6());
 }
 

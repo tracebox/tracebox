@@ -260,7 +260,7 @@ void l_ip_ref::register_globals(lua_State *l)
 	 * @see IP:new
 	 * @within IP
 	 */
-	l_do(l, "IP=ip({})");
+	l_do(l, "IP=ip({id=math.random(65535)})");
 }
 
 void l_ipoption_ref::register_globals(lua_State *l)
@@ -382,7 +382,7 @@ void l_ipv6_ref::register_globals(lua_State *l)
 	 * @see IPv6
 	 * @within IPv6
 	 */
-	l_do(l, "IPv6=ipv6({})");
+	l_do(l, "IPv6=ipv6({flowlabel=math.random(1048575)})");
 }
 
 void l_ipv6segmentroutingheader_ref::register_globals(lua_State *l)
