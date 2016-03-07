@@ -17,7 +17,7 @@ function ping(to)
 end
 
 p = ipv6{dst = dn6('google.com')} / UDP
-assert(p:send() == nil) -- Check that we don't pollute the stack
+-- assert(p:send() == nil) -- Check that we don't pollute the stack
 ping('localhost')
 ping('google.com')
 
