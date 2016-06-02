@@ -18,20 +18,40 @@ using namespace std;
 /***
  * Constructor for a Raw Layer
  * @function new
- * @tparam string data the data for this layer
+ * @tparam[opt] string data the data for this layer.
+ * @tparam[opt] table bytes the data for this layer, as byte values.
  * @treturn Raw a new Raw object
  * @usage Raw.new('Hello World!')
  * */
 int l_raw_ref::l_Raw(lua_State *l)
 {
 	RawLayer *raw;
-	const char *payload = luaL_checkstring(l, 1);
+	const char *payload = NULL;
+	std::vector<byte> bytes;
+
+	if (lua_istable(l, 1)) {
+		luaL_checktype(l, 1, LUA_TTABLE);
+		for (int i = 1;; ++i, lua_pop(l, 1)) {
+			lua_rawgeti(l, -1, i);
+			if (lua_isnil(l, -1)) {
+				lua_pop(l, 1);
+				break;
+			}
+			bytes.push_back(lua_tointeger(l, -1));
+		}
+	} else {
+		payload = luaL_checkstring(l, 1);
+	}
 
 	raw = l_raw_ref::new_ref(l);
 	if (!raw)
 		return 0;
 
-	raw->SetPayload(payload);
+	if (payload)
+		raw->SetPayload(payload);
+	if (bytes.size())
+		raw->SetPayload(&bytes[0], bytes.size());
+
 	return 1;
 }
 
