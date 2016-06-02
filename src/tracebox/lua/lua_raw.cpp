@@ -11,6 +11,25 @@
 using namespace Crafter;
 using namespace std;
 
+static void _fill_byte_vec(std::vector<byte> &vec, lua_State *l, int idx)
+{
+	luaL_checktype(l, idx, LUA_TTABLE);
+	for (int i = 1;; ++i, lua_pop(l, 1)) {
+		lua_rawgeti(l, -1, i);
+		if (lua_isnil(l, -1)) {
+			lua_pop(l, 1);
+			break;
+		}
+		vec.push_back(lua_tointeger(l, -1));
+	}
+}
+
+static void _get_byte_string(const char **dest, size_t *size,
+		lua_State *l, int idx)
+{
+	*dest = luaL_checklstring(l, idx, size);
+}
+
 /***
  * The Raw Layer, inherits from @{Base_Object}
  * @classmod Raw
@@ -26,21 +45,14 @@ using namespace std;
 int l_raw_ref::l_Raw(lua_State *l)
 {
 	RawLayer *raw;
-	const char *payload = NULL;
+	char const *payload = NULL;
+	size_t payload_len = 0;
 	std::vector<byte> bytes;
 
 	if (lua_istable(l, 1)) {
-		luaL_checktype(l, 1, LUA_TTABLE);
-		for (int i = 1;; ++i, lua_pop(l, 1)) {
-			lua_rawgeti(l, -1, i);
-			if (lua_isnil(l, -1)) {
-				lua_pop(l, 1);
-				break;
-			}
-			bytes.push_back(lua_tointeger(l, -1));
-		}
+		_fill_byte_vec(bytes, l, 1);
 	} else {
-		payload = luaL_checkstring(l, 1);
+		_get_byte_string(&payload, &payload_len, l, 1);
 	}
 
 	raw = l_raw_ref::new_ref(l);
@@ -48,7 +60,7 @@ int l_raw_ref::l_Raw(lua_State *l)
 		return 0;
 
 	if (payload)
-		raw->SetPayload(payload);
+		raw->SetPayload((byte *)payload, payload_len);
 	if (bytes.size())
 		raw->SetPayload(&bytes[0], bytes.size());
 
@@ -63,10 +75,14 @@ int l_raw_ref::l_Raw(lua_State *l)
  * */
 int l_raw_ref::l_data(lua_State *l)
 {
+	char const *payload = NULL;
+	size_t payload_len = 0;
+
 	RawLayer *o = l_raw_ref::get(l, 1);
-	if (lua_gettop(l) > 1)
-		o->SetPayload(l_data_type<const char*>::get(l, 2));
-	else
+	if (lua_gettop(l) > 1) {
+		_get_byte_string(&payload, &payload_len, l, 2);
+		o->SetPayload((byte *)payload, payload_len);
+	} else
 		l_data_type<std::string>(o->GetStringPayload()).push(l);
 	return 1;
 }
@@ -89,16 +105,8 @@ int l_raw_ref::l_bytes(lua_State *l)
 			++bytes;
 		}
 	} else {
-		luaL_checktype(l, 2, LUA_TTABLE);
 		std::vector<byte> bytes;
-		for (int i = 1;; ++i, lua_pop(l, 1)) {
-			lua_rawgeti(l, -1, i);
-			if (lua_isnil(l, -1)) {
-				lua_pop(l, 1);
-				break;
-			}
-			bytes.push_back(lua_tointeger(l, -1));
-		}
+		_fill_byte_vec(bytes, l, 2);
 		o->SetPayload(&bytes[0], bytes.size());
 	}
 	return 1;
