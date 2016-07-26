@@ -7,4 +7,4 @@
 ##  Some rights reserved. See LICENSE, AUTHORS.
 ##
 
-@tracebox@ -q -s @script@ $(cat @args@ 2> /dev/null)
+@tracebox@ -s @script@ $(cat @args@ 2> /dev/null)
