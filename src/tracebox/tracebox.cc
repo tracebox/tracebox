@@ -231,11 +231,11 @@ int openPcap(){
 }
 
 void writePcap(Packet* p){
-	struct pcap_pkthdr *hdr= (pcap_pkthdr *) malloc(sizeof(*hdr));
-	hdr->len = p->GetSize();
-	hdr->caplen = p->GetSize();
-	gettimeofday(&hdr->ts, NULL);
-	pcap_dump(reinterpret_cast<u_char*>(save_dumper), hdr, p->GetRawPtr());
+	struct pcap_pkthdr hdr;
+	hdr.len = p->GetSize();
+	hdr.caplen = p->GetSize();
+	gettimeofday(&hdr.ts, NULL);
+	pcap_dump(reinterpret_cast<u_char*>(save_dumper), &hdr, p->GetRawPtr());
 }
 
 void closePcap(){
