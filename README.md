@@ -14,7 +14,15 @@ Yosemite and El Capitan users need to first ensure they installed the full comma
 
 ### Linux
 
-Requirements: autotools, automake, libtool, liblua-dev, libpcap-dev, libjson0, libjson0-dev, libcurl4-gnutls-dev, lua-ldoc, libnetfilter-queue-dev
+Requirements: 
+
+*Debian*
+
+    apt-get install autotools automake libtool liblua-dev libpcap-dev libjson0 libjson0-dev libcurl4-gnutls-dev lua-ldoc libnetfilter-queue-dev
+
+*Fedora (24)*
+
+    dnf install autoconf automake libtool lua-devel libpcap-devel json-c-devel gnutls-devel lua-ldoc libnetfilter_queue-devel
 
 To build:
 
