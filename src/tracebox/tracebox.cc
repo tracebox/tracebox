@@ -218,7 +218,7 @@ static pcap_dumper_t *pdumper, *save_dumper = NULL;
 static const char *pcap_filename = DEFAULT_PCAP_FILENAME;
 #ifdef HAVE_CURL
 static const char * upload_url = DEFAULT_URL;
-static bool upload = true;
+static bool upload = false;
 #endif
 
 int openPcap(){
@@ -243,8 +243,10 @@ void closePcap(){
 	pcap_close(save_d);
 	pcap_dump_close(save_dumper);
 #ifdef HAVE_CURL
-	if (upload)
+	if (upload) {
+		std::cerr << "Uploading pcap to " << upload_url << std::endl;
 		curlPost(pcap_filename, upload_url);
+	}
 #endif
 }
 
@@ -549,7 +551,7 @@ int main(int argc, char *argv[])
 	ShowWarnings = 0;
 	while ((c = getopt(argc, argv, "Sl:i:m:s:p:d:f:hnv6uwjt:"
 #ifdef HAVE_CURL
-					"qc:"
+					"Cc:"
 #endif
 					)) != -1) {
 		switch (c) {
@@ -589,11 +591,12 @@ int main(int argc, char *argv[])
 				j_results = json_object_new_array();
 				break;
 #ifdef HAVE_CURL
-			case 'q' :
-				upload = false;
-				break;
 			case 'c':
 				upload_url = optarg;
+				upload = true;
+				break;
+			case 'C':
+				upload = true;
 				break;
 #endif
 			case 'f' :
@@ -612,8 +615,14 @@ int main(int argc, char *argv[])
 			case 't':
 				tbx_default_timeout = strtod(optarg, NULL);
 				break;
+			case ':':
+				std::cerr << "Option `-" << (char)optopt
+							<< "' requires an argument!" << std::endl;
+				goto usage;
+				break;
 			case '?':
-				std::cerr << "Unknown option `-" << optopt << "'." << std::endl;
+				std::cerr << "Unknown option `-" << (char)optopt
+							<< "'." << std::endl;
 			default:
 				goto usage;
 		}
@@ -693,9 +702,8 @@ usage:
 "  -l inline_script            Run a script.\n"
 "  -w                          Show warnings when crafting packets.\n"
 #ifdef HAVE_LIBCURL
-"  -q                          Cancel automatic upload of the capture file.\n"
 "  -c server_url               Specify a server where captured packets will be sent.\n"
-"                              Default is " DEFAULT_URL ".\n"
+"  -C                          Same than -c, but use the server at " DEFAULT_URL ".\n"
 #endif
 "  -f filename                 Specify the name of the pcap file.\n"
 "                              Default is " DEFAULT_PCAP_FILENAME ".\n"
