@@ -3,7 +3,6 @@ SUBDIRS = tools
 
 lua_scripts = lua/refcounting.lua \
 			  lua/sleep.lua \
-			  lua/dns.lua \
 			  lua/packet.lua \
 			  lua/tcpoption.lua \
 			  lua/arguments.lua
