@@ -1,3 +1,3 @@
 tracebox to 1.2.3.4 (1.2.3.4): 64 hops max
-1: 1.1.1.1 TCP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
-2: 1.2.3.4 TCP::CheckSum IP::TTL IP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
+1: 1.1.1.1 0ms TCP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
+2: 1.2.3.4 0ms TCP::CheckSum IP::TTL IP::CheckSum TCPOptionMaxSegSize::MaxSegSize 

@@ -1,7 +1,7 @@
 tracebox to 1.2.3.4 (1.2.3.4): 64 hops max
-1: 1.1.1.1 TCP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
-2: 2.2.2.2 TCP::CheckSum IP::Identification IP::TTL IP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
-3: 3.3.3.3 -TCP IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
-4: 4.4.4.4 -TCP IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
-5: 5.5.5.5 -TCP IP::ExpCongestionNot IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
-6: 1.2.3.4 -TCP IP::ExpCongestionNot IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
+1: 1.1.1.1 0ms TCP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
+2: 2.2.2.2 0ms TCP::CheckSum IP::Identification IP::TTL IP::CheckSum TCPOptionMaxSegSize::MaxSegSize 
+3: 3.3.3.3 0ms -TCP IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
+4: 4.4.4.4 0ms -TCP IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
+5: 5.5.5.5 0ms -TCP IP::ExpCongestionNot IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
+6: 1.2.3.4 0ms -TCP IP::ExpCongestionNot IP::Identification IP::TTL IP::Protocol IP::CheckSum -TCPOptionMaxSegSize +RawLayer 
