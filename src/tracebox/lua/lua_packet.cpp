@@ -144,6 +144,21 @@ int l_packet_ref::l_bytes(lua_State *l)
 }
 
 /***
+ * Get the timestamp associated with this packet:
+ * the time at which it was last sent or received)
+ * @function ts
+ * @treturn the timestamp in usec
+ */
+int l_packet_ref::l_ts(lua_State *l)
+{
+	Packet *p = l_packet_ref::get(l, 1);
+	struct timeval ts = p->GetTimestamp();
+	lua_Number x = ts.tv_sec * 10e6L + ts.tv_usec;
+	lua_pushnumber(l, x);
+	return 1;
+}
+
+/***
  * Get a layer matching the given one
  * @function get
  * @tparam Base_Object similar
