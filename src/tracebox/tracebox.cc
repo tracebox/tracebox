@@ -234,7 +234,7 @@ void writePcap(Packet* p){
 	struct pcap_pkthdr hdr;
 	hdr.len = p->GetSize();
 	hdr.caplen = p->GetSize();
-	gettimeofday(&hdr.ts, NULL);
+	hdr.ts = p->GetTimestamp();
 	pcap_dump(reinterpret_cast<u_char*>(save_dumper), &hdr, p->GetRawPtr());
 }
 
@@ -350,6 +350,10 @@ string iface_address(int proto, string& iface)
 	} catch (std::runtime_error &ex) { return ""; }
 }
 
+static unsigned long timeval_diff(const struct timeval a, const struct timeval b)
+{
+	return (a.tv_sec - b.tv_sec) * 10e6L + a.tv_usec - b.tv_usec;
+}
 
 static int Callback(void *ctx, int ttl, string& router,
 	const Packet * const probe, Packet *rcv, PacketModifications *mod)
@@ -366,6 +370,7 @@ static int Callback(void *ctx, int ttl, string& router,
 			cout << ttl << ": " << router << " ";
 		else
 			cout << ttl << ": " << GetHostname(router) << " (" << router << ") ";
+		cout << timeval_diff(rcv->GetTimestamp(), probe->GetTimestamp()) / 1000 << "ms ";
 		if (mod) {
 			mod->Print(cout, verbose);
 			delete mod;
@@ -398,6 +403,7 @@ static int Callback_JSON(void *ctx, int ttl, string& router,
 
 			json_object_object_add(hop,"hop", json_object_new_int(ttl));
 			json_object_object_add(hop,"from", json_object_new_string(router.c_str()));
+			json_object_object_add(hop,"delay", json_object_new_int(timeval_diff(rcv->GetTimestamp(), probe->GetTimestamp())));
 			if (resolve)
 				json_object_object_add(hop,"name", json_object_new_string(GetHostname(router).c_str()));
 			if (mod){

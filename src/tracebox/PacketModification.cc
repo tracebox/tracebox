@@ -175,7 +175,7 @@ PacketModifications* PacketModifications::ComputeModifications(Crafter::Packet *
 	int proto = pkt->GetLayer<IPLayer>()->GetID();
 
 	if (icmp && raw) {
-		Packet *cnt = new Packet;
+		Packet *cnt = new Packet((*rcv)->GetTimestamp());
 		switch (proto) {
 		case IP::PROTO:
 			cnt->PacketFromIP(*raw);

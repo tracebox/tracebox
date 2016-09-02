@@ -81,6 +81,7 @@ this will as well change the output mode to JSON
         {
             "hop"           : "Corresponding TTL/hop limit",
             "from"          : "IP address of that hop",
+            "delay"         : "Delay between the probe and the reply (usec)",
             "name"          : "Name of the hop [Optional]",
             "Modifications" : [
                 // if tracebox was called with -v :
