@@ -31,9 +31,12 @@ To build:
     $ make
     # make install
 
-You can grab the latest build here (source package or *.deb):
+You can [grab the latest build here](https://circleci-tkn.rhcloud.com/api/v1/project/tracebox/tracebox/tree/master/latest/artifacts/tracebox_latest_amd64.deb) (source package or *.deb).
 
-https://drone.io/github.com/tracebox/tracebox/files
+We rely on [CircleCI] to generate the build packages, if the above link fails,
+you can try to retrieve them manually by browsing to [the tracebox project
+build status](https://circleci.com/gh/tracebox/tracebox),
+selecting the latest build and then downloading the *.deb packages in the Artifacts tab.
 
 Tracebox has been tested and works both with Lua 5.1 and 5.2
 

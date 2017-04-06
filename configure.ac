@@ -265,6 +265,10 @@ if test -z "$LDOC";
 fi
 AM_CONDITIONAL([HAVE_LDOC],[test -n "$LDOC"])
 
+AC_DEFINE_UNQUOTED([_REV_PARSE], 
+          ["$(git describe --abbrev=16 --dirty --always --tags)"],
+          ["Version number: tag-commits-g revision-branch status"])
+
 AC_CONFIG_FILES([
 	Makefile
 	noinst/Makefile

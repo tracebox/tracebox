@@ -5,6 +5,7 @@
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
+#include "config.h"
 #include "tracebox.h"
 #include "crafter/Utils/IPResolver.h"
 #include "script.h"
@@ -721,6 +722,7 @@ usage:
 "Every argument passed after the options in conjunction with -s or -l will be passed\n"
 "to the lua interpreter and available in a global vector of strings named 'argv',\n"
 "in the order they appeared on the command-line.\n"
+"\n\nVersion: " _REV_PARSE "\n"
 	<< endl;
 	return ret;
 }

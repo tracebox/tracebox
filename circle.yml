@@ -1,0 +1,18 @@
+dependencies:
+    override:
+        - ./CI/prepare_common.sh
+compile:
+    pre:
+        - ./bootstrap.sh
+        - ./configure --enable-deb --enable-sniffer --enable-curl
+    override:
+        - make -j4 distcheck
+    post:
+        - make -j3 debian-package
+test:
+    override:
+        - sh -c 'echo Skipping tests as these are run on Travis'
+deployment:
+    override:
+        - sh -c 'cp ../*.deb $CIRCLE_ARTIFACTS || true'
+        - sh -c 'mv ../*.deb $CIRCLE_ARTIFACTS/tracebox_latest_amd64.deb || true'
