@@ -8,7 +8,7 @@
 #ifndef __LUA_TCP_H_
 #define __LUA_TCP_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_tcp_ref : public l_layer_ref<Crafter::TCP> {
 	using l_layer_ref<Crafter::TCP>::l_layer_ref;

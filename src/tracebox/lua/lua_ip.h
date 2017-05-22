@@ -8,7 +8,7 @@
 #ifndef __LUA_IP_H_
 #define __LUA_IP_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_ip_ref : public l_layer_ref<Crafter::IP> {
 	using l_layer_ref<Crafter::IP>::l_layer_ref;

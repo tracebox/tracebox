@@ -8,7 +8,7 @@
 #ifndef __LUA_UDP_H_
 #define __LUA_UDP_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_udp_ref : public l_layer_ref<Crafter::UDP> {
 	using l_layer_ref<Crafter::UDP>::l_layer_ref;

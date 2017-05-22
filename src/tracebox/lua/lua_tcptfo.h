@@ -8,7 +8,7 @@
 #ifndef __LUA_TCPTFO_H_
 #define __LUA_TCPTFO_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_tcptfo_ref : public l_layer_ref<Crafter::TCPOptionFastOpen> {
 	using l_layer_ref<Crafter::TCPOptionFastOpen>::l_layer_ref;

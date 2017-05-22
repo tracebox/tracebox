@@ -357,13 +357,17 @@ static unsigned long timeval_diff(const struct timeval a, const struct timeval b
 }
 
 static int Callback(void *ctx, int ttl, string& router,
-	const Packet * const probe, Packet *rcv, PacketModifications *mod)
+		PacketModifications *mod)
 {
 	(void)ctx;
+	const Packet *probe = mod->orig.get();
+	const Packet *rcv = mod->modif.get();
 	IPLayer *ip = probe->GetLayer<IPLayer>();
 
 	if (ttl == 1)
-		cout << "tracebox to " << ip->GetDestinationIP() << " (" << destination << "): " << hops_max << " hops max" << endl;
+		cout << "tracebox to " <<
+			ip->GetDestinationIP() << " (" << destination << "): " <<
+			hops_max << " hops max" << endl;
 
 	if (rcv) {
 		ip = rcv->GetLayer<IPLayer>();
@@ -377,7 +381,6 @@ static int Callback(void *ctx, int ttl, string& router,
 			delete mod;
 		}
 		cout << endl;
-		delete rcv;
 	} else
 		cout << ttl << ": *" << endl;
 
@@ -385,9 +388,10 @@ static int Callback(void *ctx, int ttl, string& router,
 }
 
 static int Callback_JSON(void *ctx, int ttl, string& router,
-		const Packet * const probe, Packet *rcv, PacketModifications *mod)
+		PacketModifications *mod)
 {
 	(void)ctx;
+	const Packet *probe = mod->orig.get();
 	IPLayer *ip = probe->GetLayer<IPLayer>();
 
 	if (ttl == 1){
@@ -398,6 +402,7 @@ static int Callback_JSON(void *ctx, int ttl, string& router,
 
 	json_object * hop = json_object_new_object();
 
+	const Packet *rcv = mod->modif.get();
 	if (rcv) {
 			ip = rcv->GetLayer<IPLayer>();
 
@@ -420,7 +425,6 @@ static int Callback_JSON(void *ctx, int ttl, string& router,
 				json_object_object_add(hop,"Deletions", del);
 				delete mod;
 			}
-		delete rcv;
 	}
 	else{
 		json_object_object_add(hop,"hop", json_object_new_int(ttl));
@@ -440,7 +444,7 @@ bool validIPAddress(bool ipv6, const string& ipAddress)
 		return validateIpv4Address(ipAddress);
 }
 
-IPLayer* probe_sanity_check(Packet *pkt, string& err, string& iface)
+IPLayer* probe_sanity_check(const Packet *pkt, string& err, string& iface)
 {
 	IPLayer *ip = pkt->GetLayer<IPLayer>();
 	string sourceIP;
@@ -488,8 +492,10 @@ IPLayer* probe_sanity_check(Packet *pkt, string& err, string& iface)
 	return ip;
 }
 
-int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
+int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
+		string& err, void *ctx)
 {
+	Packet *pkt = pkt_shrd.get();
 	IPLayer *ip = probe_sanity_check(pkt, err, iface);
 	if (!ip)
 		return -1;
@@ -526,11 +532,11 @@ int doTracebox(Packet *pkt, tracebox_cb_t *callback, string& err, void *ctx)
 				writePcap(&p);
 			}
 			sIP = rcv->GetLayer<IPLayer>()->GetSourceIP();
-			mod = PacketModifications::ComputeModifications(pkt, &rcv);
 		}
+		mod = PacketModifications::ComputeModifications(pkt_shrd, rcv);
 
 		/* The callback can stop the iteration */
-		if (callback && callback(ctx, ttl, sIP, pkt, rcv, mod))
+		if (callback && callback(ctx, ttl, sIP, mod))
 			return 0;
 
 		/* Stop if we reached the server */
@@ -672,12 +678,10 @@ int main(int argc, char *argv[])
 	if (!pkt)
 		return EXIT_FAILURE;
 
-	if (doTracebox(pkt, callback, err) < 0) {
+	if (doTracebox(std::shared_ptr<Packet>(pkt), callback, err) < 0) {
 		cerr << "Error: " << err << endl;
 		goto usage;
 	}
-
-	delete pkt;
 
 	if (jobj != NULL) {
 		json_object_object_add(jobj,"Hops", j_results);

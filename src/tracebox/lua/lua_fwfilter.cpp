@@ -49,7 +49,7 @@ void FWFilter::close() {
  */
 int l_fwfilter_ref::l_FWFilter_close(lua_State *l)
 {
-	FWFilter *fw = l_fwfilter_ref::get(l, 1);
+	FWFilter *fw = l_fwfilter_ref::extract(l, 1);
 	fw->close();
 	return 0;
 }
@@ -57,7 +57,7 @@ int l_fwfilter_ref::l_FWFilter_close(lua_State *l)
 int l_fwfilter_ref::l_TraceboxFilter(lua_State *l)
 {
 	int dstPort, srcPort;
-	Packet *pkt = l_packet_ref::get(l, 1);
+	Packet *pkt = l_packet_ref::extract(l, 1);
 	if (!pkt)
 		return 0;
 	TCP *tcp = pkt->GetLayer<TCP>();

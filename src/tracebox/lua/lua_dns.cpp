@@ -72,8 +72,8 @@ int l_dns_ref::l_DNS(lua_State *l)
  */
 int l_dns_ref::l_add_query(lua_State *l)
 {
-	DNS *dns = l_dns_ref::get(l, 1);
-	DNS::DNSQuery *query = l_dnsquery_ref::get(l, 2);
+	DNS *dns = l_dns_ref::extract(l, 1);
+	DNS::DNSQuery *query = l_dnsquery_ref::extract(l, 2);
 	dns->Queries.push_back(*query);
 	return 0;
 }
@@ -85,8 +85,8 @@ int l_dns_ref::l_add_query(lua_State *l)
  */
 int l_dns_ref::l_add_answer(lua_State *l)
 {
-	DNS *dns = l_dns_ref::get(l, 1);
-	DNS::DNSAnswer *answer = l_dnsanswer_ref::get(l, 2);
+	DNS *dns = l_dns_ref::extract(l, 1);
+	DNS::DNSAnswer *answer = l_dnsanswer_ref::extract(l, 2);
 	dns->Answers.push_back(*answer);
 	return 0;
 }
@@ -98,8 +98,8 @@ int l_dns_ref::l_add_answer(lua_State *l)
  */
 int l_dns_ref::l_add_authority(lua_State *l)
 {
-	DNS *dns = l_dns_ref::get(l, 1);
-	DNS::DNSAnswer *answer = l_dnsanswer_ref::get(l, 2);
+	DNS *dns = l_dns_ref::extract(l, 1);
+	DNS::DNSAnswer *answer = l_dnsanswer_ref::extract(l, 2);
 	dns->Authority.push_back(*answer);
 	return 0;
 }
@@ -111,8 +111,8 @@ int l_dns_ref::l_add_authority(lua_State *l)
  */
 int l_dns_ref::l_add_additional(lua_State *l)
 {
-	DNS *dns = l_dns_ref::get(l, 1);
-	DNS::DNSAnswer *answer = l_dnsanswer_ref::get(l, 2);
+	DNS *dns = l_dns_ref::extract(l, 1);
+	DNS::DNSAnswer *answer = l_dnsanswer_ref::extract(l, 2);
 	dns->Authority.push_back(*answer);
 	return 0;
 }
@@ -124,7 +124,7 @@ void l_dns_ref::push_vector(lua_State *l, std::vector<C> &v)
 	int i = 1;
 	lua_newtable(l);
 	for (auto &val : v) {
-		new l_ref<C>(this, &val, l);
+		new l_ref<C>(&val, this->owner, l);
 		lua_rawseti(l, -2, i);
 		++i;
 	}
@@ -140,7 +140,7 @@ int l_dns_ref::l_queries(lua_State *l)
 	l_dns_ref *ref = dynamic_cast<l_dns_ref*>(l_dns_ref::get_instance(l, 1));
 	if (!ref)
 		return luaL_argerror(l, 1, "Parameter is not a DNS Layer");
-	ref->push_vector<DNS::DNSQuery>(l, ref->val->Queries);
+	ref->push_vector<DNS::DNSQuery>(l, ref->ref->Queries);
 	return 1;
 }
 
@@ -154,7 +154,7 @@ int l_dns_ref::l_answers(lua_State *l)
 	l_dns_ref *ref = dynamic_cast<l_dns_ref*>(l_dns_ref::get_instance(l, 1));
 	if (!ref)
 		return luaL_argerror(l, 1, "Parameter is not a DNS Layer");
-	ref->push_vector<DNS::DNSAnswer>(l, ref->val->Answers);
+	ref->push_vector<DNS::DNSAnswer>(l, ref->ref->Answers);
 	return 1;
 }
 
@@ -168,7 +168,7 @@ int l_dns_ref::l_authority(lua_State *l)
 	l_dns_ref *ref = dynamic_cast<l_dns_ref*>(l_dns_ref::get_instance(l, 1));
 	if (!ref)
 		return luaL_argerror(l, 1, "Parameter is not a DNS Layer");
-	ref->push_vector<DNS::DNSAnswer>(l, ref->val->Authority);
+	ref->push_vector<DNS::DNSAnswer>(l, ref->ref->Authority);
 	return 1;
 }
 
@@ -182,7 +182,7 @@ int l_dns_ref::l_additional(lua_State *l)
 	l_dns_ref *ref = dynamic_cast<l_dns_ref*>(l_dns_ref::get_instance(l, 1));
 	if (!ref)
 		return luaL_argerror(l, 1, "Parameter is not a DNS Layer");
-	ref->push_vector<DNS::DNSAnswer>(l, ref->val->Additional);
+	ref->push_vector<DNS::DNSAnswer>(l, ref->ref->Additional);
 	return 1;
 }
 

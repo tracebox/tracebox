@@ -69,8 +69,8 @@ int l_tcp_ref::l_TCP(lua_State *l)
  */
 int l_tcp_ref::l_hasflags(lua_State *l)
 {
-	TCP *tcp = l_tcp_ref::get(l, 1);
-	int flags = l_data_type<int>::get(l, 2);
+	TCP *tcp = l_tcp_ref::extract(l, 1);
+	int flags = l_data_type<int>::extract(l, 2);
 	l_data_type<int>(tcp->GetFlags() & flags).push(l);
 	return 1;
 }

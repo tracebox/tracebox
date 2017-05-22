@@ -92,7 +92,6 @@ extern int l_Tracebox(lua_State *l);
 /* lua_utils.cpp */
 extern int l_sleep(lua_State *l);
 extern int l_dump_stack(lua_State *l);
-extern int l_cpp_object_count(lua_State *l);
 extern int l_dn6(lua_State *l);
 extern int l_dn4(lua_State *l);
 extern int l_gethostname(lua_State *l);
@@ -131,7 +130,6 @@ lua_State *l_init()
 	REGISTER_FUNCTION(l, "dn6", l_dn6);
 	REGISTER_FUNCTION(l, "gethostname", l_gethostname);
 	REGISTER_FUNCTION(l, "__dump_c_stack", l_dump_stack);
-	REGISTER_FUNCTION(l, "__cpp_object_count", l_cpp_object_count);
 	REGISTER_FUNCTION(l, "random", l_random);
 
 	return l;

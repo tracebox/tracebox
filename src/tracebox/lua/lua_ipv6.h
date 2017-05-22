@@ -8,7 +8,7 @@
 #ifndef __LUA_IPV6_H_
 #define __LUA_IPV6_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_ipv6_ref : public l_layer_ref<Crafter::IPv6> {
 	using l_layer_ref<Crafter::IPv6>::l_layer_ref;

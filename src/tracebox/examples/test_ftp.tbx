@@ -28,7 +28,9 @@ ip_port = syn:source():gsub("%.", ",")
 data = IP / tcp{src=syn:tcp():getsource(), dst=21, seq=syn:tcp():getseq()+1,
 	ack=synack:tcp():getseq()+1, flags=16} / raw('PORT '.. ip_port .. ',189,68\r\n')
 
-function cb(ttl, rip, pkt, reply, mods)
+function cb(ttl, rip, mods)
+    pkt = mods:original()
+    reply = mods:received() 
 	if mods and mods:__tostring():find("Raw") then
 		print("There is a NAT_FTP before " .. rip)
 		return 1

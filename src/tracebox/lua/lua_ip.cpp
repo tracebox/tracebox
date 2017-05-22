@@ -81,7 +81,7 @@ int l_ip_ref::l_IP(lua_State *l)
 
 int l_ip_ref::l_payloadlen(lua_State *l)
 {
-	IP *ip = l_ip_ref::get(l, 1);
+	IP *ip = l_ip_ref::extract(l, 1);
 	l_data_type<short_word>(ip->GetTotalLength() - ip->GetHeaderLength() * 4).push(l);
 	return 1;
 }

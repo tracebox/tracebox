@@ -4,6 +4,7 @@
  *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
+#include <memory>
 
 #include "lua_packet.hpp"
 #include "lua_packetmodifications.h"
@@ -30,10 +31,9 @@
  */
 
 struct tracebox_info {
-	l_packet_ref *probe;
 	const char *cb;
 	lua_State *l;
-	Packet *rcv;
+	std::shared_ptr<const Packet> rcv;
 };
 
 /***
@@ -42,23 +42,20 @@ struct tracebox_info {
  * @see tracebox
  * @tparam num ttl the current TTL value
  * @tparam string r_ip the ip of the router that echoed the probe
- * @tparam Packet probe the probe packet
- * @tparam Packet rcv the echoed packet
  * @tparam PacketModifications mod the packet modifications list
  * @treturn[opt] num 1 to force tracebox to stop sending probes
  * @usage
- * function callback_func(ttl, r_ip, probe, rcv, mod)
- * 	print("Sent probe n#" .. tll)
+ * function callback_func(ttl, r_ip, mod)
+ * 	print("Sent probe n#" .. tll .. " and received " .. mod:modif():tostring())
  * end
  * */
 static int tCallback(void *ctx, int ttl, std::string& ip,
-	const Packet * const probe, Packet *rcv, PacketModifications *mod)
+		PacketModifications *mod)
 {
-	(void)probe;
 	struct tracebox_info *info = (struct tracebox_info *)ctx;
 	int ret;
 
-	info->rcv = rcv;
+	info->rcv = mod->modif;
 
 	if (!info->cb)
 		return 0;
@@ -68,7 +65,8 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 
 	lua_getglobal(info->l, info->cb);
 	if(lua_type(info->l, -1) != LUA_TFUNCTION) {
-		const char* msg = lua_pushfstring(info->l, "`%s' is not a function", info->cb);
+		const char* msg = lua_pushfstring(info->l, "`%s' is not a function",
+				info->cb);
 		luaL_argerror(info->l, -1, msg);
 		return -1;
 	}
@@ -80,26 +78,13 @@ static int tCallback(void *ctx, int ttl, std::string& ip,
 	else
 		l_data_type<std::string>(ip).push(info->l);
 
-	info->probe->push(info->l);
+	new l_packetmodifications_ref(mod, info->l);
 
-	l_packet_ref *rcv_ref = NULL;
-	if (!rcv)
-		lua_pushnil(info->l);
-	else
-		rcv_ref = new l_packet_ref((Packet *)rcv, info->l);
-
-
-	if (!mod)
-		lua_pushnil(info->l);
-	else if (rcv_ref)
-		new l_packetmodifications_ref(rcv_ref, mod, info->l);
-	 else
-		new l_packetmodifications_ref(mod, info->l);
-
-	int err = lua_pcall(info->l, 5, 1, err_handler);
+	int err = lua_pcall(info->l, 3, 1, err_handler);
 
 	if (err) {
-		std::cerr << "Error in the callback: " << luaL_checkstring(info->l, -1) << std::endl;
+		std::cerr << "Error in the callback: " <<
+			luaL_checkstring(info->l, -1) << std::endl;
 		lua_pop(info->l, 2);
 		return -1;
 	}
@@ -126,9 +111,9 @@ int l_Tracebox(lua_State *l)
 {
 	std::string err;
 	int ret = 0;
-	l_packet_ref *pref = static_cast<l_packet_ref*>(l_packet_ref::get_instance(l, 1));
-	static struct tracebox_info info = {pref, NULL, l, NULL};
-	Packet *pkt = pref->val;
+	std::shared_ptr<Packet> pref = l_packet_ref::get_owner<Packet>(l, 1);
+	static struct tracebox_info info = {NULL, l, NULL};
+	Packet *pkt = pref.get();
 	if (!pkt) {
 		std::cerr << "doTracebox: no packet!" << std::endl;
 		return 0;
@@ -139,7 +124,7 @@ int l_Tracebox(lua_State *l)
 	v_arg_string_opt(l, 2, "callback", &info.cb);
 
 no_args:
-	ret = doTracebox(pkt, tCallback, err, &info);
+	ret = doTracebox(pref, tCallback, err, &info);
 	if (ret < 0) {
 		const char* msg = lua_pushfstring(l, "Tracebox error: %s", err.c_str());
 		luaL_argerror(l, -1, msg);
@@ -147,8 +132,8 @@ no_args:
 	}
 
 	/* Did the server reply ? */
-	if (ret == 1 && info.rcv)
-		new l_packet_ref((Packet *)info.rcv, l);
+	if (ret == 1 && info.rcv.get())
+		new l_packet_ref(new Packet(*info.rcv), l);
 	else
 		lua_pushnil(l);
 

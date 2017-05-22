@@ -16,6 +16,8 @@
 #include <json-c/json.h>
 #endif
 
+#include <memory>
+
 using namespace Crafter;
 
 class Modification {
@@ -44,8 +46,8 @@ protected:
 
 public:
 	Modification(int proto, std::string name, size_t offset, size_t len);
-	Modification(int proto, FieldInfo *f1, FieldInfo *f2);
-	Modification(Layer *l1, Layer *l2);
+	Modification(int proto, const FieldInfo *f1, const FieldInfo *f2);
+	Modification(const Layer *l1, const Layer *l2);
 
 	int getOffset() const {
 		return offset;
@@ -65,40 +67,58 @@ public:
 
 	virtual ~Modification() {}
 
-	virtual void Print(std::ostream& out = std::cout, bool verbose = false) const;
+	virtual void Print(std::ostream& out = std::cout,
+			bool verbose = false) const;
 
-	virtual void Print_JSON(json_object *res = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
+	virtual void Print_JSON(json_object *res = json_object_new_array(),
+			json_object *add = json_object_new_array(),
+			json_object *del = json_object_new_array(),
+			bool verbose = false) const;
 };
 
 struct Addition : public Modification {
-	Addition(Layer *l);
+	Addition(const Layer *l);
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
 
-	virtual void Print_JSON(json_object *res = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
+	virtual void Print_JSON(json_object *res = json_object_new_array(),
+			json_object *add = json_object_new_array(),
+			json_object *del = json_object_new_array(),
+			bool verbose = false) const;
 };
 
 struct Deletion : public Modification {
-	Deletion(Layer *l);
+	Deletion(const Layer *l);
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
 
-	virtual void Print_JSON(json_object *res = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
+	virtual void Print_JSON(json_object *res = json_object_new_array(),
+			json_object *add = json_object_new_array(),
+			json_object *del = json_object_new_array(),
+			bool verbose = false) const;
 };
 
 struct PacketModifications : public std::vector<Modification *> {
-	Packet *orig;
-	Packet *modif;
+	const std::shared_ptr<const Packet> orig;
+	const std::shared_ptr<const Packet> modif;
 	bool partial;
 
-	PacketModifications(Packet *orig, Packet *modif, bool partial=false) : orig(new Packet(*orig)), modif(modif), partial(partial) { }
+	PacketModifications(const std::shared_ptr<Packet> orig,
+			const Packet *modif, bool partial=false) :
+		orig(orig), modif(modif), partial(partial) {}
 	~PacketModifications();
 
 	void Print(std::ostream& out = std::cout, bool verbose = false) const;
 
-	static PacketModifications* ComputeModifications(Crafter::Packet *pkt, Crafter::Packet **rcv);
+	static PacketModifications* ComputeModifications(
+			const std::shared_ptr<Crafter::Packet> pkt,
+			Crafter::Packet *rcv);
 
-	void Print_JSON(json_object *res = json_object_new_array(), json_object *icmp = json_object_new_array(), json_object *add = json_object_new_array(), json_object *del = json_object_new_array(), bool verbose = false) const;
+	void Print_JSON(json_object *res = json_object_new_array(),
+			json_object *icmp = json_object_new_array(),
+			json_object *add = json_object_new_array(),
+			json_object *del = json_object_new_array(),
+			bool verbose = false) const;
 };
 
 #endif

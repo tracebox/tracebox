@@ -8,7 +8,7 @@
 #ifndef __LUA_TCPTIMESTAMP_H_
 #define __LUA_TCPTIMESTAMP_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_tcptsopt_ref : public l_layer_ref<Crafter::TCPOptionTimestamp> {
 	using l_layer_ref<Crafter::TCPOptionTimestamp>::l_layer_ref;

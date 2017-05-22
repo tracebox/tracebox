@@ -24,10 +24,10 @@ using namespace Crafter;
  */
 int l_packetmodifications_ref::l_PacketModifications(lua_State *l)
 {
-	Packet *original = l_packet_ref::get(l, 1);
-	Packet *received = new Packet(*l_packet_ref::get(l, 2));
+	std::shared_ptr<Packet> original = l_packet_ref::get_owner<Packet>(l, 1);
+	Packet *received = new Packet(*l_packet_ref::extract(l, 2));
 	PacketModifications *mod = PacketModifications::ComputeModifications(
-			original, &received);
+			original, received);
 	new l_packetmodifications_ref(mod, l);
 	return 1;
 }
@@ -35,7 +35,7 @@ int l_packetmodifications_ref::l_PacketModifications(lua_State *l)
 int l_packetmodifications_ref::l_PacketModifications_print(lua_State *l)
 {
 	std::ostringstream stream;
-	PacketModifications *o = l_packetmodifications_ref::get(l, 1);
+	PacketModifications *o = l_packetmodifications_ref::extract(l, 1);
 	o->Print(stream);
 	l_data_type<std::string>(stream.str()).push(l);
 	return 1;
@@ -43,21 +43,21 @@ int l_packetmodifications_ref::l_PacketModifications_print(lua_State *l)
 
 int l_packetmodifications_ref::l_get_original(lua_State *l)
 {
-	l_ref<PacketModifications> *r = l_packetmodifications_ref::get_instance(l, 1);
-	new l_packet_ref(r, r->val->orig, l);
+	PacketModifications *r = l_packetmodifications_ref::extract(l, 1);
+	new l_packet_ref(new Packet(*r->orig), l);
 	return 1;
 }
 
 int l_packetmodifications_ref::l_get_received(lua_State *l)
 {
-	l_ref<PacketModifications> *r = l_packetmodifications_ref::get_instance(l, 1);
-	new l_packet_ref(r, r->val->modif, l);
+	PacketModifications *r = l_packetmodifications_ref::extract(l, 1);
+	new l_packet_ref(new Packet(*r->modif), l);
 	return 1;
 }
 
 static int l_partial(lua_State *l)
 {
-	PacketModifications *p = l_packetmodifications_ref::get(l, 1);
+	PacketModifications *p = l_packetmodifications_ref::extract(l, 1);
 	l_data_type<int>(p->partial).push(l);
 	return 1;
 }
@@ -104,5 +104,5 @@ void l_packetmodifications_ref::debug(std::ostream& out)
 {
 	l_ref<PacketModifications>::debug(out);
 	out << (void*) this << " ";
-	this->val->Print(out, true);
+	this->ref->Print(out, true);
 }

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-static Layer *GetLayer(Packet *pkt, int proto_id)
+static Layer *GetLayer(const Packet *pkt, int proto_id)
 {
 	for (Layer *l : *pkt) {
 		if (l->GetID() == proto_id)
@@ -20,7 +20,7 @@ static Layer *GetLayer(Packet *pkt, int proto_id)
 	return NULL;
 }
 
-static set<int> GetAllProtos(Packet *p1, Packet *p2)
+static set<int> GetAllProtos(const Packet *p1, const Packet *p2)
 {
 	set<int> ret;
 
@@ -38,7 +38,7 @@ static set<int> GetAllProtos(Packet *p1, Packet *p2)
 }
 
 static void ComputeDifferences(PacketModifications *modifs,
-						Layer *l1, Layer *l2)
+						const Layer *l1, const Layer *l2)
 {
 	byte* this_layer = new byte[l1->GetSize()];
 	byte* that_layer = new byte[l1->GetSize()];
@@ -68,23 +68,29 @@ static void ComputeDifferences(PacketModifications *modifs,
 	delete[] that_layer;
 }
 
-static PacketModifications* ComputeDifferences(Packet *orig, Packet *modified, bool partial)
+static PacketModifications* ComputeDifferences(
+		std::shared_ptr<Packet> orig_shared, const Packet *modified,
+		bool partial)
 {
-	PacketModifications *modifs = new PacketModifications(orig, modified, partial);
-	set<int> protos = GetAllProtos(orig, modified);
 
-	for (auto proto : protos) {
-		Layer *l1 = GetLayer(orig, proto);
-		Layer *l2 = GetLayer(modified, proto);
+	PacketModifications *modifs = new PacketModifications(
+			orig_shared, modified, partial);
+	if (modified) {
+		const Packet *orig = orig_shared.get();
+		const set<int> protos = GetAllProtos(orig, modified);
 
-		if (l1 && l2)
-			ComputeDifferences(modifs, l1, l2);
-		else if (l1 && !l2 && !partial)
-			modifs->push_back(new Deletion(l1));
-		else if (!l1 && l2)
-			modifs->push_back(new Addition(l2));
+		for (auto proto : protos) {
+			const Layer *l1 = GetLayer(orig, proto);
+			const Layer *l2 = GetLayer(modified, proto);
+
+			if (l1 && l2)
+				ComputeDifferences(modifs, l1, l2);
+			else if (l1 && !l2 && !partial)
+				modifs->push_back(new Deletion(l1));
+			else if (!l1 && l2)
+				modifs->push_back(new Addition(l2));
+		}
 	}
-
 	return modifs;
 }
 
@@ -166,47 +172,49 @@ Packet* TrimReplyIPv6(Packet *rcv, bool *partial)
 	return rcv;
 }
 
-PacketModifications* PacketModifications::ComputeModifications(Crafter::Packet *pkt,
-			Crafter::Packet **rcv)
+PacketModifications* PacketModifications::ComputeModifications(
+		std::shared_ptr<Crafter::Packet> pkt, Crafter::Packet *rcv)
 {
-	ICMPLayer *icmp = (*rcv)->GetLayer<ICMPLayer>();
-	RawLayer *raw = (*rcv)->GetLayer<RawLayer>();
 	bool partial = false;
-	int proto = pkt->GetLayer<IPLayer>()->GetID();
+	if (rcv) {
+		ICMPLayer *icmp = rcv->GetLayer<ICMPLayer>();
+		RawLayer *raw = rcv->GetLayer<RawLayer>();
+		int proto = pkt->GetLayer<IPLayer>()->GetID();
 
-	if (icmp && raw) {
-		Packet *cnt = new Packet((*rcv)->GetTimestamp());
-		switch (proto) {
-		case IP::PROTO:
-			cnt->PacketFromIP(*raw);
-			/* We might receive an ICMP without the complete
-			 * echoed packet or with ICMP extensions. We thus
-			 * remove undesired parts and parse partial headers.
-			 */
-			cnt = TrimReplyIPv4(cnt, &partial);
-			break;
-		case IPv6::PROTO:
-			cnt->PacketFromIPv6(*raw);
-			cnt = TrimReplyIPv6(cnt, &partial);
-			break;
-		default:
-			delete cnt;
-			return NULL;
+		if (icmp && raw) {
+			Packet *cnt = new Packet(rcv->GetTimestamp());
+			switch (proto) {
+			case IP::PROTO:
+				cnt->PacketFromIP(*raw);
+				/* We might receive an ICMP without the complete
+				 * echoed packet or with ICMP extensions. We thus
+				 * remove undesired parts and parse partial headers.
+				 */
+				cnt = TrimReplyIPv4(cnt, &partial);
+				break;
+			case IPv6::PROTO:
+				cnt->PacketFromIPv6(*raw);
+				cnt = TrimReplyIPv6(cnt, &partial);
+				break;
+			default:
+				delete cnt;
+				cnt = NULL;
+			}
+
+			delete rcv;
+			rcv = cnt;
 		}
-
-		delete *rcv;
-		*rcv = cnt;
 	}
-
-	return ComputeDifferences(pkt, *rcv, partial);
+	return ComputeDifferences(pkt, rcv, partial);
 }
 
-Modification::Modification(int proto, std::string name, size_t offset, size_t len) :
-	layer_proto(proto), name(name), offset(offset), len(len)
+Modification::Modification(int proto, std::string name, size_t offset,
+		size_t len) : layer_proto(proto), name(name), offset(offset), len(len)
 {
 }
 
-Modification::Modification(int proto, FieldInfo *f1, FieldInfo *f2) : layer_proto(proto)
+Modification::Modification(int proto, const FieldInfo *f1,
+		const FieldInfo *f2) : layer_proto(proto)
 {
 	Layer *l = Protocol::AccessFactory()->GetLayerByID(proto);
 	std::ostringstream sf1, sf2;
@@ -222,7 +230,8 @@ Modification::Modification(int proto, FieldInfo *f1, FieldInfo *f2) : layer_prot
 	field2_repr = sf2.str();
 }
 
-Modification::Modification(Layer *l1, Layer *l2) : layer_proto(l1->GetID()), name(l1->GetName()),
+Modification::Modification(const Layer *l1, const Layer *l2) :
+	layer_proto(l1->GetID()), name(l1->GetName()),
 	offset(0), len(l1->GetSize())
 {
 	std::ostringstream sf1, sf2;
@@ -241,7 +250,8 @@ void Modification::Print(std::ostream& out, bool verbose) const
 		out << GetModifRepr();
 }
 
-void Modification::Print_JSON(json_object *res, json_object *add, json_object *del, bool verbose) const
+void Modification::Print_JSON(json_object *res, json_object *add,
+		json_object *del, bool verbose) const
 {
 	if (verbose)
 	{
@@ -261,8 +271,10 @@ json_object* Modification::GetModifRepr_JSON() const
 {
 	json_object *modif = json_object_new_object();
 	if (field1_repr != "" && field2_repr != ""){
-		json_object_object_add(modif,"Expected", json_object_new_string(field1_repr.c_str()));
-		json_object_object_add(modif,"Received", json_object_new_string(field2_repr.c_str()));
+		json_object_object_add(modif, "Expected",
+				json_object_new_string(field1_repr.c_str()));
+		json_object_object_add(modif, "Received",
+				json_object_new_string(field2_repr.c_str()));
 	}
 	return modif;
 }
@@ -274,7 +286,7 @@ std::string Modification::GetModifRepr() const
 	return "";
 }
 
-Addition::Addition(Layer *l) : Modification(l, l)
+Addition::Addition(const Layer *l) : Modification(l, l)
 {
 }
 
@@ -285,13 +297,15 @@ void Addition::Print(std::ostream& out, bool verbose) const
 		out << " " << field1_repr;
 }
 
-void Addition::Print_JSON(json_object *res, json_object *add, json_object *del, bool verbose) const
+void Addition::Print_JSON(json_object *res, json_object *add,
+		json_object *del, bool verbose) const
 {
 	if (verbose)
 	{
 			json_object *modif = json_object_new_object();
 
-			json_object_object_add(modif,"Info", json_object_new_string(field1_repr.c_str()));
+			json_object_object_add(modif,"Info",
+					json_object_new_string(field1_repr.c_str()));
 
 			json_object *modif_header = json_object_new_object();
 			json_object_object_add(modif_header,GetName().c_str(), modif);
@@ -304,7 +318,7 @@ void Addition::Print_JSON(json_object *res, json_object *add, json_object *del, 
 	}
 }
 
-Deletion::Deletion(Layer *l) : Modification(l, l)
+Deletion::Deletion(const Layer *l) : Modification(l, l)
 {
 }
 
@@ -315,13 +329,15 @@ void Deletion::Print(std::ostream& out, bool verbose) const
 		out << " " << field1_repr;
 }
 
-void Deletion::Print_JSON(json_object *res, json_object *add, json_object *del, bool verbose) const
+void Deletion::Print_JSON(json_object *res, json_object *add,
+		json_object *del, bool verbose) const
 {
 	if (verbose)
 	{
 			json_object *modif = json_object_new_object();
 
-			json_object_object_add(modif,"Info", json_object_new_string(field1_repr.c_str()));
+			json_object_object_add(modif,"Info",
+					json_object_new_string(field1_repr.c_str()));
 
 			json_object *modif_header = json_object_new_object();
 			json_object_object_add(modif_header,GetName().c_str(), modif);
@@ -344,7 +360,8 @@ void PacketModifications::Print(std::ostream& out, bool verbose) const
 	}
 }
 
-void PacketModifications::Print_JSON(json_object *res,json_object *icmp, json_object *add, json_object *del, bool verbose) const
+void PacketModifications::Print_JSON(json_object *res,json_object *icmp,
+		json_object *add, json_object *del, bool verbose) const
 {
 	for(const_iterator it = begin() ; it != end() ; it++) {
 		(*it)->Print_JSON(res, add, del, verbose);
@@ -353,10 +370,7 @@ void PacketModifications::Print_JSON(json_object *res,json_object *icmp, json_ob
 
 PacketModifications::~PacketModifications()
 {
-	delete orig;
-
 	for(const_iterator it = begin() ; it != end() ; it++)
 		delete *it;
-
 	clear();
 }

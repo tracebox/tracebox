@@ -9,6 +9,7 @@
 #define __LUA_PACKET_HPP_
 
 #include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
 	using l_crafter_ref<Crafter::Packet>::l_crafter_ref;
@@ -16,10 +17,11 @@ struct l_packet_ref : public l_crafter_ref<Crafter::Packet> {
 	template<class C>
 	static int get_layer(lua_State *l)
 	{
-		l_ref<Crafter::Packet> *ref = l_ref<Crafter::Packet>::get_instance(l, 1);
-		C *layer = ref->val->GetLayer<C>();
+		std::shared_ptr<Crafter::Packet> ref =
+			l_packet_ref::get_owner<Crafter::Packet>(l, 1);
+		C *layer = ref->GetLayer<C>();
 		if (layer)
-			new l_layer_ref<C>(ref, layer, l);
+			new l_layer_ref<C>(layer, ref, l);
 		else
 			lua_pushnil(l);
 		return 1;

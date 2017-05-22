@@ -74,11 +74,11 @@ int l_sniffer_ref::l_start(lua_State *l)
 		return luaL_argerror(l, 1, "The parameter is not a real sniffer instance!");
 	s->ctx = l;
 	if (lua_gettop(l) == 1) {
-		s->val->start();
+		s->ref->start();
 	} else {
 		luaL_checktype(l, 2, LUA_TFUNCTION);
 		s->cb = luaL_ref(l, LUA_REGISTRYINDEX);
-		s->val->start(l_sniffer_cb, s);
+		s->ref->start(l_sniffer_cb, s);
 		luaL_unref(s->ctx, LUA_REGISTRYINDEX, s->cb);
 	}
 	return 0;
@@ -90,7 +90,7 @@ int l_sniffer_ref::l_start(lua_State *l)
  */
 int l_sniffer_ref::l_stop(lua_State *l)
 {
-	TbxSniffer *s = l_sniffer_ref::get(l, 1);
+	TbxSniffer *s = l_sniffer_ref::extract(l, 1);
 	s->stop();
 	return 0;
 }
@@ -103,10 +103,10 @@ int l_sniffer_ref::l_stop(lua_State *l)
  */
 int l_sniffer_ref::l_recv(lua_State *l)
 {
-	TbxSniffer *s = l_sniffer_ref::get(l, 1);
+	TbxSniffer *s = l_sniffer_ref::extract(l, 1);
 	Crafter::Packet *p;
 	if (lua_gettop(l) > 1) {
-		double tmout = l_data_type<double>::get(l, 2);
+		double tmout = l_data_type<double>::extract(l, 2);
 		struct timespec ts = {(long)tmout, (long)(tmout * 10e9)};
 		p = s->recv(&ts);
 	} else {

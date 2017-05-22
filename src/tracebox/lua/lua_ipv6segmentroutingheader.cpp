@@ -1,7 +1,7 @@
 /**
  * Tracebox -- A middlebox detection tool
  *
- *  Copyright 2013-2015 by its authors. 
+ *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
 
@@ -60,7 +60,7 @@ int l_IPv6SegmentRoutingHeader_SetSegments_(
  */
 int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader_SetSegments(lua_State *l)
 {
-	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::get(l, 1);
+	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::extract(l, 1);
 	l_IPv6SegmentRoutingHeader_SetSegments_(srh, l);
 	/* We don't want to keep anything on the stack */
 	return 0;
@@ -151,7 +151,7 @@ int l_IPv6SegmentRoutingHeader_SetPolicyList_(
  */
 int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader_SetPolicyList(lua_State *l)
 {
-	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::get(l, 1);
+	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::extract(l, 1);
 	l_IPv6SegmentRoutingHeader_SetPolicyList_(srh, l);
 	/* We don't want to keep anything on the stack */
 	return 0;
@@ -194,7 +194,7 @@ int l_IPv6SegmentRoutingHeader_SetHMAC_(
  */
 int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader_SetHMAC(lua_State *l)
 {
-	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::get(l, 1);
+	IPv6SegmentRoutingHeader *srh = l_ipv6segmentroutingheader_ref::extract(l, 1);
 	l_IPv6SegmentRoutingHeader_SetHMAC_(srh, l);
 	/* We don't want to keep anything on the stack */
 	return 0;
@@ -264,8 +264,8 @@ int l_ipv6segmentroutingheader_ref::l_IPv6SegmentRoutingHeader(lua_State *l)
 
 static int set_segleft(lua_State *l)
 {
-	IPv6SegmentRoutingHeader *o = l_ipv6segmentroutingheader_ref::get(l, 1);
-	o->SetSegmentLeft(l_data_type<byte>::get(l, 2));
+	IPv6SegmentRoutingHeader *o = l_ipv6segmentroutingheader_ref::extract(l, 1);
+	o->SetSegmentLeft(l_data_type<byte>::extract(l, 2));
 	return 0;
 }
 

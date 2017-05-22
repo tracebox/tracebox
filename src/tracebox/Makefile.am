@@ -50,6 +50,7 @@ noinst_HEADERS = \
 	lua/lua_ipoption.hpp \
 	lua/lua_ipv6.h \
 	lua/lua_ipv6segmentroutingheader.h \
+	lua/lua_layer.hpp \
 	lua/lua_packet.hpp \
 	lua/lua_packetmodifications.h \
 	lua/lua_raw.h \

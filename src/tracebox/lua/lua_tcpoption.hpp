@@ -8,7 +8,7 @@
 #ifndef __LUA_TCPOPTION_H_
 #define __LUA_TCPOPTION_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_tcpoption_ref : public l_layer_ref<Crafter::TCPOptionLayer> {
 	using l_layer_ref<Crafter::TCPOptionLayer>::l_layer_ref;

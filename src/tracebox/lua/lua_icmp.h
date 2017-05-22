@@ -8,7 +8,7 @@
 #ifndef __LUA_ICMP_H_
 #define __LUA_ICMP_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_icmp_ref : public l_layer_ref<Crafter::ICMP> {
 	using l_layer_ref<Crafter::ICMP>::l_layer_ref;

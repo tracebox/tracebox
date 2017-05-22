@@ -8,7 +8,7 @@
 #ifndef __LUA_DNS_H_
 #define __LUA_DNS_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_dns_ref : public l_layer_ref<Crafter::DNS> {
 	using l_layer_ref<Crafter::DNS>::l_layer_ref;

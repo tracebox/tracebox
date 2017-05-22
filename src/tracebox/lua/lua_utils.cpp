@@ -34,7 +34,7 @@ static void print_object(lua_State *L, int i, std::ostream& out)
 			break;
 
 		case LUA_TUSERDATA:
-			dynamic_cast<_ref_base*>((*(_ref_base**)
+			dynamic_cast<lua_base*>((*(lua_base**)
 						(lua_touserdata(L, i))))->debug(out);
 			break;
 
@@ -155,18 +155,6 @@ int l_dump_stack(lua_State *l)
 	lua_getinfo(l, "l", &ar);
 	stackDump(l, "Called from Lua", ar.currentline, s);
 	lua_pushstring(l, s.str().c_str());
-	return 1;
-}
-
-/***
- * Return the number of objects that are referenced
- * @function __cpp_object_count
- * @treturn num object_count
- * @within Debugging
- */
-int l_cpp_object_count(lua_State *l)
-{
-	lua_pushinteger(l, _ref_base::instance_count);
 	return 1;
 }
 

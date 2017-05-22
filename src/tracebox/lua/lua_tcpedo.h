@@ -8,7 +8,7 @@
 #ifndef __LUA_TCPEDO_H_
 #define __LUA_TCPEDO_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_tcpedoopt_ref : public l_layer_ref<Crafter::TCPOptionEDO> {
 	using l_layer_ref<Crafter::TCPOptionEDO>::l_layer_ref;

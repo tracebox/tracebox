@@ -61,7 +61,7 @@ int l_tcptfo_ref::l_TCP_TFO(lua_State *l)
 
 int _access_cookie(lua_State *l)
 {
-	TCPOptionFastOpen *o = l_tcptfo_ref::get(l, 1);
+	TCPOptionFastOpen *o = l_tcptfo_ref::extract(l, 1);
 	if (lua_gettop(l) == 1)
 		_write_cookie(l, o);
 	else {

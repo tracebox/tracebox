@@ -8,7 +8,7 @@
 #ifndef __LUA_IPOption_H_
 #define __LUA_IPOption_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_ipoption_ref : public l_layer_ref<Crafter::IPOptionLayer> {
 	using l_layer_ref<Crafter::IPOptionLayer>::l_layer_ref;

@@ -6,6 +6,7 @@
  */
 
 #include "lua_packet.hpp"
+#include "lua_layer.hpp"
 #include "lua_ip.h"
 #include "lua_ipv6.h"
 #include "lua_arg.h"
@@ -25,11 +26,12 @@ using namespace Crafter;
  */
 int l_packet_ref::source(lua_State *l)
 {
-	Packet *pkt = l_packet_ref::get(l, 1);
+	Packet *pkt = l_packet_ref::extract(l, 1);
 	if (!pkt)
 		lua_pushnil(l);
 	else
-		l_data_type<std::string>(pkt->GetLayer<IPLayer>()->GetSourceIP()).push(l);
+		l_data_type<std::string>(pkt->GetLayer<IPLayer>()->GetSourceIP()
+				).push(l);
 	return 1;
 }
 
@@ -40,11 +42,12 @@ int l_packet_ref::source(lua_State *l)
  */
 int l_packet_ref::destination(lua_State *l)
 {
-	Packet *pkt = l_packet_ref::get(l, 1);
+	Packet *pkt = l_packet_ref::extract(l, 1);
 	if (!pkt)
 		lua_pushnil(l);
 	else
-		l_data_type<std::string>(pkt->GetLayer<IPLayer>()->GetDestinationIP()).push(l);
+		l_data_type<std::string>(pkt->GetLayer<IPLayer>()->GetDestinationIP()
+				).push(l);
 	return 1;
 }
 
@@ -85,7 +88,7 @@ int l_packet_ref::send_receive(lua_State *l)
 	v_arg_string_opt(l, 2, "interface", &iface);
 
 	std::string err, intf(iface);
-	Packet *p = l_packet_ref::get(l, 1);
+	Packet *p = l_packet_ref::extract(l, 1);
 	if (!probe_sanity_check(p, err, intf))
 		luaL_argerror(l, 1, err.c_str());
 	writePcap(p);
@@ -111,7 +114,7 @@ int l_packet_ref::send_receive(lua_State *l)
  */
 int l_packet_ref::send(lua_State *l)
 {
-	Packet *p = l_packet_ref::get(l, 1);
+	Packet *p = l_packet_ref::extract(l, 1);
 	std::string iface, err;
 	if (lua_gettop(l) > 1)
 		iface = luaL_checkstring(l, 2);
@@ -131,7 +134,7 @@ int l_packet_ref::send(lua_State *l)
  */
 int l_packet_ref::l_bytes(lua_State *l)
 {
-	Packet *p = l_packet_ref::get(l, 1);
+	Packet *p = l_packet_ref::extract(l, 1);
 	lua_newtable(l);
 	p->PreCraft();
 	const byte *b = p->GetRawPtr();
@@ -151,7 +154,7 @@ int l_packet_ref::l_bytes(lua_State *l)
  */
 int l_packet_ref::l_ts(lua_State *l)
 {
-	Packet *p = l_packet_ref::get(l, 1);
+	Packet *p = l_packet_ref::extract(l, 1);
 	struct timeval ts = p->GetTimestamp();
 	lua_Number x = ts.tv_sec * 10e6L + ts.tv_usec;
 	lua_pushnumber(l, x);
@@ -159,7 +162,7 @@ int l_packet_ref::l_ts(lua_State *l)
 }
 
 /***
- * Get a layer matching the given one
+ * Get the layer matching the given one
  * @function get
  * @tparam Base_Object similar
  * @treturn Base_Object layer the corresponding layer or nil
@@ -167,14 +170,13 @@ int l_packet_ref::l_ts(lua_State *l)
  */
 int l_packet_ref::l_get(lua_State *l)
 {
-	l_packet_ref *p_ref = (l_packet_ref*)l_packet_ref::get_instance(l, 1);
-	Packet *p = l_packet_ref::get(l, 1);
+	std::shared_ptr<Packet> p_ref = l_packet_ref::get_owner<Packet>(l, 1);
 	Layer *ref = lua_tbx::get_udata<Layer>(l, 2);
 	if (!ref)
 		return luaL_argerror(l, 2, "This function takes a Layer as parameter!");
-	for (Layer *layer : *p) {
+	for (Layer *layer : *p_ref) {
 		if (layer->GetID() == ref->GetID()) {
-			new l_ref<Layer>(p_ref, layer, l,
+			new l_layer_ref<Layer>(layer, p_ref, l,
 					lua_tbx::l_layer_ref_mapping->at(layer->GetID()));
 			return 1;
 		}
@@ -191,16 +193,16 @@ int l_packet_ref::l_get(lua_State *l)
  */
 int l_packet_ref::l_getall(lua_State *l)
 {
-	l_packet_ref *p_ref = (l_packet_ref*)l_packet_ref::get_instance(l, 1);
-	Packet *p = l_packet_ref::get(l, 1);
+	std::shared_ptr<Packet> p_ref =
+			l_packet_ref::get_owner<Crafter::Packet>(l, 1);
 	Layer *ref = lua_tbx::get_udata<Layer>(l, 2);
 	if (!ref)
 		return luaL_argerror(l, 2, "This function takes a Layer as parameter!");
 	lua_newtable(l);
 	int count = 1;
-	for (Layer *layer : *p) {
+	for (Layer *layer : *p_ref) {
 		if (layer->GetID() == ref->GetID()) {
-			new l_ref<Layer>(p_ref, layer, l,
+			new l_layer_ref<Layer>(layer, p_ref, l,
 					lua_tbx::l_layer_ref_mapping->at(layer->GetID()));
 			lua_rawseti(l, -2, count);
 			++count;
@@ -211,15 +213,15 @@ int l_packet_ref::l_getall(lua_State *l)
 
 int l_packet_ref::iplayer(lua_State *l)
 {
-	l_packet_ref *ref = (l_packet_ref*)l_packet_ref::get_instance(l, 1);
-	Packet *p = ref->val;
-	IPLayer *ip = p->GetLayer<IPLayer>();
+	std::shared_ptr<Packet> p_ref =
+			l_packet_ref::get_owner<Crafter::Packet>(l, 1);
+	IPLayer *ip = p_ref->GetLayer<IPLayer>();
 	switch(ip->GetID()) {
 		case IP::PROTO:
-			new l_ip_ref(ref, dynamic_cast<IP*>(ip), l);
+			new l_ip_ref(dynamic_cast<IP*>(ip), p_ref, l);
 			break;
 		case IPv6::PROTO:
-			new l_ipv6_ref(ref, dynamic_cast<IPv6*>(ip), l);
+			new l_ipv6_ref(dynamic_cast<IPv6*>(ip), p_ref, l);
 			break;
 	}
 	return 1;

@@ -8,7 +8,7 @@
 #ifndef __LUA_IPV6SEGMENTROUTINGHEADER_H_
 #define __LUA_IPV6SEGMENTROUTINGHEADER_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_ipv6segmentroutingheader_ref : public l_layer_ref<Crafter::IPv6SegmentRoutingHeader> {
 	using l_layer_ref<Crafter::IPv6SegmentRoutingHeader>::l_layer_ref;

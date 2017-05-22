@@ -78,7 +78,7 @@ int l_raw_ref::l_data(lua_State *l)
 	char const *payload = NULL;
 	size_t payload_len = 0;
 
-	RawLayer *o = l_raw_ref::get(l, 1);
+	RawLayer *o = l_raw_ref::extract(l, 1);
 	if (lua_gettop(l) > 1) {
 		_get_byte_string(&payload, &payload_len, l, 2);
 		o->SetPayload((byte *)payload, payload_len);
@@ -95,7 +95,7 @@ int l_raw_ref::l_data(lua_State *l)
  */
 int l_raw_ref::l_bytes(lua_State *l)
 {
-	RawLayer *o = l_raw_ref::get(l, 1);
+	RawLayer *o = l_raw_ref::extract(l, 1);
 	if (lua_gettop(l) == 1) {
 		lua_newtable(l);
 		const byte *bytes = o->GetPayload().GetRawPointer();

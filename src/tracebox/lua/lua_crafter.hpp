@@ -26,11 +26,11 @@ struct lua_tbx {
 		if (!luaL_getmetafield(l, n, base_class_field))
 			return NULL;
 		/* We want the object the have the specified base class name */
-		const char *basename = l_data_type<const char*>::get(l, -1);
+		const char *basename = l_data_type<const char*>::extract(l, -1);
 		lua_pop(l, 1);
 		if (strcmp(TNAME(Base), basename))
 			return NULL;
-		return (*static_cast<l_ref<Base>**>(lua_touserdata(l, n)))->val;
+		return (*static_cast<l_ref<Base>**>(lua_touserdata(l, n)))->ref;
 	};
 };
 
@@ -38,7 +38,7 @@ template<class C>
 int push_streamfunc(lua_State *l, void (C::*f)(std::ostream&))
 {
 	std::ostringstream stream;
-	C *o = l_ref<C>::get(l, 1);
+	C *o = l_ref<C>::extract(l, 1);
 	(o->*f)(stream);
 	l_data_type<std::string>(stream.str()).push(l);
 	return 1;
@@ -47,7 +47,7 @@ template<class C>
 int push_streamfunc(lua_State *l, void (C::*f)(std::ostream&) const)
 {
 	std::ostringstream stream;
-	C *o = l_ref<C>::get(l, 1);
+	C *o = l_ref<C>::extract(l, 1);
 	(o->*f)(stream);
 	l_data_type<std::string>(stream.str()).push(l);
 	return 1;
@@ -57,8 +57,8 @@ int push_streamfunc(lua_State *l, void (C::*f)(std::ostream&) const)
 template<typename T, class C, class B, void (B::*setfunc)(const T&)>
 static int setter(lua_State *l)
 {
-	C *o = l_ref<C>::get(l, 1);
-	(o->*setfunc)(l_data_type<T>::get(l, 2));
+	C *o = l_ref<C>::extract(l, 1);
+	(o->*setfunc)(l_data_type<T>::extract(l, 2));
 	return 0;
 };
 #define L_SETTER_BASE(type, class_name, base_class, field_name) \
@@ -69,7 +69,7 @@ static int setter(lua_State *l)
 template<typename T, class C, class B, T (B::*getfunc)() const>
 static int getter(lua_State *l)
 {
-	C *o = l_ref<C>::get(l, 1);
+	C *o = l_ref<C>::extract(l, 1);
 	l_data_type<T>((o->*getfunc)()).push(l);
 	return 1;
 };
@@ -110,7 +110,7 @@ struct l_crafter_ref : public l_ref<C> {
 	{
 		l_ref<C>::debug(out);
 		out << (void*) this << " ";
-		this->val->Print(out);
+		this->ref->Print(out);
 	}
 
 	/* Base Print/HexDump methods */
@@ -140,23 +140,10 @@ struct l_crafter_ref : public l_ref<C> {
 };
 
 template<class C>
-struct l_layer_ref : public l_crafter_ref<C> {
-	using l_crafter_ref<C>::l_crafter_ref;
-
-	static void register_members(lua_State *l)
-	{
-		l_crafter_ref<C>::template register_members<Crafter::Layer>(l);
-	}
-
-	protected:
-	virtual ~l_layer_ref() {}
-};
-
-template<class C>
 int set_payload(lua_State *l)
 {
-	C *o = l_crafter_ref<C>::get(l, 1);
-	o->SetPayload(l_data_type<const char*>::get(l, 2));
+	C *o = l_crafter_ref<C>::extract(l, 1);
+	o->SetPayload(l_data_type<const char*>::extract(l, 2));
 	return 0;
 }
 #endif

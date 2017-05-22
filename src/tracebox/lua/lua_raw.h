@@ -8,7 +8,7 @@
 #ifndef __LUA_RAW_H_
 #define __LUA_RAW_H_
 
-#include "lua_crafter.hpp"
+#include "lua_layer.hpp"
 
 struct l_raw_ref : public l_layer_ref<Crafter::RawLayer> {
 	using l_layer_ref<Crafter::RawLayer>::l_layer_ref;

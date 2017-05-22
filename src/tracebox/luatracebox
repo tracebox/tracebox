@@ -7,7 +7,9 @@
 --  Some rights reserved. See LICENSE, AUTHORS.
 --
 
-function cb(ttl, rip, pkt, reply, mods)
+function cb(ttl, rip, mods)
+    pkt = mods:original()
+    reply = mods:received()
 	if ttl == 1 then
 		print("luatracebox to " .. pkt:dest())
 	end
