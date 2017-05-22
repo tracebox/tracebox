@@ -1,3 +1,10 @@
+tracebox (0.4) experimental; urgency=low
+
+  * Reworked the Lua-cpp memory management$
+  * The lua callbacks for the tracebox function now only takes 5 arguments.
+
+ -- Olivier Tilmans <olivier.tilmans@uclouvain.be>  Mon, 22 May 2017 11:57:57 +0200
+
 tracebox (0.3.1) experimental; urgency=low
 
   * Added -S option to bypass the root check for testing purpose
