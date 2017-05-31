@@ -1,3 +1,10 @@
+tracebox (0.4.1) experimental; urgency=low
+
+  * Exposed PartialTCP headers to Lua
+  * Updated libcrafter version
+
+ -- Olivier Tilmans <olivier.tilmans@uclouvain.be>  Mon, 31 May 2017 13:58:22 +0200
+
 tracebox (0.4) experimental; urgency=low
 
   * Reworked the Lua-cpp memory management$
