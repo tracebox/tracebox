@@ -18,6 +18,7 @@
 #include "lua_ipv6segmentroutingheader.h"
 #include "lua_packet.hpp"
 #include "lua_packetmodifications.h"
+#include "lua_partialtcp.h"
 #include "lua_raw.h"
 #include "lua_tcp.h"
 #include "lua_tcpoption.hpp"
@@ -74,7 +75,7 @@ L_EXPOSE_TYPE(UDP);
 L_EXPOSE_TYPE(ICMP);
 L_EXPOSE_TYPE(RawLayer);
 L_EXPOSE_TYPE(DNS);
-
+L_EXPOSE_TYPE(PartialTCP);
 L_EXPOSE_TYPE(Layer);
 L_EXPOSE_TYPE(Packet);
 L_EXPOSE_TYPE_AS(TCPOptionLayer, TCPOption);
@@ -123,6 +124,7 @@ lua_State *l_init()
 	#ifdef HAVE_SNIFFER
 	INIT_TYPE(l_sniffer_ref,                   TbxSniffer,               l);
 	#endif
+	INIT_LAYER(l_partialtcp_ref, PartialTCP, l);
 
 	REGISTER_FUNCTION(l, "tracebox", l_Tracebox);
 	REGISTER_FUNCTION(l, "sleep", l_sleep);

@@ -51,7 +51,11 @@ int l_packetmodifications_ref::l_get_original(lua_State *l)
 int l_packetmodifications_ref::l_get_received(lua_State *l)
 {
 	PacketModifications *r = l_packetmodifications_ref::extract(l, 1);
-	new l_packet_ref(new Packet(*r->modif), l);
+	const Packet *rcv = r->modif.get();
+	if (rcv)
+		new l_packet_ref(new Packet(*rcv), l);
+	else
+		lua_pushnil(l);
 	return 1;
 }
 

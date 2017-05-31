@@ -10,6 +10,7 @@
 #include "crafter/Utils/IPResolver.h"
 #include "script.h"
 #include "PacketModification.h"
+#include "PartialHeader.h"
 
 
 #include <cstdlib>
@@ -557,6 +558,7 @@ int main(int argc, char *argv[])
 	Packet *pkt = NULL;
 	string err;
 	bool inline_script = false;
+	PartialTCP::register_type();
 
 	tracebox_cb_t *callback = Callback;
 
