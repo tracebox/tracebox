@@ -4,6 +4,7 @@
  *  Copyright 2013-2015 by its authors.
  *  Some rights reserved. See LICENSE, AUTHORS.
  */
+#include <algorithm>
 
 #include "config.h"
 #include "PacketModification.h"
@@ -70,11 +71,11 @@ static void ComputeDifferences(PacketModifications *modifs,
 
 static PacketModifications* ComputeDifferences(
 		std::shared_ptr<Packet> orig_shared, const Packet *modified,
-		bool partial)
+		bool partial, std::vector<const Layer*> &extensions)
 {
 
 	PacketModifications *modifs = new PacketModifications(
-			orig_shared, modified, partial);
+			orig_shared, modified, extensions, partial);
 	if (modified) {
 		const Packet *orig = orig_shared.get();
 		const set<int> protos = GetAllProtos(orig, modified);
@@ -94,35 +95,43 @@ static PacketModifications* ComputeDifferences(
 	return modifs;
 }
 
-Packet* TrimReplyIPv4(Packet *rcv, bool *partial)
+Packet *TrimReply(Packet *rcv, bool *partial, size_t ip_total_len,
+		int next_hdr, std::vector<const Layer*> &extensions)
 {
-	IP *ip = GetIP(*rcv);
-
 	*partial = false;
 	/* Remove any ICMP extension. */
-	if (ip->GetTotalLength() < rcv->GetSize()) {
+	if (ip_total_len < rcv->GetSize()) {
 		RawLayer *raw = GetRawLayer(*rcv);
-		int len = raw->GetSize() - (rcv->GetSize() - ip->GetTotalLength());
-		RawLayer new_raw(raw->GetPayload().GetRawPointer(), len);
+		if (!raw)
+			goto out;
+		int len = raw->GetSize() - (rcv->GetSize() - ip_total_len);
+		if (len > 0) {
+			RawLayer new_raw(raw->GetPayload().GetRawPointer(), len);
+			int remaining_len = raw->GetSize() - len;
+			if (remaining_len > 0) {
+				extensions.push_back(new RawLayer(
+							raw->GetPayload().GetRawPointer() + len,
+							remaining_len));
+			}
 
-		rcv->PopLayer();
-		if (len)
+			rcv->PopLayer();
 			rcv->PushLayer(new_raw);
-	} else if (rcv->GetSize() < ip->GetTotalLength()) {
+		}
+	} else if (rcv->GetSize() < ip_total_len) {
 		/* We have received a partial header */
 		RawLayer *raw = GetRawLayer(*rcv);
 		Layer *new_layer = NULL;
 
 		if (!raw)
-			return rcv;
+			goto out;
 
-		switch(ip->GetProtocol()) {
+		switch(next_hdr) {
 		case TCP::PROTO:
 			new_layer = new PartialTCP(*raw);
 			*partial = true;
 			break;
 		default:
-			return rcv;
+			goto out;
 		}
 		if (new_layer) {
 			rcv->PopLayer();
@@ -130,56 +139,57 @@ Packet* TrimReplyIPv4(Packet *rcv, bool *partial)
 		}
 	}
 
+out:
 	return rcv;
 }
 
-Packet* TrimReplyIPv6(Packet *rcv, bool *partial)
+Packet* TrimReplyIPv4(Packet *rcv, bool *partial,
+		std::vector<const Layer*> &extensions)
+{
+	IP *ip = GetIP(*rcv);
+	return TrimReply(rcv, partial, ip->GetTotalLength(), ip->GetProtocol(),
+			extensions);
+}
+
+Packet* TrimReplyIPv6(Packet *rcv, bool *partial,
+		std::vector<const Layer*> &extensions)
 {
 	IPv6 *ip = GetIPv6(*rcv);
-
-	*partial = false;
-	/* Remove any extension. */
-	if ((size_t)ip->GetPayloadLength() + 40 < rcv->GetSize()) {
-		RawLayer *raw = GetRawLayer(*rcv);
-		int len = raw->GetSize() - (rcv->GetSize() - (ip->GetPayloadLength() + 40));
-		RawLayer new_raw(raw->GetPayload().GetRawPointer(), len);
-
-		rcv->PopLayer();
-		if (len)
-			rcv->PushLayer(new_raw);
-	} else if (rcv->GetSize() < (size_t)ip->GetPayloadLength() + 40) {
-		/* We have received a partial header */
-		RawLayer *raw = GetRawLayer(*rcv);
-		Layer *new_layer = NULL;
-
-		if (!raw)
-			return rcv;
-
-		switch(ip->GetNextHeader()) {
-		case TCP::PROTO:
-			new_layer = new PartialTCP(*raw);
-			*partial = true;
-			break;
-		default:
-			return rcv;
-		}
-		if (new_layer) {
-			rcv->PopLayer();
-			rcv->PushLayer(new_layer);
-		}
-	}
-
-	return rcv;
+	return TrimReply(rcv, partial, ip->GetPayloadLength() + 40,
+			ip->GetNextHeader(), extensions);
 }
 
 PacketModifications* PacketModifications::ComputeModifications(
 		std::shared_ptr<Crafter::Packet> pkt, Crafter::Packet *rcv)
 {
 	bool partial = false;
+	std::vector<const Layer*> extensions;
 	if (rcv) {
-		ICMPLayer *icmp = rcv->GetLayer<ICMPLayer>();
-		RawLayer *raw = rcv->GetLayer<RawLayer>();
-		int proto = pkt->GetLayer<IPLayer>()->GetID();
+		size_t layer_pos;
+		int proto = -1;
+		ICMPLayer *icmp = nullptr;
+		RawLayer *raw = nullptr;
+		/* Find the IP Layer to know the version */
+		for (layer_pos = 0; layer_pos < rcv->GetLayerCount()
+				&& proto != IP::PROTO
+				&& proto != IPv6::PROTO; ++layer_pos) {
+			const Layer* layer = (*rcv)[layer_pos];
+			proto = layer->GetID();
+		}
+		/* Register the ICMP Layer location */
+		icmp = rcv->GetLayer<ICMPLayer>(layer_pos);
+		++layer_pos;
+		/* Find the Raw Layer itself and register its location as it contains
+		 * the echoed packet */
+		raw = rcv->GetLayer<RawLayer>(layer_pos);
+		++layer_pos;
+		/* Keep track of any ICMP extension */
+		for (; layer_pos < rcv->GetLayerCount(); ++layer_pos) {
+			Layer *layer = (*rcv)[layer_pos];
+			Layer *new_layer = Protocol::AccessFactory()->GetLayerByID(layer->GetID());
+			*new_layer = *layer;
+			extensions.push_back(new_layer);
+		}
 
 		if (icmp && raw) {
 			Packet *cnt = new Packet(rcv->GetTimestamp());
@@ -190,11 +200,11 @@ PacketModifications* PacketModifications::ComputeModifications(
 				 * echoed packet or with ICMP extensions. We thus
 				 * remove undesired parts and parse partial headers.
 				 */
-				cnt = TrimReplyIPv4(cnt, &partial);
+				cnt = TrimReplyIPv4(cnt, &partial, extensions);
 				break;
 			case IPv6::PROTO:
 				cnt->PacketFromIPv6(*raw);
-				cnt = TrimReplyIPv6(cnt, &partial);
+				cnt = TrimReplyIPv6(cnt, &partial, extensions);
 				break;
 			default:
 				delete cnt;
@@ -205,7 +215,7 @@ PacketModifications* PacketModifications::ComputeModifications(
 			rcv = cnt;
 		}
 	}
-	return ComputeDifferences(pkt, rcv, partial);
+	return ComputeDifferences(pkt, rcv, partial, extensions);
 }
 
 Modification::Modification(int proto, std::string name, size_t offset,
@@ -358,19 +368,57 @@ void PacketModifications::Print(std::ostream& out, bool verbose) const
 		(*it)->Print(out, verbose);
 		out << " ";
 	}
+	if (extensions.size() > 0) {
+		out << "[Extra headers: ";
+		for (std::vector<const Layer *>::const_iterator it = extensions.begin();
+				it != extensions.end();	++it) {
+			if (verbose) {
+				(*it)->Print(out);
+				out << " ";
+			} else out << (*it)->GetName() << " ";
+		}
+		out << "] ";
+	}
 }
 
-void PacketModifications::Print_JSON(json_object *res,json_object *icmp,
-		json_object *add, json_object *del, bool verbose) const
+void PacketModifications::Print_JSON(json_object *res,
+		json_object *add, json_object *del, json_object **ext,
+		bool verbose) const
 {
-	for(const_iterator it = begin() ; it != end() ; it++) {
+	for(const_iterator it = begin() ; it != end() ; ++it)
 		(*it)->Print_JSON(res, add, del, verbose);
+	if (extensions.size() > 0) {
+		*ext = json_object_new_array();
+		for (std::vector<const Layer *>::const_iterator it = extensions.begin();
+				it != extensions.end();	++it) {
+			if (verbose) {
+				std::ostringstream ss;
+				(*it)->Print(ss);
+				std::string str = ss.str();
+				str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+
+				json_object *descr = json_object_new_object();
+				json_object_object_add(descr, "Info",
+						json_object_new_string(str.c_str()));
+
+				json_object *descr_hdr = json_object_new_object();
+				json_object_object_add(descr_hdr, (*it)->GetName().c_str(),
+						descr);
+				json_object_array_add(*ext, descr_hdr);
+			} else {
+				json_object_array_add(*ext, json_object_new_string(
+							(*it)->GetName().c_str()));
+			}
+		}
 	}
 }
 
 PacketModifications::~PacketModifications()
 {
-	for(const_iterator it = begin() ; it != end() ; it++)
+	for (std::vector<const Layer *>::const_iterator it = extensions.begin();
+			it != extensions.end(); ++it)
+		delete *it;
+	for(const_iterator it = begin() ; it != end() ; ++it)
 		delete *it;
 	clear();
 }

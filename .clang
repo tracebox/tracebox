@@ -1,0 +1,8 @@
+-x c++
+-DHAVE_CONFIG_H
+-I.
+-I../..
+-I../../noinst/libcrafter/libcrafter
+-I/usr/include/pcap
+-Wall
+-std=gnu++11

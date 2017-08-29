@@ -415,15 +415,17 @@ static int Callback_JSON(void *ctx, int ttl, string& router,
 				json_object_object_add(hop,"name", json_object_new_string(GetHostname(router).c_str()));
 			if (mod){
 				json_object *modif = json_object_new_array();
-				json_object *icmp = json_object_new_array();
 				json_object *add = json_object_new_array();
 				json_object *del = json_object_new_array();
+				json_object *ext = NULL;
 
-				mod->Print_JSON(modif, icmp, add, del, verbose);
+				mod->Print_JSON(modif, add, del, &ext, verbose);
 
 				json_object_object_add(hop,"Modifications", modif);
 				json_object_object_add(hop,"Additions", add);
 				json_object_object_add(hop,"Deletions", del);
+				if (ext != NULL)
+					json_object_object_add(hop, "ICMPExtensions", ext);
 				delete mod;
 			}
 	}
@@ -687,7 +689,7 @@ int main(int argc, char *argv[])
 
 	if (jobj != NULL) {
 		json_object_object_add(jobj,"Hops", j_results);
-		printf ("%s\n",json_object_to_json_string(jobj));
+		std::cout << json_object_to_json_string(jobj) << std::endl;
 	}
 out:
 	closePcap();

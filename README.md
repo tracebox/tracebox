@@ -73,7 +73,10 @@ The documentation should be created under doc/html
 ## JSON Output Format
 
 More detailled information about the successive hops can be obtained using the -j option,
-this will as well change the output mode to JSON
+this will as well change the output mode to JSON.
+
+As the output will be buffered, you SHOULD make use of the max hop parameter
+(-m) if the target node does not answer in order to get the partial trace.
 
 ```javascript
 {

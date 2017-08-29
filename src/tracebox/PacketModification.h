@@ -70,10 +70,8 @@ public:
 	virtual void Print(std::ostream& out = std::cout,
 			bool verbose = false) const;
 
-	virtual void Print_JSON(json_object *res = json_object_new_array(),
-			json_object *add = json_object_new_array(),
-			json_object *del = json_object_new_array(),
-			bool verbose = false) const;
+	virtual void Print_JSON(json_object *res, json_object *add,
+			json_object *del, bool verbose = false) const;
 };
 
 struct Addition : public Modification {
@@ -81,10 +79,8 @@ struct Addition : public Modification {
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
 
-	virtual void Print_JSON(json_object *res = json_object_new_array(),
-			json_object *add = json_object_new_array(),
-			json_object *del = json_object_new_array(),
-			bool verbose = false) const;
+	virtual void Print_JSON(json_object *res, json_object *add,
+			json_object *del, bool verbose = false) const;
 };
 
 struct Deletion : public Modification {
@@ -92,21 +88,21 @@ struct Deletion : public Modification {
 
 	virtual void Print(std::ostream& out, bool verbose = false) const;
 
-	virtual void Print_JSON(json_object *res = json_object_new_array(),
-			json_object *add = json_object_new_array(),
-			json_object *del = json_object_new_array(),
-			bool verbose = false) const;
+	virtual void Print_JSON(json_object *res, json_object *add,
+			json_object *del, bool verbose = false) const;
 };
 
 struct PacketModifications : public std::vector<Modification *> {
 	const std::shared_ptr<const Packet> orig;
 	const std::shared_ptr<const Packet> modif;
+	std::vector<const Layer*> extensions;
 	bool partial;
 
 	PacketModifications(const std::shared_ptr<Packet> orig,
-			const Packet *modif, bool partial=false) :
-		orig(orig), modif(modif), partial(partial) {}
-	~PacketModifications();
+			const Packet *modif, std::vector<const Layer*> &ext,
+			bool partial=false) :
+		orig(orig), modif(modif), extensions(ext), partial(partial) {}
+	virtual ~PacketModifications();
 
 	void Print(std::ostream& out = std::cout, bool verbose = false) const;
 
@@ -114,11 +110,8 @@ struct PacketModifications : public std::vector<Modification *> {
 			const std::shared_ptr<Crafter::Packet> pkt,
 			Crafter::Packet *rcv);
 
-	void Print_JSON(json_object *res = json_object_new_array(),
-			json_object *icmp = json_object_new_array(),
-			json_object *add = json_object_new_array(),
-			json_object *del = json_object_new_array(),
-			bool verbose = false) const;
+	virtual void Print_JSON(json_object *res, json_object *add,
+			json_object *del, json_object **ext, bool verbose = false) const;
 };
 
 #endif
