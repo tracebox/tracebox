@@ -52,6 +52,8 @@ using namespace std;
 static bool skip_suid_check = false;
 
 static int hops_max = 64;
+static int hops_min = 0;
+
 static string destination;
 static string iface;
 static bool resolve = true;
@@ -503,7 +505,8 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 	if (!ip)
 		return -1;
 
-	for (int ttl = 1; ttl <= hops_max; ++ttl) {
+	hops_min = hops_min == 0 ? 1 : hops_min;
+	for (int ttl = hops_min; ttl <= hops_max; ++ttl) {
 		Packet* rcv = NULL;
 		PacketModifications *mod = NULL;
 		string sIP;
@@ -566,7 +569,7 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, "Sl:i:m:s:p:d:f:hnv6uwjt:"
+	while ((c = getopt(argc, argv, "Sl:i:M:m:s:p:d:f:hnv6uwjt:"
 #ifdef HAVE_CURL
 					"Cc:"
 #endif
@@ -577,6 +580,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'i':
 				iface = optarg;
+				break;
+			case 'M':
+				hops_min = strtol(optarg, NULL, 10);
 				break;
 			case 'm':
 				hops_max = strtol(optarg, NULL, 10);
@@ -708,6 +714,8 @@ usage:
 "  -i device                   Specify a network interface to operate with\n"
 "  -m hops_max                 Set the max number of hops (max TTL to be reached).\n"
 "                              Default is 30.\n"
+"  -M hops_min                 Set the min number of hops (min TTL to be reached).\n"
+"                              Default is 1. \n"
 "  -v                          Print more information.\n"
 "  -j                          Change the format of the output to JSON.\n"
 "  -t timeout                  Timeout to wait for a reply after sending a packet.\n"
