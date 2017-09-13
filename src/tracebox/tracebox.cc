@@ -51,8 +51,8 @@ using namespace std;
 
 static bool skip_suid_check = false;
 
-static int hops_max = 64;
-static int hops_min = 0;
+static uint8_t hops_max = 64;
+static uint8_t hops_min = 1;
 
 static string destination;
 static string iface;
@@ -505,7 +505,6 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 	if (!ip)
 		return -1;
 
-	hops_min = hops_min == 0 ? 1 : hops_min;
 	for (int ttl = hops_min; ttl <= hops_max; ++ttl) {
 		Packet* rcv = NULL;
 		PacketModifications *mod = NULL;
@@ -549,6 +548,16 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 		if (rcv && sIP == ip->GetDestinationIP())
 			return 1;
 	}
+	return 0;
+}
+
+int set_tracebox_ttl_range(uint8_t ttl_min, uint8_t ttl_max)
+{
+	if(!(ttl_min > 0 && (ttl_min <= ttl_max)))
+		return -1;
+
+	hops_min = ttl_min;
+	hops_max = ttl_max;
 	return 0;
 }
 
@@ -649,6 +658,11 @@ int main(int argc, char *argv[])
 			default:
 				goto usage;
 		}
+	}
+
+    if (set_tracebox_ttl_range(hops_min, hops_max) < 0) {
+		cerr << "Cannot use the specified TTL range: [" << hops_min << ", " << hops_max << "]" << std::endl;
+		goto usage;
 	}
 
 	if (!skip_suid_check && getuid() != 0) {
