@@ -25,6 +25,8 @@ IPLayer* probe_sanity_check(const Crafter::Packet *probe,
 int doTracebox(std::shared_ptr<Crafter::Packet> pkt, tracebox_cb_t *callback,
 		std::string& err, void *ctx = NULL);
 
+int set_tracebox_ttl_range(uint8_t ttl_min, uint8_t ttl_max);
+
 void writePcap(Packet* p);
 
 #ifdef HAVE_CURL

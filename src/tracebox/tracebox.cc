@@ -51,7 +51,9 @@ using namespace std;
 
 static bool skip_suid_check = false;
 
-static int hops_max = 64;
+static uint8_t hops_max = 64;
+static uint8_t hops_min = 1;
+
 static string destination;
 static string iface;
 static bool resolve = true;
@@ -503,7 +505,7 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 	if (!ip)
 		return -1;
 
-	for (int ttl = 1; ttl <= hops_max; ++ttl) {
+	for (int ttl = hops_min; ttl <= hops_max; ++ttl) {
 		Packet* rcv = NULL;
 		PacketModifications *mod = NULL;
 		string sIP;
@@ -549,6 +551,16 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 	return 0;
 }
 
+int set_tracebox_ttl_range(uint8_t ttl_min, uint8_t ttl_max)
+{
+	if(!(ttl_min > 0 && (ttl_min <= ttl_max)))
+		return -1;
+
+	hops_min = ttl_min;
+	hops_max = ttl_max;
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int c;
@@ -566,7 +578,7 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, "Sl:i:m:s:p:d:f:hnv6uwjt:"
+	while ((c = getopt(argc, argv, "Sl:i:M:m:s:p:d:f:hnv6uwjt:"
 #ifdef HAVE_CURL
 					"Cc:"
 #endif
@@ -577,6 +589,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'i':
 				iface = optarg;
+				break;
+			case 'M':
+				hops_min = strtol(optarg, NULL, 10);
 				break;
 			case 'm':
 				hops_max = strtol(optarg, NULL, 10);
@@ -645,6 +660,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
+    if (set_tracebox_ttl_range(hops_min, hops_max) < 0) {
+		cerr << "Cannot use the specified TTL range: [" << hops_min << ", " << hops_max << "]" << std::endl;
+		goto usage;
+	}
+
 	if (!skip_suid_check && getuid() != 0) {
 		cerr << "tracebox requires superuser permissions!" << endl;
 		goto usage;
@@ -708,6 +728,8 @@ usage:
 "  -i device                   Specify a network interface to operate with\n"
 "  -m hops_max                 Set the max number of hops (max TTL to be reached).\n"
 "                              Default is 30.\n"
+"  -M hops_min                 Set the min number of hops (min TTL to be reached).\n"
+"                              Default is 1. \n"
 "  -v                          Print more information.\n"
 "  -j                          Change the format of the output to JSON.\n"
 "  -t timeout                  Timeout to wait for a reply after sending a packet.\n"
