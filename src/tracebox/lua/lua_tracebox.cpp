@@ -49,7 +49,7 @@ struct tracebox_info {
  * 	print("Sent probe n#" .. tll .. " and received " .. mod:modif():tostring())
  * end
  * */
-static int tCallback(void *ctx, int ttl, std::string& ip,
+static int tCallback(void *ctx, uint8_t ttl, std::string& ip,
 		PacketModifications *mod)
 {
 	struct tracebox_info *info = (struct tracebox_info *)ctx;

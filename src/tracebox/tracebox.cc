@@ -359,7 +359,7 @@ static unsigned long timeval_diff(const struct timeval a, const struct timeval b
 	return (a.tv_sec - b.tv_sec) * 10e6L + a.tv_usec - b.tv_usec;
 }
 
-static int Callback(void *ctx, int ttl, string& router,
+static int Callback(void *ctx, uint8_t ttl, string& router,
 		PacketModifications *mod)
 {
 	(void)ctx;
@@ -370,14 +370,14 @@ static int Callback(void *ctx, int ttl, string& router,
 	if (ttl == 1)
 		cout << "tracebox to " <<
 			ip->GetDestinationIP() << " (" << destination << "): " <<
-			hops_max << " hops max" << endl;
+			(int)hops_max << " hops max" << endl;
 
 	if (rcv) {
 		ip = rcv->GetLayer<IPLayer>();
 		if (!resolve)
-			cout << ttl << ": " << router << " ";
+			cout << +(int)ttl << ": " << router << " ";
 		else
-			cout << ttl << ": " << GetHostname(router) << " (" << router << ") ";
+			cout << (int)ttl << ": " << GetHostname(router) << " (" << router << ") ";
 		cout << timeval_diff(rcv->GetTimestamp(), probe->GetTimestamp()) / 1000 << "ms ";
 		if (mod) {
 			mod->Print(cout, verbose);
@@ -390,7 +390,7 @@ static int Callback(void *ctx, int ttl, string& router,
 	return 0;
 }
 
-static int Callback_JSON(void *ctx, int ttl, string& router,
+static int Callback_JSON(void *ctx, uint8_t ttl, string& router,
 		PacketModifications *mod)
 {
 	(void)ctx;
@@ -505,7 +505,7 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 	if (!ip)
 		return -1;
 
-	for (int ttl = hops_min; ttl <= hops_max; ++ttl) {
+	for (uint8_t ttl = hops_min; ttl <= hops_max; ++ttl) {
 		Packet* rcv = NULL;
 		PacketModifications *mod = NULL;
 		string sIP;
