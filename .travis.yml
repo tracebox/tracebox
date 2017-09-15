@@ -16,8 +16,8 @@ install:
     - sh CI/travis_prepare.sh --enable-tests --enable-curl
 
 script:
-- if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make distcheck ; fi
-- if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ulimit -c unlimited && make check ; fi
+- if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then ulimit -c unlimited && make distcheck ; fi
+- if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then ulimit -c unlimited && make check ; fi
 
 
 after_failure:
