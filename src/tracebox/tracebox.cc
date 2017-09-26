@@ -561,6 +561,9 @@ int set_tracebox_ttl_range(uint8_t ttl_min, uint8_t ttl_max)
 	return 0;
 }
 
+uint8_t get_min_ttl() { return hops_min; };
+uint8_t get_max_ttl() { return hops_max; };
+
 int main(int argc, char *argv[])
 {
 	int c;

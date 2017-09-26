@@ -102,10 +102,15 @@ static int tCallback(void *ctx, uint8_t ttl, std::string& ip,
  * differences
  * @function tracebox
  * @tparam Packet pkt the probe packet
- * @tparam[opt] table args a table with the name of a callback function at key 'callback'
+ * @tparam[opt] table args see tracebox_args
  * @treturn Packet the echoed packet from the destination or nil
  * @see tracebox_callback
  * @usage tracebox(IP/TCP, { callback = 'callback_func'})
+ * */
+/***
+ * Tracebox optional keyword parameters
+ * @table tracebox_args
+ * @tfield string callback The callback function to call at each received probe, see tracebox_callback
  * */
 int l_Tracebox(lua_State *l)
 {
@@ -123,6 +128,7 @@ int l_Tracebox(lua_State *l)
 
 	v_arg_string_opt(l, 2, "callback", &info.cb);
 
+
 no_args:
 	ret = doTracebox(pref, tCallback, err, &info);
 	if (ret < 0) {
@@ -137,5 +143,37 @@ no_args:
 	else
 		lua_pushnil(l);
 
+	return 1;
+}
+
+/***
+ * Set a new TTL range for further tracebox calls
+ * @function set_tt_range
+ * @tparam table args see ttl_table
+ * @treturn table The old TTL table
+ * */
+/***
+ * set_ttl_range paramters
+ * @table set_ttl_range_args
+ * @ tfield num min_ttl The minimal probe TTL
+ * @ tfield num max_ttl The maximal probe TTL
+ * */
+int l_set_ttl_range(lua_State *l)
+{
+	int old_min = get_min_ttl(), old_max = get_max_ttl(), min_ttl, max_ttl,
+			new_min, new_max;
+	bool min = v_arg_integer_opt(l, 1, "min_ttl", &min_ttl);
+	bool max = v_arg_integer_opt(l, 1, "max_ttl", &max_ttl);
+	new_min = min ? min_ttl : old_min;
+	new_max = max ? max_ttl : old_max;
+	if ((min || max) &&	set_tracebox_ttl_range(new_min, new_max))
+		return luaL_error(l, "Invalid TTL range: [%d <= %d]", new_min, new_max);
+	lua_createtable(l, 0, 2);
+	lua_pushstring(l, "min_ttl");
+	lua_pushinteger(l, old_min);
+	lua_settable(l, -3);
+	lua_pushstring(l, "max_ttl");
+	lua_pushinteger(l, old_max);
+	lua_settable(l, -3);
 	return 1;
 }

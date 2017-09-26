@@ -90,6 +90,7 @@ L_EXPOSE_TYPE(TbxSniffer);
 
 /* lua_tracebox.cpp */
 extern int l_Tracebox(lua_State *l);
+extern int l_set_ttl_range(lua_State *);
 /* lua_utils.cpp */
 extern int l_sleep(lua_State *l);
 extern int l_dump_stack(lua_State *l);
@@ -133,6 +134,7 @@ lua_State *l_init()
 	REGISTER_FUNCTION(l, "gethostname", l_gethostname);
 	REGISTER_FUNCTION(l, "__dump_c_stack", l_dump_stack);
 	REGISTER_FUNCTION(l, "random", l_random);
+	REGISTER_FUNCTION(l, "set_ttl_range", l_set_ttl_range);
 
 	return l;
 }
