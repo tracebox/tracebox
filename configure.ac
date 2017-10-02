@@ -266,7 +266,7 @@ fi
 AM_CONDITIONAL([HAVE_LDOC],[test -n "$LDOC"])
 
 AC_DEFINE_UNQUOTED([_REV_PARSE], 
-          ["$(git describe --abbrev=16 --dirty --always --tags)"],
+          ["$(git describe --abbrev=16 --always --tags)"],
           ["Version number: tag-commits-g revision-branch status"])
 
 AC_CONFIG_FILES([
