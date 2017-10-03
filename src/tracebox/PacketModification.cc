@@ -167,7 +167,7 @@ PacketModifications* PacketModifications::ComputeModifications(
 	if (rcv) {
 		size_t layer_pos;
 		int proto = -1;
-		ICMPLayer *icmp = nullptr;
+		int icmp_loc = 0;
 		RawLayer *raw = nullptr;
 		/* Find the IP Layer to know the version */
 		for (layer_pos = 0; layer_pos < rcv->GetLayerCount()
@@ -177,8 +177,7 @@ PacketModifications* PacketModifications::ComputeModifications(
 			proto = layer->GetID();
 		}
 		/* Register the ICMP Layer location */
-		icmp = rcv->GetLayer<ICMPLayer>(layer_pos);
-		++layer_pos;
+		icmp_loc = layer_pos++;
 		/* Find the Raw Layer itself and register its location as it contains
 		 * the echoed packet */
 		raw = rcv->GetLayer<RawLayer>(layer_pos);
@@ -191,21 +190,36 @@ PacketModifications* PacketModifications::ComputeModifications(
 			extensions.push_back(new_layer);
 		}
 
-		if (icmp && raw) {
+		if (icmp_loc && raw) {
+			/* If there are ICMP extensions, then the raw-sandwich layer might
+			 * include padding ... */
+			int len_without_padding = raw->GetSize();
 			Packet *cnt = new Packet(rcv->GetTimestamp());
 			switch (proto) {
-			case IP::PROTO:
-				cnt->PacketFromIP(*raw);
+			case IP::PROTO: {
+				ICMP *icmp = rcv->GetLayer<ICMP>(icmp_loc);
+				if (icmp->GetLength())
+					len_without_padding = std::min(len_without_padding,
+							icmp->GetLength() * 4);
+				cnt->PacketFromIP(raw->GetRawPointer(),
+						len_without_padding);
 				/* We might receive an ICMP without the complete
 				 * echoed packet or with ICMP extensions. We thus
 				 * remove undesired parts and parse partial headers.
 				 */
 				cnt = TrimReplyIPv4(cnt, &partial, extensions);
 				break;
-			case IPv6::PROTO:
-				cnt->PacketFromIPv6(*raw);
+			}
+			case IPv6::PROTO: {
+				ICMPv6 *icmp = rcv->GetLayer<ICMPv6>(icmp_loc);
+				if (icmp->GetLength())
+					len_without_padding = std::min(len_without_padding,
+							icmp->GetLength() * 8);
+				cnt->PacketFromIPv6(raw->GetRawPointer(),
+						len_without_padding);
 				cnt = TrimReplyIPv6(cnt, &partial, extensions);
 				break;
+			}
 			default:
 				delete cnt;
 				cnt = NULL;
