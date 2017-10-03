@@ -2,8 +2,8 @@ Source: tracebox
 Section: net
 Priority: extra
 Maintainer: Olivier Tilmans <olivier.tilmans@uclouvain.be>
-Build-Depends: gcc (>= 4.8), debhelper (>= 8.0.0), autotools-dev, autoconf, libpcap-dev, liblua5.1-dev, git, libnetfilter-queue-dev, libjson0-dev, libcurl4-gnutls-dev, luarocks
-Standards-Version: 0.4.2
+Build-Depends: gcc (>= 4.8), debhelper (>= 8.0.0), autotools-dev, autoconf, libpcap-dev, liblua5.1-dev, git, libnetfilter-queue-dev, libjson0-dev, libcurl4-gnutls-dev, luarocks, lua-sec
+Standards-Version: 0.4.3
 Homepage: http://www.tracebox.org
 
 Package: tracebox

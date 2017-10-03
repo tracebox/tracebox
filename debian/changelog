@@ -1,3 +1,9 @@
+tracebox (0.4.3) experimental; urgency=low
+
+  * Proper handling of RFC4884
+
+ -- Olivier Tilmans <olivier.tilmans@uclouvain.be>  Wed, 04 Oct 2017 11:45:42 +0200
+
 tracebox (0.4.2) experimental; urgency=low
 
   * Can specify min TTL for tracebox calls
