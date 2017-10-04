@@ -148,15 +148,15 @@ no_args:
 
 /***
  * Set a new TTL range for further tracebox calls
- * @function set_tt_range
- * @tparam table args see ttl_table
+ * @function set_ttl_range
+ * @tparam table args see set_ttl_range_args
  * @treturn table The old TTL table
  * */
 /***
- * set_ttl_range paramters
+ * Parameters for set_ttl_range
  * @table set_ttl_range_args
- * @ tfield num min_ttl The minimal probe TTL
- * @ tfield num max_ttl The maximal probe TTL
+ * @tfield num min_ttl The minimal probe TTL
+ * @tfield num max_ttl The maximal probe TTL
  * */
 int l_set_ttl_range(lua_State *l)
 {
