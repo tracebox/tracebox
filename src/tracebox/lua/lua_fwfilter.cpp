@@ -7,33 +7,40 @@
 
 #include "lua_fwfilter.h"
 #include "lua_packet.hpp"
+#include <sstream>
 
 using namespace Crafter;
 
-FWFilter::FWFilter(int src, int dst)
-	: src(src), dst(dst), id(src^dst), closed(false)
-{
+FWFilter::FWFilter(int src, int dst, const char *proto)
+	: src(src), dst(dst), proto(proto),
 #ifdef __APPLE__
-	std::string cmd = "ipfw add " + StrPort(id) + " deny tcp from any " \
-		+ StrPort(dst) + " to any " + StrPort(src) + " in";
-#else /* Assume Linux */
-	std::string cmd = "iptables -A INPUT -p tcp --sport " \
-				+ StrPort(dst) + " --dport " + StrPort(src) + " -j DROP";
+	id(src^dst),
 #endif
-	system(cmd.c_str());
+	closed(false)
+{
+	std::ostringstream ss;
+#ifdef __APPLE__
+	ss << "ipfw add " << StrPort(id) << " deny " << proto << " from any "
+		<< StrPort(dst) << " to any " << StrPort(src) + " in";
+#else /* Assume Linux */
+	ss << "iptables -A INPUT -p " << proto << " --sport "
+		<< StrPort(dst) << " --dport " << StrPort(src) << " -j DROP";
+#endif
+	system(ss.str().c_str());
 }
 
 void FWFilter::close() {
 	if (closed)
 		return;
 
+	std::ostringstream ss;
 #ifdef __APPLE__
-	std::string cmd = "ipfw del " + StrPort(id);
+	ss << "ipfw del " << StrPort(id);
 #else /* Assume Linux */
-	std::string cmd = "iptables -D INPUT -p tcp --sport " \
-				+ StrPort(dst) + " --dport " + StrPort(src) + " -j DROP";
+	ss << "iptables -D INPUT -p " << proto << " --sport "
+		<< StrPort(dst) << " --dport " << StrPort(src) << " -j DROP";
 #endif
-	system(cmd.c_str());
+	system(ss.str().c_str());
 	closed = true;
 }
 /***
@@ -76,7 +83,7 @@ int l_fwfilter_ref::l_TraceboxFilter(lua_State *l)
 		return 0;
 	}
 
-	FWFilter *f = new FWFilter(srcPort, dstPort);
+	FWFilter *f = new FWFilter(srcPort, dstPort, tcp ? "tcp" : "udp");
 	new l_fwfilter_ref(f, l);
 
 	return 1;

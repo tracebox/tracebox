@@ -11,10 +11,14 @@
 #include "lua_base.hpp"
 
 class FWFilter {
-	int src, dst, id;
+	int src, dst;
+#ifdef __APPLE__
+	int id;
+#endif
+	const char *proto;
 	bool closed;
 public:
-	FWFilter(int src, int dst);
+	FWFilter(int src, int dst, const char *proto);
 
 	~FWFilter() { close(); }
 
