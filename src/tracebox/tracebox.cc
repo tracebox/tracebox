@@ -581,7 +581,7 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, "Sl:i:M:m:s:p:d:f:hnv6uwjt:"
+	while ((c = getopt(argc, argv, "Sl:i:M:m:s:p:d:f:hnv6uwjt:V"
 #ifdef HAVE_CURL
 					"Cc:"
 #endif
@@ -650,6 +650,9 @@ int main(int argc, char *argv[])
 			case 't':
 				tbx_default_timeout = strtod(optarg, NULL);
 				break;
+			case 'V':
+				std::cerr << _REV_PARSE << std::endl;
+				return 0;
 			case ':':
 				std::cerr << "Option `-" << (char)optopt
 							<< "' requires an argument!" << std::endl;
@@ -751,6 +754,7 @@ usage:
 "                              To be used mainly for testing purposes,\n"
 "	                           as it will cause tracebox to crash for some\n"
 "							   of its features!.\n"
+"  -V                          Print tracebox version and exit.\n"
 "\n"
 "Every argument passed after the options in conjunction with -s or -l will be passed\n"
 "to the lua interpreter and available in a global vector of strings named 'argv',\n"

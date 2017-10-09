@@ -37,3 +37,4 @@ tags
 tests/test-suite.log
 doc/html
 *~
+.libs
