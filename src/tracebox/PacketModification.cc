@@ -159,75 +159,95 @@ Packet* TrimReplyIPv6(Packet *rcv, bool *partial,
 			ip->GetNextHeader(), extensions);
 }
 
+static int find_layers_locations(Packet *rcv, int *proto, RawLayer **raw,
+		std::vector<const Layer *> &extensions)
+{
+	if (!rcv)
+		return -1;
+	size_t layer_pos;
+	int icmp_loc = 0;
+	const Layer *layer;
+	/* Find the IP Layer to know the version */
+	for (layer_pos = 0; layer_pos < rcv->GetLayerCount()
+			&& *proto != IP::PROTO
+			&& *proto != IPv6::PROTO; ++layer_pos) {
+		layer = (*rcv)[layer_pos];
+		*proto = layer->GetID();
+	}
+	if (layer_pos >= rcv->GetLayerCount())
+		/* No IP layer */
+		return -1;
+	layer = (*rcv)[layer_pos];
+	if (layer->GetID() != ICMP::PROTO && layer->GetID() != ICMPv6::PROTO)
+		/* No ICMP Layer */
+		return -1;
+	/* Register the ICMP Layer location */
+	icmp_loc = layer_pos++;
+	/* Find the Raw Layer itself and register its location as it contains
+	 * the echoed packet */
+	if (layer_pos >= rcv->GetLayerCount() ||
+			!(*raw = rcv->GetLayer<RawLayer>(layer_pos++)))
+		/* No raw layer, i.e. incorrect ICMP reply for our use case */
+		return -1;
+	/* Keep track of any ICMP extension */
+	for (; layer_pos < rcv->GetLayerCount(); ++layer_pos) {
+		Layer *layer = (*rcv)[layer_pos];
+		Layer *new_layer = Protocol::AccessFactory()->GetLayerByID(layer->GetID());
+		*new_layer = *layer;
+		extensions.push_back(new_layer);
+	}
+	return icmp_loc;
+}
+
 PacketModifications* PacketModifications::ComputeModifications(
 		std::shared_ptr<Crafter::Packet> pkt, Crafter::Packet *rcv)
 {
 	bool partial = false;
 	std::vector<const Layer*> extensions;
-	if (rcv) {
-		size_t layer_pos;
-		int proto = -1;
-		int icmp_loc = 0;
-		RawLayer *raw = nullptr;
-		/* Find the IP Layer to know the version */
-		for (layer_pos = 0; layer_pos < rcv->GetLayerCount()
-				&& proto != IP::PROTO
-				&& proto != IPv6::PROTO; ++layer_pos) {
-			const Layer* layer = (*rcv)[layer_pos];
-			proto = layer->GetID();
+	int proto, icmp_loc;
+	RawLayer *raw;
+	/* It should normally be impossible to have an ICMP Layer at index 0 as it
+	 * would indicate that we received it without an encapsulating IP header
+	 * which is impossible unless the user explicitely crafts (incorrect)
+	 * responses */
+	icmp_loc = find_layers_locations(rcv, &proto, &raw, extensions);
+	if (icmp_loc > 0) {
+		/* If there are ICMP extensions, then the raw-sandwich layer might
+		 * include padding ... */
+		int len_without_padding = raw->GetSize();
+		Packet *cnt = new Packet(rcv->GetTimestamp());
+		switch (proto) {
+		case IP::PROTO: {
+			ICMP *icmp = rcv->GetLayer<ICMP>(icmp_loc);
+			if (icmp->GetLength())
+				len_without_padding = std::min(len_without_padding,
+						icmp->GetLength() * 4);
+			cnt->PacketFromIP(raw->GetRawPointer(),
+					len_without_padding);
+			/* We might receive an ICMP without the complete
+			 * echoed packet or with ICMP extensions. We thus
+			 * remove undesired parts and parse partial headers.
+			 */
+			cnt = TrimReplyIPv4(cnt, &partial, extensions);
+			break;
 		}
-		/* Register the ICMP Layer location */
-		icmp_loc = layer_pos++;
-		/* Find the Raw Layer itself and register its location as it contains
-		 * the echoed packet */
-		raw = rcv->GetLayer<RawLayer>(layer_pos);
-		++layer_pos;
-		/* Keep track of any ICMP extension */
-		for (; layer_pos < rcv->GetLayerCount(); ++layer_pos) {
-			Layer *layer = (*rcv)[layer_pos];
-			Layer *new_layer = Protocol::AccessFactory()->GetLayerByID(layer->GetID());
-			*new_layer = *layer;
-			extensions.push_back(new_layer);
+		case IPv6::PROTO: {
+			ICMPv6 *icmp = rcv->GetLayer<ICMPv6>(icmp_loc);
+			if (icmp->GetLength())
+				len_without_padding = std::min(len_without_padding,
+						icmp->GetLength() * 8);
+			cnt->PacketFromIPv6(raw->GetRawPointer(),
+					len_without_padding);
+			cnt = TrimReplyIPv6(cnt, &partial, extensions);
+			break;
+		}
+		default:
+			delete cnt;
+			cnt = NULL;
 		}
 
-		if (icmp_loc && raw) {
-			/* If there are ICMP extensions, then the raw-sandwich layer might
-			 * include padding ... */
-			int len_without_padding = raw->GetSize();
-			Packet *cnt = new Packet(rcv->GetTimestamp());
-			switch (proto) {
-			case IP::PROTO: {
-				ICMP *icmp = rcv->GetLayer<ICMP>(icmp_loc);
-				if (icmp->GetLength())
-					len_without_padding = std::min(len_without_padding,
-							icmp->GetLength() * 4);
-				cnt->PacketFromIP(raw->GetRawPointer(),
-						len_without_padding);
-				/* We might receive an ICMP without the complete
-				 * echoed packet or with ICMP extensions. We thus
-				 * remove undesired parts and parse partial headers.
-				 */
-				cnt = TrimReplyIPv4(cnt, &partial, extensions);
-				break;
-			}
-			case IPv6::PROTO: {
-				ICMPv6 *icmp = rcv->GetLayer<ICMPv6>(icmp_loc);
-				if (icmp->GetLength())
-					len_without_padding = std::min(len_without_padding,
-							icmp->GetLength() * 8);
-				cnt->PacketFromIPv6(raw->GetRawPointer(),
-						len_without_padding);
-				cnt = TrimReplyIPv6(cnt, &partial, extensions);
-				break;
-			}
-			default:
-				delete cnt;
-				cnt = NULL;
-			}
-
-			delete rcv;
-			rcv = cnt;
-		}
+		delete rcv;
+		rcv = cnt;
 	}
 	return ComputeDifferences(pkt, rcv, partial, extensions);
 }

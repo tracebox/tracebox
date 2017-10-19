@@ -500,16 +500,15 @@ IPLayer* probe_sanity_check(const Packet *pkt, string& err, string& iface)
 int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 		string& err, void *ctx)
 {
+	Packet* rcv = NULL;
+	PacketModifications *mod = NULL;
+	string sIP;
 	Packet *pkt = pkt_shrd.get();
 	IPLayer *ip = probe_sanity_check(pkt, err, iface);
 	if (!ip)
 		return -1;
 
 	for (uint8_t ttl = hops_min; ttl <= hops_max; ++ttl) {
-		Packet* rcv = NULL;
-		PacketModifications *mod = NULL;
-		string sIP;
-
 		switch (ip->GetID()) {
 		case IP::PROTO:
 			reinterpret_cast<IP *>(ip)->SetTTL(ttl);
@@ -517,6 +516,10 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 		case IPv6::PROTO:
 			reinterpret_cast<IPv6 *>(ip)->SetHopLimit(ttl);
 			break;
+		default:
+			std::cerr << "Could not access the IPLayer from the probe, "
+				"aborting." << std::endl;
+			return 1;
 		}
 		pkt->PreCraft();
 
@@ -537,6 +540,8 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 				writePcap(&p);
 			}
 			sIP = rcv->GetLayer<IPLayer>()->GetSourceIP();
+		} else {
+			sIP = "";
 		}
 		mod = PacketModifications::ComputeModifications(pkt_shrd, rcv);
 
