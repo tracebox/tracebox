@@ -58,6 +58,7 @@ static string destination;
 static string iface;
 static bool resolve = true;
 static bool verbose = false;
+bool print_debug = false;
 static json_object * jobj = NULL;
 static json_object *j_results = NULL;
 
@@ -522,6 +523,11 @@ int doTracebox(std::shared_ptr<Packet> pkt_shrd, tracebox_cb_t *callback,
 			return 1;
 		}
 		pkt->PreCraft();
+		if (print_debug) {
+			std::cerr << "Filter used at hop " << (int) ttl << ": ";
+			pkt->GetFilter(std::cerr);
+			std::cerr << std::endl;
+		}
 
 		if (isPcap(iface))
 			rcv = PcapSendRecv(pkt, iface);
@@ -586,7 +592,7 @@ int main(int argc, char *argv[])
 
 	/* disable libcrafter warnings */
 	ShowWarnings = 0;
-	while ((c = getopt(argc, argv, "Sl:i:M:m:s:p:d:f:hnv6uwjt:V"
+	while ((c = getopt(argc, argv, "Sl:i:M:m:s:p:d:f:hnv6uwjt:VD"
 #ifdef HAVE_CURL
 					"Cc:"
 #endif
@@ -658,6 +664,9 @@ int main(int argc, char *argv[])
 			case 'V':
 				std::cerr << _REV_PARSE << std::endl;
 				return 0;
+			case 'D':
+				print_debug = true;
+				break;
 			case ':':
 				std::cerr << "Option `-" << (char)optopt
 							<< "' requires an argument!" << std::endl;
@@ -760,6 +769,7 @@ usage:
 "	                           as it will cause tracebox to crash for some\n"
 "							   of its features!.\n"
 "  -V                          Print tracebox version and exit.\n"
+"  -D                          Print debug information.\n"
 "\n"
 "Every argument passed after the options in conjunction with -s or -l will be passed\n"
 "to the lua interpreter and available in a global vector of strings named 'argv',\n"

@@ -16,6 +16,7 @@
 #include "PacketModification.h"
 
 extern double tbx_default_timeout;
+extern bool print_debug;
 
 typedef int (tracebox_cb_t)(void *, uint8_t, std::string&, PacketModifications *);
 
