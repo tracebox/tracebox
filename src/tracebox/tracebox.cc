@@ -385,7 +385,7 @@ static int Callback(void *ctx, uint8_t ttl, string& router,
 		}
 		cout << endl;
 	} else
-		cout << ttl << ": *" << endl;
+		cout << (int)ttl << ": *" << endl;
 
 	return 0;
 }
