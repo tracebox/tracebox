@@ -18,7 +18,7 @@ Requirements:
 
 *Debian*
 
-    apt-get install autotools automake libtool liblua-dev libpcap-dev libjson0 libjson0-dev libcurl4-gnutls-dev lua-ldoc libnetfilter-queue-dev
+    apt-get install autotools automake libtool liblua5.2-dev libpcap-dev libjson0 libjson0-dev libcurl4-gnutls-dev lua-ldoc libnetfilter-queue-dev
 
 *Fedora (24)*
 
@@ -37,8 +37,6 @@ We rely on [CircleCI] to generate the build packages, if the above link fails,
 you can try to retrieve them manually by browsing to [the tracebox project
 build status](https://circleci.com/gh/tracebox/tracebox),
 selecting the latest build and then downloading the *.deb packages in the Artifacts tab.
-
-Tracebox has been tested and works both with Lua 5.1 and 5.2
 
 ### OpenWRT
 
