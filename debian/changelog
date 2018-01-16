@@ -1,3 +1,9 @@
+tracebox (0.4.4) experimental; urgency=low
+
+  * Uniformize IPv4 default ID value to be random if unspecified
+
+ -- Olivier Tilmans <olivier.tilmans@uclouvain.be>  Tue, 16 Jan 2018 09:30:21 +0200
+
 tracebox (0.4.3) experimental; urgency=low
 
   * Proper handling of RFC4884
