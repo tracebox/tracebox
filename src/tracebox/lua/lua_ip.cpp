@@ -30,7 +30,7 @@ using namespace std;
  * Constructor arguments
  * @table new_args
  * @tfield string dst the IP dst
- * @tfield num id the IP identifier
+ * @tfield num id the IP identifier, randomized if unset
  * @tfield num flags the IP flags
  * @tfield num ttl the IP TTL
  * @tfield num offset the IP fragment offset
@@ -58,12 +58,15 @@ int l_ip_ref::l_IP(lua_State *l)
 		return 0;
 	if (dst_set)
 		ip->SetDestinationIP(dst);
+	/*
+	 * FreeBSD/macOS add random IP ID if default-initialized to 0,
+	 * so always randomize it if unset to make it uniform across platform
+	 * (0 can still be forced on linux, explicitely).
+	 */
 	if (id_set)
 		ip->SetIdentification(id);
-#ifdef __APPLE__
-	else /* FreeBSD add random IP ID if not set */
+	else
 		ip->SetIdentification(rand() % USHRT_MAX);
-#endif
 	if (ttl_set)
 		ip->SetTTL(ttl);
 	if (flags_set)
@@ -129,11 +132,12 @@ void l_ip_ref::register_members(lua_State *l)
 	 * */
 	meta_bind_func(l, "ttl", L_SETTER(byte, IP, TTL));
 	/***
-	 * Set the IP Identification
+	 * Get/Set the IP Identification
 	 * @function id
-	 * @tparam num id
+	 * @tparam[opt] num id
+	 * @treturn num the IP ID
 	 * */
-	meta_bind_func(l, "id", L_SETTER(short_word, IP, Identification));
+	meta_bind_func(l, "id", L_ACCESSOR(short_word, IP, Identification));
 	/***
 	 * Set the IP DSCP
 	 * @function dscp
