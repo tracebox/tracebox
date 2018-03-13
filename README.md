@@ -18,7 +18,7 @@ Requirements:
 
 *Debian*
 
-    apt-get install autotools autoconf automake libtool liblua5.2-dev libpcap-dev libjson0 libjson0-dev libcurl4-gnutls-dev lua-ldoc libnetfilter-queue-dev
+    apt-get install autotools autoconf automake libtool liblua5.2-dev libpcap-dev libjson0 libjson0-dev libcurl4-gnutls-dev lua-ldoc libnetfilter-queue-dev lua5.2
 
 *Fedora (24)*
 
